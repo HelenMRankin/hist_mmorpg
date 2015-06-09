@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using System.Windows.Forms;
 using QuickGraph;
-
+//TODO Modify to use CSV file
 namespace hist_mmorpg
 {
     public static class CSVimport

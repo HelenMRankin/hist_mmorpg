@@ -10,11 +10,13 @@ namespace hist_mmorpg
 {
     public static class DatabaseWrite
     {
+        //TODO implement server error log
+        //TODO add loop to write all client things
         /// <summary>
         /// Writes all game objects to the database
         /// </summary>
         /// <param name="gameID">ID of game (used for database bucket)</param>
-        public static void DatabaseWriteAll(string gameID)
+        public static void DatabaseWriteAll(string gameID, Client c = null)
         {
             // ========= write CLOCK
             DatabaseWrite.DatabaseWrite_Clock(gameID, Globals_Game.clock);
@@ -32,14 +34,9 @@ namespace hist_mmorpg
             // ========= write JOURNALS
             DatabaseWrite.DatabaseWrite_Journal(gameID, "serverScheduledEvents", Globals_Game.scheduledEvents);
             DatabaseWrite.DatabaseWrite_Journal(gameID, "serverPastEvents", Globals_Game.pastEvents);
-            DatabaseWrite.DatabaseWrite_Journal(gameID, "clientPastEvents", Globals_Client.myPastEvents);
 
             // ========= write GLOBALS_GAME/CLIENT/SERVER CHARACTER VARIABLES
-            // Globals_Client.myPlayerCharacter
-            if (Globals_Client.myPlayerCharacter != null)
-            {
-                DatabaseWrite.DatabaseWrite_String(gameID, "myPlayerCharacter", Globals_Client.myPlayerCharacter.charID);
-            }
+
             // Globals_Game.sysAdmin
             if (Globals_Game.sysAdmin != null)
             {
@@ -109,10 +106,6 @@ namespace hist_mmorpg
             DatabaseWrite.DatabaseWrite_Bool(gameID, "writeToDatabase", Globals_Game.writeToDatabase);
             // Globals_Game.statureCapInForce
             DatabaseWrite.DatabaseWrite_Bool(gameID, "statureCapInForce", Globals_Game.statureCapInForce);
-            // Globals_Client.showMessages
-            DatabaseWrite.DatabaseWrite_Bool(gameID, "showMessages", Globals_Client.showMessages);
-            // Globals_Client.showDebugMessages
-            DatabaseWrite.DatabaseWrite_Bool(gameID, "showDebugMessages", Globals_Client.showDebugMessages);
 
             // ========= write TRAITS
             // clear existing key list
@@ -417,6 +410,21 @@ namespace hist_mmorpg
             // ========= write MAP (edges collection)
             DatabaseWrite.DatabaseWrite_MapEdges(gameID, map: Globals_Game.gameMap);
 
+            foreach (KeyValuePair<string, Client> pair in Globals_Server.clients)
+            {
+                DatabaseWrite.DatabaseWrite_Journal(gameID, "clientPastEvents", pair.Value.myPastEvents);
+                // Globals_Client.myPlayerCharacter
+                if (pair.Value.myPlayerCharacter != null)
+                {
+                    DatabaseWrite.DatabaseWrite_String(gameID, "myPlayerCharacter", pair.Value.myPlayerCharacter.charID);
+                }
+
+                // Globals_Client.showMessages
+                DatabaseWrite.DatabaseWrite_Bool(gameID, "showMessages", pair.Value.showMessages);
+                // Globals_Client.showDebugMessages
+                DatabaseWrite.DatabaseWrite_Bool(gameID, "showDebugMessages", pair.Value.showDebugMessages);
+            }
+
         }
 
         /// <summary>
@@ -531,6 +539,20 @@ namespace hist_mmorpg
             return putJournalResult.IsSuccess;
         }
 
+        public static bool DatabaseWrite_User(string gameID, string key, string pc)
+        {
+            var rString = new RiakObject(gameID, key, pc);
+            var putStringResult = Globals_Server.rClient.Put(rString);
+            if (!putStringResult.IsSuccess)
+            {
+                if (Globals_Client.showMessages)
+                {
+                    System.Windows.Forms.MessageBox.Show("Write failed: String variable " + key + " to bucket " + rString.Bucket);
+                }
+            }
+
+            return putStringResult.IsSuccess;
+        }
         /// <summary>
         /// Writes a string variable to the database
         /// </summary>

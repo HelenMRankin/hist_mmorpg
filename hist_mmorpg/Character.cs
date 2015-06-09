@@ -1801,11 +1801,26 @@ namespace hist_mmorpg
                     Globals_Game.victoryData[promotedNPC.playerID].playerCharacterID = promotedNPC.charID;
                 }
             }
-
+            //ASK about player character promotion
 			// ============== 8. change GLOBALS_CLIENT.MYPLAYERCHARACTER
-            if (Globals_Client.myPlayerCharacter == deceased)
+            string user = deceased.user;
+            if (user != null)
             {
-                Globals_Client.myPlayerCharacter = promotedNPC;
+                if (Globals_Game.userChars.ContainsKey(user))
+                {
+                    Globals_Game.userChars[deceased.user] = promotedNPC;
+                    promotedNPC.playerID = user;
+                    //TODO notify user if logged in and write to database
+                }
+                else
+                {
+                    //TODO error logging
+                    string errorLog = "CHARACTER ERROR: " + user + " not contained in list of registered users";
+                }
+            }
+            else
+            {
+                //TODO user of character is null
             }
 
         }
@@ -1865,11 +1880,9 @@ namespace hist_mmorpg
 
             if (!success)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Error: NPC " + oldNPC.charID
-                        + " (" + oldNPC.firstName + " " + oldNPC.familyName + ") could not be respawned", "NPC CREATION ERROR");
-                }
+                //TODO error logging
+                string errorLog = "NPC CREATION ERROR: " + "Error: NPC " + oldNPC.charID
+                        + " (" + oldNPC.firstName + " " + oldNPC.familyName + ") could not be respawned";
             }
 
             return success;
@@ -1879,11 +1892,11 @@ namespace hist_mmorpg
         /// Enables character to enter keep (if not barred)
         /// </summary>
         /// <returns>bool indicating success</returns>
-        public virtual bool EnterKeep()
+        public virtual bool EnterKeep(Client c = null)
         {
             bool proceed = true;
             Army thisArmy = null;
-
+            bool hasClient = (c != null);
             // check if character leading an army
             if (!String.IsNullOrWhiteSpace(this.armyID))
             {
@@ -1896,9 +1909,9 @@ namespace hist_mmorpg
                     if (thisArmy.GetOwner() != location.owner)
                     {
                         proceed = false;
-                        if (Globals_Client.showMessages)
+                        if (hasClient)
                         {
-                            System.Windows.Forms.MessageBox.Show("Bailiff: You are not permitted to enter the keep with your army, My Lord.");
+                            c.message = "Bailiff: You are not permitted to enter the keep with your army, My Lord.";
                         }
                     }
 
@@ -1906,9 +1919,9 @@ namespace hist_mmorpg
                     else if (this.location.CheckFieldArmyInKeep())
                     {
                         proceed = false;
-                        if (Globals_Client.showMessages)
+                        if (hasClient)
                         {
-                            System.Windows.Forms.MessageBox.Show("Bailiff: There is already a friendly field army present in the keep, My Lord.\r\nOnly one is permitted.");
+                           c.message = "Bailiff: There is already a friendly field army present in the keep, My Lord.\r\nOnly one is permitted.";
                         }
                     }
                 }
@@ -1920,7 +1933,7 @@ namespace hist_mmorpg
                 if (location.barredNationalities.Contains(this.nationality.natID))
                 {
                     proceed = false;
-                    if (Globals_Client.showMessages)
+                    if (hasClient)
                     {
                         string title = "My Lord";
                         if (this.nationality.natID.Equals("Sco"))
@@ -1931,7 +1944,7 @@ namespace hist_mmorpg
                         {
                             title = "Mon Seigneur";
                         }
-                        System.Windows.Forms.MessageBox.Show("Bailiff: The perfidious " + this.nationality.name + " are barred from entering this keep, "+ title + "!");
+                        c.message = "Bailiff: The perfidious " + this.nationality.name + " are barred from entering this keep, "+ title + "!";
                     }
                 }
 
@@ -1941,9 +1954,9 @@ namespace hist_mmorpg
                     if (location.barredCharacters.Contains(this.charID))
                     {
                         proceed = false;
-                        if (Globals_Client.showMessages)
+                        if (c != null)
                         {
-                            System.Windows.Forms.MessageBox.Show("Bailiff: Your person is barred from entering this keep, Good Sir!");
+                            c.message = "Bailiff: Your person is barred from entering this keep, Good Sir!";
                         }
                     }
                 }
@@ -2157,6 +2170,7 @@ namespace hist_mmorpg
             return headFamily;
         }
 
+        //TODO check if there is a way to do this without passing in client
         /// <summary>
         /// Performs conditional checks before granting a gift or postiton of responsibility
         /// </summary>
@@ -2164,11 +2178,12 @@ namespace hist_mmorpg
         /// <param name="type">string identify type of grant</param>
         /// <param name="priorToList">bool indicating if check is prior to listing possible candidates</param>
         /// <param name="armyID">string containing the army ID (if choosing a leader)</param>
-        public bool ChecksBeforeGranting(string type, bool priorToList, string armyID = null)
+        /// <param name="c">client performing action</param>
+        public bool ChecksBeforeGranting(string type, bool priorToList, string armyID = null, Client c = null)
         {
             bool proceed = true;
             string toDisplay = "";
-
+            bool hasClient = (c != null);
             // get army if appropriate
             Army armyToLead = null;
             if (!String.IsNullOrWhiteSpace(armyID))
@@ -2188,10 +2203,10 @@ namespace hist_mmorpg
                     proceed = false;
                     if (!priorToList)
                     {
-                        if (Globals_Client.showMessages)
+                        if (hasClient)
                         {
                             toDisplay = "Only a PlayerCharacter can receive a royal gift.";
-                            System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
+                            Globals_Game.UpdateUser(c.user, toDisplay);
                         }
                     }
                 }
@@ -2204,10 +2219,10 @@ namespace hist_mmorpg
                         proceed = false;
                         if (!priorToList)
                         {
-                            if (Globals_Client.showMessages)
+                            if (hasClient)
                             {
                                 toDisplay = "Only a player can receive a royal gift.";
-                                System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
+                                Globals_Game.UpdateUser(c.user, toDisplay);
                             }
                         }
                     }
@@ -2215,15 +2230,15 @@ namespace hist_mmorpg
                     else
                     {
                         // 3. check is not self
-                        if ((this as PlayerCharacter) == Globals_Client.myPlayerCharacter)
+                        if ((this as PlayerCharacter) == c.myPlayerCharacter)
                         {
                             proceed = false;
                             if (!priorToList)
                             {
-                                if (Globals_Client.showMessages)
+                                if (hasClient)
                                 {
                                     toDisplay = "You cannot grant a royal gift to yourself.";
-                                    System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
+                                    Globals_Game.UpdateUser(c.user, toDisplay);
                                 }
                             }
                         }
@@ -2241,10 +2256,10 @@ namespace hist_mmorpg
                     proceed = false;
                     if (!priorToList)
                     {
-                        if (Globals_Client.showMessages)
+                        if (hasClient)
                         {
                             toDisplay = "The recieving character must be a male.";
-                            System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
+                            Globals_Game.UpdateUser(c.user, toDisplay);
                         }
                     }
                 }
@@ -2257,10 +2272,10 @@ namespace hist_mmorpg
                         proceed = false;
                         if (!priorToList)
                         {
-                            if (Globals_Client.showMessages)
+                            if (hasClient)
                             {
                                 toDisplay = "The recieving character must be of age (14).";
-                                System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
+                                Globals_Game.UpdateUser(c.user, toDisplay);
                             }
                         }
                     }
@@ -2274,10 +2289,10 @@ namespace hist_mmorpg
                             proceed = false;
                             if (!priorToList)
                             {
-                                if (Globals_Client.showMessages)
+                                if (hasClient)
                                 {
                                     toDisplay = "Army leaders must be in the same hex as the army they are to lead.";
-                                    System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
+                                    Globals_Game.UpdateUser(c.user, toDisplay);
                                 }
                             }
                         }
@@ -2292,10 +2307,10 @@ namespace hist_mmorpg
                                     proceed = false;
                                     if (!priorToList)
                                     {
-                                        if (Globals_Client.showMessages)
+                                        if (hasClient)
                                         {
                                             toDisplay = "This character is already leading the selected army.";
-                                            System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
+                                            Globals_Game.UpdateUser(c.user, toDisplay);
                                         }
                                     }
                                 }
@@ -2323,7 +2338,7 @@ namespace hist_mmorpg
                             if (dialogResult == DialogResult.Cancel)
                             {
                                 proceed = false;
-                                if (Globals_Client.showMessages)
+                                if (hasClient)
                                 {
                                     toDisplay = "Appointment cancelled.";
                                     System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
@@ -2354,10 +2369,10 @@ namespace hist_mmorpg
                                 if (dialogResult == DialogResult.Cancel)
                                 {
                                     proceed = false;
-                                    if (Globals_Client.showMessages)
+                                    if (hasClient)
                                     {
                                         toDisplay = "Appointment cancelled.";
-                                        System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
+                                        Globals_Game.UpdateUser(c.user, toDisplay);
                                     }
                                 }
                             }
@@ -2394,6 +2409,7 @@ namespace hist_mmorpg
             return success;
         }
 
+        //TODO rewrite to get confirmation from client
         /// <summary>
         /// Moves character to target fief
         /// </summary>
@@ -2401,10 +2417,10 @@ namespace hist_mmorpg
         /// <param name="target">Target fief</param>
         /// <param name="cost">Travel cost (days)</param>
         /// <param name="siegeCheck">bool indicating whether to check whether the move would end a siege</param>
-        public bool ChecksBeforeMove(Fief target, double cost, bool siegeCheck = true)
+        public bool ChecksBeforeMove(Fief target, double cost, bool siegeCheck = true, Client c = null)
         {
             bool proceedWithMove = true;
-
+            bool hasClient = (c != null);
             // check to see if character is leading a besieging army
             if (siegeCheck)
             {
@@ -2415,11 +2431,16 @@ namespace hist_mmorpg
                     if (!String.IsNullOrWhiteSpace(thisSiegeID))
                     {
                         // give player fair warning of consequences to siege
-                        DialogResult dialogResult = MessageBox.Show("Your army is currently besieging this fief.  Moving will end the siege.\r\nClick 'OK' to proceed.", "Proceed with move?", MessageBoxButtons.OKCancel);
-
+                        if (hasClient)
+                        {
+                            string toDisplay = "Your army is currently besieging this fief.  Moving will end the siege.";
+                            Globals_Game.UpdateUser(c.user, toDisplay);
+                            //WAIT FOR RESPONSE
+                        }
                         // if choose to cancel
                         if (dialogResult == DialogResult.Cancel)
                         {
+                            
                             if (Globals_Client.showMessages)
                             {
                                 System.Windows.Forms.MessageBox.Show("Move cancelled.");
@@ -2465,9 +2486,10 @@ namespace hist_mmorpg
                         this.goTo.Enqueue(target);
                     }
 
-                    if (Globals_Client.showMessages)
+                    if (c!=null)
                     {
-                        System.Windows.Forms.MessageBox.Show("I'm afraid you've run out of days.\r\nYour journey will continue next season.");
+                        String toDisplay = "I'm afraid you've run out of days.\r\nYour journey will continue next season.";
+                        Globals_Game.UpdateUser(c.user,toDisplay);
                     }
 
                     proceedWithMove = false;
@@ -2484,9 +2506,9 @@ namespace hist_mmorpg
         /// <param name="target">Target fief</param>
         /// <param name="cost">Travel cost (days)</param>
         /// <param name="siegeCheck">bool indicating whether to check whether the move would end a siege</param>
-        public virtual bool MoveCharacter(Fief target, double cost, bool siegeCheck = true)
+        public virtual bool MoveCharacter(Fief target, double cost, bool siegeCheck = true, Client c = null)
         {
-            bool success = this.ChecksBeforeMove(target, cost, siegeCheck);
+            bool success = this.ChecksBeforeMove(target, cost, siegeCheck,c);
 
             if (success)
             {
@@ -2619,7 +2641,7 @@ namespace hist_mmorpg
                 this.AdjustDays(remainingDays);
             }
         }
-
+        //ASK if players should be alerted if one of their family members spouses becomes pregnant or just for player's wife
         /// <summary>
         /// Calculates whether character manages to get spouse pregnant
         /// </summary>
@@ -2730,10 +2752,10 @@ namespace hist_mmorpg
                         success = true;
 
                         // display message of celebration
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("Let the bells ring out, milord.  " + wife.firstName + " " + wife.familyName + " is pregnant!", "PREGNANCY SUCCESSFUL");
-                        }
+                        if(this is PlayerCharacter) {
+                            string user = ((PlayerCharacter)this).playerID;
+                            string toDisplay = "Let the bells ring out, milord.  " + wife.firstName + " " + wife.familyName + " is pregnant!";
+                            Globals_Game.UpdateUser(user,toDisplay);
                     }
 
                     // if not added
@@ -4290,7 +4312,10 @@ namespace hist_mmorpg
     /// </summary>
     public class PlayerCharacter : Character
     {
-
+        /// <summary>
+        /// Holds the username of the player playing this character
+        /// </summary>
+        public string user { get; set; }
         /// <summary>
         /// Holds character outlawed status
         /// </summary>
@@ -7330,6 +7355,8 @@ namespace hist_mmorpg
             this.mySieges = myS;
         }
 
+        //ASK what this is for
+        //ASK if it would be better to have a serialise and deserialise method in Character/PlayerCharacter
         /// <summary>
         /// Constructor for PlayerCharacter_Serialised taking no parameters.
         /// For use when de-serialising.

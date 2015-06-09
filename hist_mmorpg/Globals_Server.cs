@@ -13,6 +13,10 @@ namespace hist_mmorpg
     public static class Globals_Server
     {
         /// <summary>
+        /// Holds the usernames and Client objects of connected players
+        /// </summary>
+        public static Dictionary<string, Client> clients = new Dictionary<string, Client>();
+        /// <summary>
         /// Holds target RiakCluster 
         /// </summary>
         public static RiakCluster rCluster;

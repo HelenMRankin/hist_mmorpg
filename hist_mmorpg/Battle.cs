@@ -46,15 +46,6 @@ namespace hist_mmorpg
             {
                 battleHasCommenced = true;
             }
-
-            if (battleHasCommenced)
-            {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("The attacker has successfully brought the defender to battle");
-                }
-            }
-
             return battleHasCommenced;
         }
 
@@ -389,8 +380,16 @@ namespace hist_mmorpg
 
                         if (!battleHasCommenced)
                         {
+                            Globals_Game.UpdateUser(attacker.owner, "update:battle:You failed to bring the defending army to battle");
+                            Globals_Game.UpdateUser(defender.owner, "update:battle:An attacking army tried and failed to engage you in battle");
                             defender.ProcessRetreat(1);
                         }
+                        else
+                        {
+                            Globals_Game.UpdateUser(defender.owner, "update:battle:You have been brought to battle by an opposing army!");
+                            Globals_Game.UpdateUser(attacker.owner, "update:battle:You have successfully brought the enemy army to battle!");
+                        }
+
                     }
                 }
 
@@ -407,7 +406,14 @@ namespace hist_mmorpg
 
                 if (!battleHasCommenced)
                 {
+                    Globals_Game.UpdateUser(attacker.owner, "update:battle:You failed to bring the defending army to battle");
+                    Globals_Game.UpdateUser(defender.owner, "update:battle:An attacking army tried and failed to engage you in battle");
                     defender.ProcessRetreat(1);
+                }
+                else
+                {
+                    Globals_Game.UpdateUser(defender.owner, "update:battle:You have been brought to battle by an opposing army!");
+                    Globals_Game.UpdateUser(attacker.owner, "update:battle:You have successfully brought the enemy army to battle!");
                 }
             }
 
@@ -854,11 +860,10 @@ namespace hist_mmorpg
             // add new journal entry to pastEvents
             Globals_Game.AddPastEvent(battleResult);
 
+            //ASK if both attacker and defender should receive message
             // display pop-up informational message
-            if (Globals_Client.showMessages)
-            {
-                System.Windows.Forms.MessageBox.Show(toDisplay, "BATTLE RESULTS");
-            }
+            Globals_Game.UpdateUser(attacker.owner, "update:battle:BATTLE RESULTS," + toDisplay);
+            Globals_Game.UpdateUser(defender.owner, "update:battle:BATTLE RESULTS," + toDisplay);
 
             // end siege if appropriate
             if (siegeRaised)

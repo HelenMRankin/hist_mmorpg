@@ -930,6 +930,7 @@ namespace hist_mmorpg
 
             // set to null
             s = null;
+   
 
             // refresh screen
             this.RefreshCurrentScreen();

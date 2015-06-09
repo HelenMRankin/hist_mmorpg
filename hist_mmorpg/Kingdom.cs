@@ -48,23 +48,20 @@ namespace hist_mmorpg
         /// <summary>
         /// Processes functions involved in lodging a new ownership (and kingship) challenge
         /// </summary>
-        public void LodgeOwnershipChallenge()
+        public void LodgeOwnershipChallenge(Client c)
         {
             bool proceed = true;
 
             // ensure aren't current owner
-            if (Globals_Client.myPlayerCharacter == this.owner)
+            if (c.myPlayerCharacter == this.owner)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("You are already the King of " + this.name + "!");
-                }
+                c.message = "You are already the King of " + this.name + "!";
             }
 
             else
             {
                 // create and send new OwnershipChallenge
-                OwnershipChallenge newChallenge = new OwnershipChallenge(Globals_Game.GetNextOwnChallengeID(), Globals_Client.myPlayerCharacter.charID, "kingdom", this.id);
+                OwnershipChallenge newChallenge = new OwnershipChallenge(Globals_Game.GetNextOwnChallengeID(), c.myPlayerCharacter.charID, "kingdom", this.id);
                 proceed = Globals_Game.AddOwnershipChallenge(newChallenge);
             }
 
@@ -87,7 +84,7 @@ namespace hist_mmorpg
                 // journal entry personae
                 string allEntry = "all|all";
                 string currentOwnerEntry = currentOwner.charID + "|king";
-                string challengerEntry = Globals_Client.myPlayerCharacter.charID + "|pretender";
+                string challengerEntry = c.myPlayerCharacter.charID + "|pretender";
                 string[] entryPersonae = new string[] { currentOwnerEntry, challengerEntry, allEntry };
 
                 // entry type
@@ -95,7 +92,7 @@ namespace hist_mmorpg
 
                 // journal entry description
                 string description = "On this day of Our Lord a challenge for the crown of " + this.name + " (" + this.id + ")";
-                description += " has COMMENCED.  " + Globals_Client.myPlayerCharacter.firstName + " " + Globals_Client.myPlayerCharacter.familyName + " seeks to press his claim ";
+                description += " has COMMENCED.  " + c.myPlayerCharacter.firstName + " " + c.myPlayerCharacter.familyName + " seeks to press his claim ";
                 description += "and depose the current king, His Highness " + currentOwner.firstName + " " + currentOwner.familyName + ", King of " + this.name + ".";
 
                 // create and send a proposal (journal entry)

@@ -14,10 +14,10 @@ namespace hist_mmorpg
     public interface Game_Observable
     {
         // method to register observer
-        void RegisterObserver(Form1 obs);
+        void RegisterObserver(Client obs);
 
         // method to remove observer
-        void RemoveObserver(Form1 obs);
+        void RemoveObserver(Client obs);
 
         // method to notify observers of changes to subject
         void NotifyObservers(String info);

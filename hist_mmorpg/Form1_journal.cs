@@ -17,6 +17,7 @@ namespace hist_mmorpg
 {
     /// <summary>
     /// Partial class for Form1, containing functionality specific to the journal
+    /// Well this'll be interesting to try and implement on client -server
     /// </summary>
     partial class Form1
     {

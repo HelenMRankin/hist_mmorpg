@@ -249,6 +249,8 @@ namespace hist_mmorpg
 
         }
 
+        // Is this needed?
+
         /*
         /// <summary>
         /// Moves character to the target fief, through intervening fiefs (stored in goTo queue)

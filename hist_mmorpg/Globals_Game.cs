@@ -13,6 +13,10 @@ namespace hist_mmorpg
     public static class Globals_Game
     {
         /// <summary>
+        /// Dictionary mapping users to player characters
+        /// </summary>
+        public static Dictionary<string, PlayerCharacter> userChars = new Dictionary<string, PlayerCharacter>();
+        /// <summary>
         /// Holds current challenges for ownership of provinces or kingdoms
         /// </summary>
         public static Dictionary<string, OwnershipChallenge> ownershipChallenges = new Dictionary<string, OwnershipChallenge>();
@@ -55,7 +59,7 @@ namespace hist_mmorpg
         /// <summary>
         /// List of registered observers
         /// </summary>
-        private static List<Form1> registeredObservers = new List<Form1>();
+        private static List<Client> registeredObservers = new List<Client>();
         /// <summary>
         /// Holds all NonPlayerCharacter objects
         /// </summary>
@@ -482,7 +486,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating success</returns>
         /// <param name="challenge">OwnershipChallenge to be added</param>
-        public static bool AddOwnershipChallenge(OwnershipChallenge challenge)
+        public static bool AddOwnershipChallenge(OwnershipChallenge challenge, Client c)
         {
             bool success = true;
             string toDisplay = "";
@@ -490,12 +494,7 @@ namespace hist_mmorpg
             if (Globals_Game.CheckForExistingChallenge(challenge.placeID))
             {
                 success = false;
-                if (Globals_Client.showMessages)
-                {
-                    toDisplay = "There is already a challenge for the ownership of " + challenge.GetPlace().name + ".";
-                    toDisplay += "  Only one challenge is permissable at a time.";
-                    System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
-                }
+                c.message = "There is already a challenge for the ownership of " + challenge.GetPlace().name + ". Only one challenge is permissable at a time.";
             }
 
             else
@@ -847,15 +846,11 @@ namespace hist_mmorpg
                     }
                 }
             }
-
+            //TODO find way to send game results to clients
             // announce winners
             if ((endDateReached) || (absoluteVictory))
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show(gameResults);
-                }
-
+                //send gameResults to client
                 gameEnded = true;
             }
 
@@ -1082,12 +1077,29 @@ namespace hist_mmorpg
             return forRemoval;
 
         }
-
         /// <summary>
-        /// Adds an observer (Form1 object) to the list of registered observers
+        /// Sends an update to a particular user
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="message"></param>
+        public static void UpdateUser(string user, string message)
+        {
+            // if a user is currently signed in send the message direct to client
+            if (Globals_Server.clients.ContainsKey(user))
+            {
+                Globals_Server.clients[user].Update(message);
+            }
+            // if user is away store message in database to view when user next logs in
+            else
+            {
+                //TODO user message log
+            }
+        }
+        /// <summary>
+        /// Adds an observer (Client object) to the list of registered observers
         /// </summary>
         /// <param name="obs">Observer to be added</param>
-        public static void RegisterObserver(Form1 obs)
+        public static void RegisterObserver(Client obs)
         {
             // add new observer to list
             registeredObservers.Add(obs);
@@ -1097,12 +1109,13 @@ namespace hist_mmorpg
         /// Removes an observer (Form1 object) from the list of registered observers
         /// </summary>
         /// <param name="obs">Observer to be removed</param>
-        public static void RemoveObserver(Form1 obs)
+        public static void RemoveObserver(Client obs)
         {
             // remove observer from list
             registeredObservers.Remove(obs);
         }
 
+        //TODO possibly move to Game, send updated globals
         /// <summary>
         /// Notifies all observers (Form1 objects) in the list of registered observers
         /// that a change has occured to the data
@@ -1111,7 +1124,7 @@ namespace hist_mmorpg
         public static void NotifyObservers(String info)
         {
             // iterate through list of observers
-            foreach (Form1 obs in registeredObservers)
+            foreach (Client obs in registeredObservers)
             {
                 // call observer's update method to perform the required actions
                 // based on the string passed

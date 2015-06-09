@@ -17,97 +17,11 @@ namespace hist_mmorpg
 {
     /// <summary>
     /// Partial class for Form1, containing functionality specific to the character display
+    /// This can be smooshed into Character to fetch the details required for the client
     /// </summary>
     partial class Form1
     {
-        /*
-        /// <summary>
-        /// Retrieves PlayerCharacter-specific information for Character display screen
-        /// </summary>
-        /// <returns>String containing information to display</returns>
-        /// <param name="pc">PlayerCharacter whose information is to be displayed</param>
-        public string DisplayPlayerCharacter(PlayerCharacter pc)
-        {
-            string pcText = "";
-
-            // whether outlawed
-            pcText += "You are ";
-            if (!pc.outlawed)
-            {
-                pcText += "not ";
-            }
-            pcText += "outlawed\r\n";
-
-            // purse
-            pcText += "Purse: " + pc.purse + "\r\n";
-
-            // employees
-            pcText += "Family and employees:\r\n";
-            for (int i = 0; i < pc.myNPCs.Count; i++)
-            {
-                pcText += "  - " + pc.myNPCs[i].firstName + " " + pc.myNPCs[i].familyName;
-                if (pc.myNPCs[i].inEntourage)
-                {
-                    pcText += " (travelling companion)";
-                }
-                pcText += "\r\n";
-            }
-
-            // owned fiefs
-            pcText += "Fiefs owned:\r\n";
-            for (int i = 0; i < pc.ownedFiefs.Count; i++)
-            {
-                pcText += "  - " + pc.ownedFiefs[i].name + "\r\n";
-            }
-
-            // owned provinces
-            pcText += "Provinces owned:\r\n";
-            for (int i = 0; i < pc.ownedProvinces.Count; i++)
-            {
-                pcText += "  - " + pc.ownedProvinces[i].name + "\r\n";
-            }
-
-            return pcText;
-        }
-
-        /// <summary>
-        /// Retrieves NonPlayerCharacter-specific information for Character display screen
-        /// </summary>
-        /// <returns>String containing information to display</returns>
-        /// <param name="npc">NonPlayerCharacter whose information is to be displayed</param>
-        public string DisplayNonPlayerCharacter(NonPlayerCharacter npc)
-        {
-            string npcText = "";
-
-            // boss
-            if (!String.IsNullOrWhiteSpace(npc.employer))
-            {
-                npcText += "Hired by (ID): " + npc.employer + "\r\n";
-            }
-
-            // estimated salary level (if character is male)
-            if (npc.isMale)
-            {
-                npcText += "Potential salary: " + npc.CalcSalary(Globals_Client.myPlayerCharacter) + "\r\n";
-
-                // most recent salary offer from player (if any)
-                npcText += "Last offer from this PC: ";
-                if (npc.lastOffer.ContainsKey(Globals_Client.myPlayerCharacter.charID))
-                {
-                    npcText += npc.lastOffer[Globals_Client.myPlayerCharacter.charID];
-                }
-                else
-                {
-                    npcText += "N/A";
-                }
-                npcText += "\r\n";
-
-                // current salary
-                npcText += "Current salary: " + npc.salary + "\r\n";
-            }
-
-            return npcText;
-        } */
+       
 
         /// <summary>
         /// Retrieves information for Character display screen

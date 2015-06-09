@@ -18,6 +18,7 @@ namespace hist_mmorpg
     /// <summary>
     /// Partial class for Form1, containing functionality specific to the meeting place screen
     /// (court, tavern, outside keep)
+    /// this is going to be a little harder to deal with- may implement a meeting place as a subclass of place?
     /// </summary>
     partial class Form1
     {

@@ -217,6 +217,7 @@ namespace hist_mmorpg
                     }
                     else
                     {
+                        Globals_Client.message
                         if (Globals_Client.showMessages)
                         {
                             System.Windows.Forms.MessageBox.Show("Error: JournalEntry not added.", "INSERTION ERROR");

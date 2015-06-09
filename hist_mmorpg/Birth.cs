@@ -202,7 +202,7 @@ namespace hist_mmorpg
         public static bool ChecksBeforePregnancyAttempt(Character husband)
         {
             bool proceed = true;
-
+            bool isPlayer = husband is PlayerCharacter;
             // check is married
             // get spouse
             Character wife = husband.GetSpouse();
@@ -212,9 +212,10 @@ namespace hist_mmorpg
                 // check to make sure is in same fief
                 if (!(wife.location == husband.location))
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("You have to be in the same fief to do that!");
+                    if (isPlayer)
+                    {  
+                        string message = "You have to be in the same fief to do that!";
+                        Globals_Game.UpdateUser(((PlayerCharacter)husband).user, message);
                     }
                     proceed = false;
                 }
@@ -224,9 +225,10 @@ namespace hist_mmorpg
                     // make sure wife not already pregnant
                     if (wife.isPregnant)
                     {
-                        if (Globals_Client.showMessages)
+                        if (isPlayer)
                         {
-                            System.Windows.Forms.MessageBox.Show(wife.firstName + " " + wife.familyName + " is already pregnant, milord.  Don't be so impatient!", "PREGNANCY ATTEMPT CANCELLED");
+                            string message = "error:birth:" + wife.firstName + " " + wife.familyName + " is already pregnant, milord.  Don't be so impatient!";
+                            Globals_Game.UpdateUser(((PlayerCharacter)husband).user,message);
                         }
                         proceed = false;
                     }
@@ -236,9 +238,10 @@ namespace hist_mmorpg
                     {
                         if ((!String.IsNullOrWhiteSpace(husband.location.siege)) && (husband.inKeep != wife.inKeep))
                         {
-                            if (Globals_Client.showMessages)
+                            if (isPlayer)
                             {
-                                System.Windows.Forms.MessageBox.Show("I'm afraid the husband and wife are being separated by the ongoing siege.", "PREGNANCY ATTEMPT CANCELLED");
+                                string message = "error:birth:I'm afraid the husband and wife are being separated by the ongoing siege.";
+                                Globals_Game.UpdateUser(((PlayerCharacter)husband).user, message);
                             }
                             proceed = false;
                         }
@@ -250,9 +253,10 @@ namespace hist_mmorpg
 
                             if (minDays < 1)
                             {
-                                if (Globals_Client.showMessages)
+                                if (isPlayer)
                                 {
-                                    System.Windows.Forms.MessageBox.Show("Sorry, you don't have enough time left for this in the current season.", "PREGNANCY ATTEMPT CANCELLED");
+                                    string message = "error:birth:Sorry, you don't have enough time left for this in the current season.";
+                                    Globals_Game.UpdateUser(((PlayerCharacter)husband).user, message);
                                 }
                                 proceed = false;
                             }
@@ -282,23 +286,21 @@ namespace hist_mmorpg
                     }
                 }
             }
-
+            //ASK about what to display to who when not married
             else
             {
-                if (Globals_Client.showMessages)
+                string toDisplay;
+                string whoThisIs = "";
+                if (isPlayer)
                 {
-                    string whoThisIs = "";
-                    if (husband == Globals_Client.myPlayerCharacter)
-                    {
-                        whoThisIs = "You are ";
-                    }
-                    else
-                    {
-                        whoThisIs = "This man is ";
-                    }
-
-                    System.Windows.Forms.MessageBox.Show(whoThisIs + "not married, my lord.", "PREGNANCY ATTEMPT CANCELLED");
+                    whoThisIs = "You are ";
                 }
+                else
+                {
+                    whoThisIs = "This man is ";
+                }
+                toDisplay = "error:birth:," + whoThisIs + "not married, my lord.";
+                if(isPlayer) Globals_Game.UpdateUser(((PlayerCharacter)husband).user, toDisplay);
                 proceed = false;
             }
 

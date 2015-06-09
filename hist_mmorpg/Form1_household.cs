@@ -17,6 +17,8 @@ namespace hist_mmorpg
 {
     /// <summary>
     /// Partial class for Form1, containing functionality specific to household management
+    /// Something like this will exist on client
+    /// I feel like the method for grabbing the information to do with family members belongs in playercharacter
     /// </summary>
     partial class Form1
     {
