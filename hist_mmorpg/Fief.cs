@@ -495,8 +495,6 @@ namespace hist_mmorpg
 		{
 		}
 
-        //ASK if it would be better to apply adjustexpenditures to this fief rather than the fief being viewed by the client
-        //this current implementation requires Client to be taken in, 
         // would prefer to check that fief is currently viewed fief elsewhere
         /// <summary>
         /// Adjusts the fief's tax rate and expenditure levels (officials, garrison, infrastructure, keep)
@@ -506,7 +504,7 @@ namespace hist_mmorpg
         /// <param name="garr">Proposed garrison expenditure</param>
         /// <param name="infr">Proposed infrastructure expenditure</param>
         /// <param name="kp">Proposed keep expenditure</param>
-        public void AdjustExpenditures(double tx, uint off, uint garr, uint infr, uint kp, Client c)
+        public void AdjustExpenditures(double tx, uint off, uint garr, uint infr, uint kp)
         {
             // keep track of whether any spends ahve changed
             bool spendChanged = false;
@@ -518,8 +516,7 @@ namespace hist_mmorpg
             double bailiffModif = 0;
 
             // get bailiff modifier (passing in whether bailiffDaysInFief is sufficient)
-            bailiffModif = c.fiefToView.CalcBailExpModif(c.fiefToView.bailiffDaysInFief >= 30);
-            // bailiffModif = c.fiefToView.CalcBailExpModif(this.bailiffDaysInFief >= 30);
+            bailiffModif = this.CalcBailExpModif(this.bailiffDaysInFief >= 30);
             if (bailiffModif != 0)
             {
                 totalSpend = totalSpend + Convert.ToUInt32(totalSpend * bailiffModif);
@@ -527,17 +524,14 @@ namespace hist_mmorpg
 
             // check that expenditure can be supported by the treasury
             // if it can't, display a message and cancel the commit
-          //  if (this.CheckExpenditureOK(totalSpend))
-            if (!c.fiefToView.CheckExpenditureOK(totalSpend))
+            if (this.CheckExpenditureOK(totalSpend))
             {
-                //int difference = Convert.ToInt32(totalSpend - this.GetAvailableTreasury());
-                int difference = Convert.ToInt32(totalSpend - c.fiefToView.GetAvailableTreasury());
-                //string toDisplay = "Expenditure adjustment CANCELLED; Your spending would exceed the " + this.name + " treasury by " + difference;
-                string toDisplay = "Expenditure adjustment CANCELLED; Your spending would exceed the " + c.fiefToView.name + " treasury by " + difference;
+                int difference = Convert.ToInt32(totalSpend - this.GetAvailableTreasury());
+                string toDisplay = "Expenditure adjustment CANCELLED; Your spending would exceed the " + this.name + " treasury by " + difference;
                 toDisplay += "\r\n\r\nTo increase expenditure, you must transfer funds from your Home Treasury.";
                 string user = this.owner.playerID;
                 if(!string.IsNullOrEmpty(user)) {
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
             // if treasury funds are sufficient to cover expenditure, do the commit
@@ -601,7 +595,7 @@ namespace hist_mmorpg
                 string user = this.owner.playerID;
                 if (user != null)
                 {
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
         }
@@ -962,7 +956,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The maximum tax rate is 100%.  Rate adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
             else if (tx < 0)
@@ -971,7 +965,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The minimum tax rate is 0%.  Rate adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 
@@ -1027,7 +1021,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The minimum officials expenditure is 0.  Amount adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 
@@ -1039,7 +1033,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The maximum officials expenditure for this fief is " + maxSpend + ".\r\nAmount adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 
@@ -1060,7 +1054,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The minimum infrastructure expenditure is 0.  Amount adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 
@@ -1072,7 +1066,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The maximum infrastructure expenditure for this fief is " + maxSpend + ".\r\nAmount adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
             this.infrastructureSpendNext = infs;
@@ -1092,7 +1086,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The minimum garrison expenditure is 0.  Amount adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 
@@ -1104,7 +1098,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The maximum garrison expenditure for this fief is " + maxSpend + ".\r\nAmount adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 
@@ -1125,7 +1119,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The minimum keep expenditure is 0.  Amount adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 
@@ -1137,7 +1131,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = "The maximum keep expenditure for this fief is " + maxSpend + ".\r\nAmount adjusted.";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 
@@ -2382,7 +2376,7 @@ namespace hist_mmorpg
                     if (!string.IsNullOrEmpty(user))
                     {
                         string toDisplay = "You cannot give away your home fief.";
-                        Globals_Game.UpdateUser(user, toDisplay);
+                        Globals_Game.UpdatePlayer(user, toDisplay);
                     }
                 }
 
@@ -2459,7 +2453,7 @@ namespace hist_mmorpg
                             if (!string.IsNullOrEmpty(user))
                             {
                                 string toDisplay = oldOwner.firstName + " " + oldOwner.familyName + " must select a new home fief.";
-                                Globals_Game.UpdateUser(user, toDisplay);
+                                Globals_Game.UpdatePlayer(user, toDisplay);
                             }
                         }
                     }
@@ -2470,7 +2464,7 @@ namespace hist_mmorpg
                         if (!string.IsNullOrEmpty(user))
                         {
                             string toDisplay = oldOwner.firstName + " " + oldOwner.familyName + " doesn't own any fiefs!  Defeat?";
-                            Globals_Game.UpdateUser(user, toDisplay);
+                            Globals_Game.UpdatePlayer(user, toDisplay);
                         }
                     }
                 }
@@ -3363,7 +3357,7 @@ namespace hist_mmorpg
                 if (!string.IsNullOrEmpty(user))
                 {
                     string toDisplay = toBeBarred.firstName + " " + toBeBarred.familyName + " has been ejected from the keep in " + this.name + ".";
-                    Globals_Game.UpdateUser(user, toDisplay);
+                    Globals_Game.UpdatePlayer(user, toDisplay);
                 }
             }
 

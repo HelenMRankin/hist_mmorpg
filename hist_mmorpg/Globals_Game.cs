@@ -69,7 +69,7 @@ namespace hist_mmorpg
         /// </summary>
         public static List<String> npcKeys = new List<String>();
         /// <summary>
-        /// Holds all PlayerCharacter objects
+        /// Holds all PlayerCharacter objects <charID, PlayerCharacter>
         /// </summary>
         public static Dictionary<string, PlayerCharacter> pcMasterList = new Dictionary<string, PlayerCharacter>();
         /// <summary>
@@ -494,7 +494,12 @@ namespace hist_mmorpg
             if (Globals_Game.CheckForExistingChallenge(challenge.placeID))
             {
                 success = false;
-                c.message = "There is already a challenge for the ownership of " + challenge.GetPlace().name + ". Only one challenge is permissable at a time.";
+                PlayerCharacter player = challenge.GetChallenger();
+                if (player != null)
+                {
+                    toDisplay = "There is already a challenge for the ownership of " + challenge.GetPlace().name + ". Only one challenge is permissable at a time.";
+                    UpdatePlayer(player.playerID, toDisplay);
+                }
             }
 
             else
@@ -1080,14 +1085,17 @@ namespace hist_mmorpg
         /// <summary>
         /// Sends an update to a particular user
         /// </summary>
-        /// <param name="user"></param>
+        /// <param name="player"></param>
         /// <param name="message"></param>
-        public static void UpdateUser(string user, string message)
+        public static void UpdatePlayer(string player, string message)
         {
+            if(string.IsNullOrWhiteSpace(player)||(string.IsNullOrWhiteSpace(message))) {
+                return;
+            }
             // if a user is currently signed in send the message direct to client
-            if (Globals_Server.clients.ContainsKey(user))
+            if (Globals_Server.clients.ContainsKey(player))
             {
-                Globals_Server.clients[user].Update(message);
+                Globals_Server.clients[player].Update(message);
             }
             // if user is away store message in database to view when user next logs in
             else

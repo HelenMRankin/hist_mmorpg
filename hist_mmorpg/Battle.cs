@@ -380,14 +380,14 @@ namespace hist_mmorpg
 
                         if (!battleHasCommenced)
                         {
-                            Globals_Game.UpdateUser(attacker.owner, "update:battle:You failed to bring the defending army to battle");
-                            Globals_Game.UpdateUser(defender.owner, "update:battle:An attacking army tried and failed to engage you in battle");
+                            Globals_Game.UpdatePlayer(attacker.owner, "update:battle:You failed to bring the defending army to battle");
+                            Globals_Game.UpdatePlayer(defender.owner, "update:battle:An attacking army tried and failed to engage you in battle");
                             defender.ProcessRetreat(1);
                         }
                         else
                         {
-                            Globals_Game.UpdateUser(defender.owner, "update:battle:You have been brought to battle by an opposing army!");
-                            Globals_Game.UpdateUser(attacker.owner, "update:battle:You have successfully brought the enemy army to battle!");
+                            Globals_Game.UpdatePlayer(defender.owner, "update:battle:You have been brought to battle by an opposing army!");
+                            Globals_Game.UpdatePlayer(attacker.owner, "update:battle:You have successfully brought the enemy army to battle!");
                         }
 
                     }
@@ -406,14 +406,14 @@ namespace hist_mmorpg
 
                 if (!battleHasCommenced)
                 {
-                    Globals_Game.UpdateUser(attacker.owner, "update:battle:You failed to bring the defending army to battle");
-                    Globals_Game.UpdateUser(defender.owner, "update:battle:An attacking army tried and failed to engage you in battle");
+                    Globals_Game.UpdatePlayer(attacker.owner, "update:battle:You failed to bring the defending army to battle");
+                    Globals_Game.UpdatePlayer(defender.owner, "update:battle:An attacking army tried and failed to engage you in battle");
                     defender.ProcessRetreat(1);
                 }
                 else
                 {
-                    Globals_Game.UpdateUser(defender.owner, "update:battle:You have been brought to battle by an opposing army!");
-                    Globals_Game.UpdateUser(attacker.owner, "update:battle:You have successfully brought the enemy army to battle!");
+                    Globals_Game.UpdatePlayer(defender.owner, "update:battle:You have been brought to battle by an opposing army!");
+                    Globals_Game.UpdatePlayer(attacker.owner, "update:battle:You have successfully brought the enemy army to battle!");
                 }
             }
 
@@ -862,8 +862,8 @@ namespace hist_mmorpg
 
             //ASK if both attacker and defender should receive message
             // display pop-up informational message
-            Globals_Game.UpdateUser(attacker.owner, "update:battle:BATTLE RESULTS," + toDisplay);
-            Globals_Game.UpdateUser(defender.owner, "update:battle:BATTLE RESULTS," + toDisplay);
+            Globals_Game.UpdatePlayer(attacker.owner, "update:battle:BATTLE RESULTS," + toDisplay);
+            Globals_Game.UpdatePlayer(defender.owner, "update:battle:BATTLE RESULTS," + toDisplay);
 
             // end siege if appropriate
             if (siegeRaised)

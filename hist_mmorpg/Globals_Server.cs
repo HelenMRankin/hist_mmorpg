@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CorrugatedIron;
-using CorrugatedIron.Models;
+//using CorrugatedIron;
+//using CorrugatedIron.Models;
+using RiakClient;
+using RiakClient.Models;
 
 namespace hist_mmorpg
 {
@@ -19,11 +21,11 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds target RiakCluster 
         /// </summary>
-        public static RiakCluster rCluster;
+        public static IRiakEndPoint rCluster;
         /// <summary>
         /// Holds RiakClient to communicate with RiakCluster
         /// </summary>
-        public static RiakClient rClient;
+        public static IRiakClient rClient;
         /// <summary>
         /// Holds next value for game ID
         /// </summary>

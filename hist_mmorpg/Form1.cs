@@ -28,7 +28,6 @@ namespace hist_mmorpg
         // ------------------- TEST METHODS
 
         /// <summary>
-        //ASK if players are allowed to have more than one character as this will affect how user character is stored/accessed
  
 
         /// <summary>

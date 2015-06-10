@@ -203,6 +203,12 @@ namespace hist_mmorpg
         {
             bool proceed = true;
             bool isPlayer = husband is PlayerCharacter;
+            bool isSonOfPlayer = (husband.GetFather()) is PlayerCharacter;
+            if (!isPlayer && !isSonOfPlayer)
+            {
+                //TODO error log
+                return false;
+            }
             // check is married
             // get spouse
             Character wife = husband.GetSpouse();
@@ -215,7 +221,7 @@ namespace hist_mmorpg
                     if (isPlayer)
                     {  
                         string message = "You have to be in the same fief to do that!";
-                        Globals_Game.UpdateUser(((PlayerCharacter)husband).user, message);
+                        Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, message);
                     }
                     proceed = false;
                 }
@@ -228,7 +234,7 @@ namespace hist_mmorpg
                         if (isPlayer)
                         {
                             string message = "error:birth:" + wife.firstName + " " + wife.familyName + " is already pregnant, milord.  Don't be so impatient!";
-                            Globals_Game.UpdateUser(((PlayerCharacter)husband).user,message);
+                            Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID,message);
                         }
                         proceed = false;
                     }
@@ -241,7 +247,7 @@ namespace hist_mmorpg
                             if (isPlayer)
                             {
                                 string message = "error:birth:I'm afraid the husband and wife are being separated by the ongoing siege.";
-                                Globals_Game.UpdateUser(((PlayerCharacter)husband).user, message);
+                                Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, message);
                             }
                             proceed = false;
                         }
@@ -256,7 +262,7 @@ namespace hist_mmorpg
                                 if (isPlayer)
                                 {
                                     string message = "error:birth:Sorry, you don't have enough time left for this in the current season.";
-                                    Globals_Game.UpdateUser(((PlayerCharacter)husband).user, message);
+                                    Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, message);
                                 }
                                 proceed = false;
                             }
@@ -286,7 +292,8 @@ namespace hist_mmorpg
                     }
                 }
             }
-            //ASK about what to display to who when not married
+            // If the husband is a player, alert the husband's user
+            // otherwise, the husband is the son of a player- alert the husband's father's user
             else
             {
                 string toDisplay;
@@ -300,7 +307,11 @@ namespace hist_mmorpg
                     whoThisIs = "This man is ";
                 }
                 toDisplay = "error:birth:," + whoThisIs + "not married, my lord.";
-                if(isPlayer) Globals_Game.UpdateUser(((PlayerCharacter)husband).user, toDisplay);
+                if(isPlayer) Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, toDisplay);
+                else
+                {
+                    Globals_Game.UpdatePlayer(((PlayerCharacter)husband.GetFather()).playerID, toDisplay);
+                }
                 proceed = false;
             }
 
