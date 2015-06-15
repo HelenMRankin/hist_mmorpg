@@ -56,7 +56,6 @@ namespace hist_mmorpg
             // ========= load JOURNALS
             Globals_Game.scheduledEvents = DatabaseRead.DatabaseRead_journal(gameID, "serverScheduledEvents");
             Globals_Game.pastEvents = DatabaseRead.DatabaseRead_journal(gameID, "serverPastEvents");
-            Globals_Client.myPastEvents = DatabaseRead.DatabaseRead_journal(gameID, "clientPastEvents");
 
             // ========= load victoryData
             foreach (string element in Globals_Game.victoryDataKeys)
@@ -71,8 +70,6 @@ namespace hist_mmorpg
             Globals_Game.loadFromCSV = DatabaseRead.DatabaseRead_bool(gameID, "loadFromCSV");
             Globals_Game.writeToDatabase = DatabaseRead.DatabaseRead_bool(gameID, "writeToDatabase");
             Globals_Game.statureCapInForce = DatabaseRead.DatabaseRead_bool(gameID, "statureCapInForce");
-            Globals_Client.showMessages = DatabaseRead.DatabaseRead_bool(gameID, "showMessages");
-            Globals_Client.showDebugMessages = DatabaseRead.DatabaseRead_bool(gameID, "showDebugMessages");
 
             // ========= load TRAITS
             foreach (string element in Globals_Game.traitKeys)
@@ -196,8 +193,7 @@ namespace hist_mmorpg
                 Globals_Game.goToList.Clear();
             }
 
-            // ========= read GLOBALS_GAME/CLIENT CHARACTER VARIABLES
-            Globals_Client.myPlayerCharacter = DatabaseRead.DatabaseRead_PcVariable(gameID, "myPlayerCharacter");
+            // ========= read GLOBALS_GAME CHARACTER VARIABLES
             Globals_Game.sysAdmin = DatabaseRead.DatabaseRead_PcVariable(gameID, "sysAdmin");
             Globals_Game.kingOne = DatabaseRead.DatabaseRead_PcVariable(gameID, "kingOne");
             Globals_Game.kingTwo = DatabaseRead.DatabaseRead_PcVariable(gameID, "kingTwo");
@@ -208,6 +204,23 @@ namespace hist_mmorpg
 
             // ========= load MAP
             Globals_Game.gameMap = DatabaseRead.DatabaseRead_map(gameID, "mapEdges");
+        }
+
+        //TODO
+        public static Client DatabaseRead_Client(string gameID, string clientID)
+        {
+            var newClient = Globals_Server.rClient.Get(gameID, clientID);
+            if (newClient.IsSuccess)
+            {
+                Client_Serialized client_ser = newClient.Value.GetObject<Client_Serialized>();
+
+                return client_ser.deserialise();
+            }
+            else
+            {
+                Globals_Server.logError("Failed to read client: " + clientID);
+                return null;
+            }
         }
 
         /// <summary>
@@ -224,10 +237,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve traitKeys from database.");
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve traitKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate nationalityKeys
@@ -238,10 +249,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve nationalityKeys from database.");
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve nationalityKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate langKeys
@@ -252,10 +261,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve langKeys from database.");
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve langKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate baseLangKeys
@@ -266,10 +273,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve baseLangKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve baseLangKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate rankKeys
@@ -280,10 +285,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve rankKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve rankKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate positionKeys
@@ -294,10 +297,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve positionKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve positionKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate npcKeys
@@ -308,10 +309,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve npcKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve npcKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate pcKeys
@@ -322,10 +321,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve pcKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve pcKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate kingKeys
@@ -336,10 +333,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve kingKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve kingKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate provKeys
@@ -350,10 +345,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve provKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve provKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate terrKeys
@@ -364,10 +357,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve terrKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve terrKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate victoryDataKeys
@@ -378,10 +369,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve victoryDataKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve victoryDataKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate fiefKeys
@@ -392,10 +381,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve fiefKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve fiefKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate armyKeys
@@ -406,10 +393,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve armyKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve armyKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
             // populate siegeKeys
@@ -420,10 +405,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve siegeKeys from database.");
-                }
+                string toDisplay ="InitialDBload: Unable to retrieve siegeKeys from database.";
+                Globals_Server.logError(toDisplay);
             }
 
         }
@@ -445,10 +428,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve GameClock " + clockID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve GameClock " + clockID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newClock;
@@ -471,10 +452,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Dictionary " + dictID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Dictionary " + dictID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newDict;
@@ -497,10 +476,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Dictionary " + dictID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Dictionary " + dictID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newDict;
@@ -523,10 +500,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Dictionary " + dictID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Dictionary " + dictID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newDict;
@@ -551,10 +526,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Dictionary " + dictID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Dictionary " + dictID;
+                Globals_Server.logError(toDisplay);
             }
 
             return dictOut;
@@ -598,10 +571,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Dictionary " + dictID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Dictionary " + dictID;
+                Globals_Server.logError(toDisplay);
             }
 
             return dictOut;
@@ -624,10 +595,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve newID variable " + newID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve newID variable " + newID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newIDout;
@@ -650,10 +619,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Journal " + journalID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Journal " + journalID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newJournal;
@@ -676,10 +643,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve VictoryData " + vicDataID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve VictoryData " + vicDataID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newVictoryData;
@@ -702,10 +667,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve trait " + traitID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve trait " + traitID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newTrait;
@@ -728,10 +691,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve BaseLanguage " + bLangID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve BaseLanguage " + bLangID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newBaseLang;
@@ -759,10 +720,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Language " + langID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Language " + langID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newLanguage;
@@ -803,10 +762,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Nationality " + natID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Nationality " + natID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newNat;
@@ -829,10 +786,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Rank " + rankID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Rank " + rankID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newRank;
@@ -860,10 +815,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Position " + posID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Position " + posID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newPos;
@@ -908,10 +861,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Siege " + siegeID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Siege " + siegeID;
+                Globals_Server.logError(toDisplay);
             }
 
             return mySiege;
@@ -935,10 +886,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Army " + armyID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Army " + armyID;
+                Globals_Server.logError(toDisplay);
             }
 
             return myArmy;
@@ -972,10 +921,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve NonPlayerCharacter " + npcID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve NonPlayerCharacter " + npcID;
+                Globals_Server.logError(toDisplay);
             }
 
             return myNPC;
@@ -1038,10 +985,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve PlayerCharacter " + pcID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve PlayerCharacter " + pcID;
+                Globals_Server.logError(toDisplay);
             }
 
             return myPC;
@@ -1117,10 +1062,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Province " + kingID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Province " + kingID;
+                Globals_Server.logError(toDisplay);
             }
 
             return myKing;
@@ -1145,10 +1088,8 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Kingdom " + ks.id + ": King not found (" + ks.owner + ")");
-                    }
+                    string toDisplay = "Kingdom " + ks.id + ": King not found (" + ks.owner + ")";
+                    Globals_Server.logError(toDisplay);
                 }
             }
 
@@ -1161,10 +1102,8 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Kingdom " + ks.id + ": Rank not found (" + ks.rank + ")");
-                    }
+                    string toDisplay = "Kingdom " + ks.id + ": Rank not found (" + ks.rank + ")";
+                    Globals_Server.logError(toDisplay);
                 }
             }
 
@@ -1177,10 +1116,8 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Kingdom " + ks.id + ": Nationality not found (" + ks.nationality + ")");
-                    }
+                    string toDisplay = "Kingdom " + ks.id + ": Nationality not found (" + ks.nationality + ")";
+                    Globals_Server.logError(toDisplay);
                 }
             }
 
@@ -1209,10 +1146,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Province " + provID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Province " + provID;
+                Globals_Server.logError(toDisplay);
             }
 
             return myProv;
@@ -1237,10 +1172,8 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Province " + ps.id + ": Overlord not found (" + ps.owner + ")");
-                    }
+                    string toDisplay = "Province " + ps.id + ": Overlord not found (" + ps.owner + ")";
+                    Globals_Server.logError(toDisplay);
                 }
             }
 
@@ -1261,10 +1194,8 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Province " + ps.id + ": Kingdom not found (" + ps.kingdom + ")");
-                    }
+                    string toDisplay = "Province " + ps.id + ": Kingdom not found (" + ps.kingdom + ")";
+                    Globals_Server.logError(toDisplay);
                 }
             }
 
@@ -1277,10 +1208,8 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Province " + ps.id + ": Rank not found (" + ps.rank + ")");
-                    }
+                    string toDisplay = "Province " + ps.id + ": Rank not found (" + ps.rank + ")";
+                    Globals_Server.logError(toDisplay);
                 }
             }
 
@@ -1304,10 +1233,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Terrain " + terrID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Terrain " + terrID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newTerrain;
@@ -1335,10 +1262,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Fief " + fiefID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Fief " + fiefID;
+                Globals_Server.logError(toDisplay);
             }
 
             return myFief;
@@ -1389,10 +1314,8 @@ namespace hist_mmorpg
                 else
                 {
                     fOut.bailiff = null;
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Unable to identify bailiff (" + fs.bailiff + ") for Fief " + fOut.id);
-                    }
+                    string toDisplay = "Unable to identify bailiff (" + fs.bailiff + ") for Fief " + fOut.id;
+                    Globals_Server.logError(toDisplay);
                 }
             }
 
@@ -1416,10 +1339,8 @@ namespace hist_mmorpg
                     }
                     else
                     {
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("Unable to identify character (" + fs.charactersInFief[i] + ") for Fief " + fOut.id);
-                        }
+                        string toDisplay = "Unable to identify character (" + fs.charactersInFief[i] + ") for Fief " + fOut.id;
+                        Globals_Server.logError(toDisplay);
                     }
 
                 }
@@ -1434,10 +1355,8 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("Fief " + fs.id + ": Rank not found (" + fs.rank + ")");
-                    }
+                    string toDisplay = "Fief " + fs.id + ": Rank not found (" + fs.rank + ")";
+                    Globals_Server.logError(toDisplay);
                 }
             }
 
@@ -1472,10 +1391,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("goTo queue processing: Character not found (" + cs.charID + ")");
-                }
+                string toDisplay = "goTo queue processing: Character not found (" + cs.charID + ")";
+                Globals_Server.logError(toDisplay);
             }
 
             if (success)
@@ -1514,10 +1431,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve Character variable " + charVarID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve Character variable " + charVarID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newPC;
@@ -1540,10 +1455,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve bool variable " + boolID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve bool variable " + boolID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newBool;
@@ -1571,10 +1484,8 @@ namespace hist_mmorpg
             }
             else
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("InitialDBload: Unable to retrieve map edges " + mapEdgesID);
-                }
+                string toDisplay = "InitialDBload: Unable to retrieve map edges " + mapEdgesID;
+                Globals_Server.logError(toDisplay);
             }
 
             return newMap;

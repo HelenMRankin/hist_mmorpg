@@ -72,10 +72,8 @@ namespace hist_mmorpg
             if (challenger == this.owner)
             {
                 proceed = false;
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("You already own " + this.name + "!");
-                }
+                string toDisplay = "You already own " + this.name + "!";
+                Globals_Game.UpdatePlayer(challenger.playerID, toDisplay);
             }
 
             else
@@ -131,18 +129,14 @@ namespace hist_mmorpg
             if (tx > 100)
             {
                 tx = 100;
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("The maximum tax rate is 100%.  Rate adjusted.");
-                }
+                string toDisplay = "The maximum tax rate is 100%.  Rate adjusted.";
+                Globals_Game.UpdatePlayer(this.owner.playerID, toDisplay);
             }
             else if (tx < 0)
             {
                 tx = 0;
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("The minimum tax rate is 0%.  Rate adjusted.");
-                }
+                string toDisplay = "The minimum tax rate is 0%.  Rate adjusted.";
+                Globals_Game.UpdatePlayer(this.owner.playerID, toDisplay);
             }
 
             this.taxRate = tx;

@@ -20,7 +20,6 @@ namespace hist_mmorpg
             double moneyPillagedTotal = 0;
             double moneyPillagedOwner = 0;
             double pillageMultiplier = 0;
-
             // get army leader
             Character armyLeader = a.GetLeader();
 
@@ -271,24 +270,20 @@ namespace hist_mmorpg
             // add new journal entry to pastEvents
             Globals_Game.AddPastEvent(pillageEntry);
 
-            // show message
-            if (Globals_Client.showMessages)
+            // set label
+            string messageLabel = "";
+
+            if (circumstance.Equals("pillage"))
             {
-                // set label
-                string messageLabel = "";
-
-                if (circumstance.Equals("pillage"))
-                {
-                    messageLabel += "PILLAGE ";
-                }
-                else if (circumstance.Equals("quellRebellion"))
-                {
-                    messageLabel += "QUELL REBELLION ";
-                }
-
-                // show message
-                System.Windows.Forms.MessageBox.Show(pillageDescription, messageLabel + "RESULTS");
+                messageLabel += "PILLAGE ";
             }
+            else if (circumstance.Equals("quellRebellion"))
+            {
+                messageLabel += "QUELL REBELLION ";
+            }
+            //TODO message handling
+            Globals_Game.UpdatePlayer(armyOwner.playerID,messageLabel + ":" + pillageDescription);
+            Globals_Game.UpdatePlayer(f.owner.playerID, messageLabel + ":" + pillageDescription);
         }
 
         /// <summary>
@@ -327,10 +322,9 @@ namespace hist_mmorpg
 
                 if (pillageCancelled)
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("The pillaging force has been forced to retreat by the fief's defenders!");
-                    }
+                    string toDisplay = "The pillaging force has been forced to retreat by the fief's defenders!";
+                    Globals_Game.UpdatePlayer(f.owner.playerID, toDisplay);
+                    Globals_Game.UpdatePlayer(a.owner, toDisplay);
                 }
 
                 else
@@ -338,10 +332,10 @@ namespace hist_mmorpg
                     // check still have enough days left
                     if (a.days < 7)
                     {
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("After giving battle, the pillaging army no longer has\r\nsufficient days for this operation.  Pillage cancelled.");
-                        }
+                        string toDisplay = "After giving battle, the pillaging army no longer has\r\nsufficient days for this operation.  Pillage cancelled.";
+                        Globals_Game.UpdatePlayer(f.owner.playerID, toDisplay);
+                        Globals_Game.UpdatePlayer(a.owner, toDisplay);
+                        
                         pillageCancelled = true;
                     }
                 }
@@ -378,17 +372,13 @@ namespace hist_mmorpg
                     proceed = false;
                     if (circumstance.Equals("pillage"))
                     {
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("You cannot pillage your own fief!  Pillage cancelled.");
-                        }
+                        string toDisplay = "You cannot pillage your own fief!  Pillage cancelled.";
+                        Globals_Game.UpdatePlayer(a.owner, toDisplay);
                     }
                     else if (circumstance.Equals("siege"))
                     {
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("You cannot besiege your own fief!  Siege cancelled.");
-                        }
+                        string toDisplay = "You cannot besiege your own fief!  Siege cancelled.";
+                        Globals_Game.UpdatePlayer(a.owner, toDisplay);
                     }
                 }
             }
@@ -402,17 +392,13 @@ namespace hist_mmorpg
                     proceed = false;
                     if (circumstance.Equals("pillage"))
                     {
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("You cannot pillage a fief that is under siege.  Pillage cancelled.");
-                        }
+                        string toDisplay = "You cannot pillage a fief that is under siege.  Pillage cancelled.";
+                        Globals_Game.UpdatePlayer(a.owner, toDisplay);
                     }
                     else if (circumstance.Equals("siege"))
                     {
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("This fief is already under siege.  Siege cancelled.");
-                        }
+                        string toDisplay = "This fief is already under siege.  Siege cancelled.";
+                        Globals_Game.UpdatePlayer(a.owner, toDisplay);
                     }
                 }
             }
@@ -427,10 +413,8 @@ namespace hist_mmorpg
                     if ((f.isPillaged) && (proceed))
                     {
                         proceed = false;
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("This fief has already been pillaged during\r\nthe current season.  Pillage cancelled.");
-                        }
+                        string toDisplay = "This fief has already been pillaged during\r\nthe current season.  Pillage cancelled.";
+                        Globals_Game.UpdatePlayer(a.owner, toDisplay);
                     }
                 }
             }
@@ -452,11 +436,8 @@ namespace hist_mmorpg
                 {
                     operation = "Siege";
                 }
-
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("This army has no leader.  " + operation + " cancelled.");
-                }
+                string toDisplay = "This army has no leader.  " + operation + " cancelled.";
+                Globals_Game.UpdatePlayer(a.owner, toDisplay);
             }
 
             // check has min days required
@@ -474,11 +455,8 @@ namespace hist_mmorpg
                     {
                         operation = "Pillage";
                     }
-
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("This army has too few days remaining for\r\na this operation.  " + operation + " cancelled.");
-                    }
+                    string toDisplay = "This army has too few days remaining for\r\na this operation.  " + operation + " cancelled.";
+                    Globals_Game.UpdatePlayer(a.owner, toDisplay);
                 }
             }
             else if (circumstance.Equals("siege"))
@@ -487,10 +465,8 @@ namespace hist_mmorpg
                 if ((a.days < 1) && (proceed))
                 {
                     proceed = false;
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show("This army has too few days remaining for\r\na siege operation.  Siege cancelled.");
-                    }
+                    string toDisplay = "This army has too few days remaining for\r\na siege operation.  Siege cancelled.";
+                    Globals_Game.UpdatePlayer(a.owner, toDisplay);
                 }
             }
 
@@ -525,11 +501,8 @@ namespace hist_mmorpg
                                 {
                                     operation = "Quell rebellion";
                                 }
-
-                                if (Globals_Client.showMessages)
-                                {
-                                    System.Windows.Forms.MessageBox.Show("There is at least one defending army (" + armyInFief.armyID + ") that must be defeated\r\nbefore you can conduct this operation.  " + operation + " cancelled.");
-                                }
+                                string toDisplay = "There is at least one defending army (" + armyInFief.armyID + ") that must be defeated\r\nbefore you can conduct this operation.  " + operation + " cancelled.";
+                                Globals_Game.UpdatePlayer(a.owner, toDisplay);
 
                                 break;
                             }
@@ -543,11 +516,8 @@ namespace hist_mmorpg
                     if (f.status.Equals('R'))
                     {
                         proceed = false;
-
-                        if (Globals_Client.showMessages)
-                        {
-                            System.Windows.Forms.MessageBox.Show("You cannot lay siege to a keep if the fief is in rebellion.", "OPERATION CANCELLED");
-                        }
+                        string toDisplay = "You cannot lay siege to a keep if the fief is in rebellion.";
+                        Globals_Game.UpdatePlayer(a.owner,toDisplay);
                     }
                 }
             }

@@ -62,5 +62,15 @@ namespace hist_mmorpg
             return gameID;
         }
 
+        //TODO
+        /// <summary>
+        /// Writes any errors encountered to a logfile
+        /// </summary>
+        /// <param name="error"></param>
+        public static void logError(String error)
+        {
+
+        }
+
     }
 }

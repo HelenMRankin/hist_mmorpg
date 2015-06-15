@@ -2185,31 +2185,10 @@ namespace hist_mmorpg
         /// <param name="type">string identify type of grant</param>
         /// <param name="priorToList">bool indicating if check is prior to listing possible candidates</param>
         /// <param name="armyID">string containing the army ID (if choosing a leader)</param>
-        /// <param name="c">client performing action</param>
-        public bool ChecksBeforeGranting(string type, bool priorToList, string armyID = null)
+        public bool ChecksBeforeGranting(PlayerCharacter granter, string type, bool priorToList, string armyID = null)
         {
             bool proceed = true;
             string toDisplay = "";
-            PlayerCharacter player = null;
-            if (this is PlayerCharacter)
-            {
-                if (!string.IsNullOrWhiteSpace((this as PlayerCharacter).playerID))
-                {
-                    player = this as PlayerCharacter;
-                }
-            }
-            else
-            {
-                NonPlayerCharacter npc = this as NonPlayerCharacter;
-                if (npc.GetHeadOfFamily() != null)
-                {
-                    player = npc.GetHeadOfFamily();
-                }
-                else
-                {
-                    player = npc.GetEmployer();
-                }
-            }
             // get army if appropriate
             Army armyToLead = null;
             if (!String.IsNullOrWhiteSpace(armyID))
@@ -2229,10 +2208,10 @@ namespace hist_mmorpg
                     proceed = false;
                     if (!priorToList)
                     {
-                        if (player!=null)
+                        if (granter!=null)
                         {
                             toDisplay = "Only a PlayerCharacter can receive a royal gift.";
-                            Globals_Game.UpdatePlayer(player.playerID, toDisplay);
+                            Globals_Game.UpdatePlayer(granter.playerID, toDisplay);
                         }
                     }
                 }
@@ -2245,10 +2224,10 @@ namespace hist_mmorpg
                         proceed = false;
                         if (!priorToList)
                         {
-                            if (player!=null)
+                            if (granter!=null)
                             {
                                 toDisplay = "Only a player can receive a royal gift.";
-                                Globals_Game.UpdatePlayer(player.playerID, toDisplay);
+                                Globals_Game.UpdatePlayer(granter.playerID, toDisplay);
                             }
                         }
                     }
@@ -2256,15 +2235,15 @@ namespace hist_mmorpg
                     else
                     {
                         // 3. check is not self
-                        if ((this as PlayerCharacter) == c.myPlayerCharacter)
+                        if ((this as PlayerCharacter) == granter)
                         {
                             proceed = false;
                             if (!priorToList)
                             {
-                                if (player!=null)
+                                if (granter!=null)
                                 {
                                     toDisplay = "You cannot grant a royal gift to yourself.";
-                                    Globals_Game.UpdatePlayer(player.playerID, toDisplay);
+                                    Globals_Game.UpdatePlayer(granter.playerID, toDisplay);
                                 }
                             }
                         }
@@ -2282,10 +2261,10 @@ namespace hist_mmorpg
                     proceed = false;
                     if (!priorToList)
                     {
-                        if (player!=null)
+                        if (granter!=null)
                         {
                             toDisplay = "The recieving character must be a male.";
-                            Globals_Game.UpdatePlayer(player.playerID, toDisplay);
+                            Globals_Game.UpdatePlayer(granter.playerID, toDisplay);
                         }
                     }
                 }
@@ -2298,10 +2277,10 @@ namespace hist_mmorpg
                         proceed = false;
                         if (!priorToList)
                         {
-                            if (player!=null)
+                            if (granter!=null)
                             {
                                 toDisplay = "The recieving character must be of age (14).";
-                                Globals_Game.UpdatePlayer(player.playerID, toDisplay);
+                                Globals_Game.UpdatePlayer(granter.playerID, toDisplay);
                             }
                         }
                     }
@@ -2315,10 +2294,10 @@ namespace hist_mmorpg
                             proceed = false;
                             if (!priorToList)
                             {
-                                if (player!=null)
+                                if (granter!=null)
                                 {
                                     toDisplay = "Army leaders must be in the same hex as the army they are to lead.";
-                                    Globals_Game.UpdatePlayer(player.playerID, toDisplay);
+                                    Globals_Game.UpdatePlayer(granter.playerID, toDisplay);
                                 }
                             }
                         }
@@ -2333,10 +2312,10 @@ namespace hist_mmorpg
                                     proceed = false;
                                     if (!priorToList)
                                     {
-                                        if (player!=null)
+                                        if (granter!=null)
                                         {
                                             toDisplay = "This character is already leading the selected army.";
-                                            Globals_Game.UpdatePlayer(player.playerID toDisplay);
+                                            Globals_Game.UpdatePlayer(granter.playerID, toDisplay);
                                         }
                                     }
                                 }
@@ -2364,13 +2343,14 @@ namespace hist_mmorpg
                             if (dialogResult == DialogResult.Cancel)
                             {
                                 proceed = false;
-                                if (hasClient)
+                              /*  if (hasClient)
                                 {
                                     toDisplay = "Appointment cancelled.";
                                     System.Windows.Forms.MessageBox.Show(toDisplay, "OPERATION CANCELLED");
-                                }
+                                }*/
                             }
                         }
+                       
                         //TODO confirm
                         // 2. warn if is currently employed as bailiff
                         if (proceed)
@@ -2395,11 +2375,11 @@ namespace hist_mmorpg
                                 if (dialogResult == DialogResult.Cancel)
                                 {
                                     proceed = false;
-                                    if (hasClient)
+                                    /*if (hasClient)
                                     {
                                         toDisplay = "Appointment cancelled.";
                                         Globals_Game.UpdatePlayer(c.user, toDisplay);
-                                    }
+                                    } */
                                 }
                             }
                         }
@@ -4964,6 +4944,7 @@ namespace hist_mmorpg
             npc.lastOffer.Clear();
         }
 
+        //TODO send success to client
         /// <summary>
         /// Fire an NPC
         /// </summary>
@@ -5886,10 +5867,7 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    if (Globals_Client.showMessages)
-                    {
-                        System.Windows.Forms.MessageBox.Show(toDisplay);
-                    }
+                    Globals_Game.UpdatePlayer(this.playerID, toDisplay);
                 }
             }
 
@@ -6033,10 +6011,10 @@ namespace hist_mmorpg
             : base(id, firstNam, famNam, dob, isM, nat, alive, mxHea, vir, go, lang, day, stat, mngmnt, cbt, trt, inK, preg, famID, sp, fath, moth, myTi, fia, ails, loc, aID)
         {
             // VALIDATION
-
             // EMPL
             if (!String.IsNullOrWhiteSpace(empl))
             {
+                //TODO exception handling
                 // trim and ensure 1st is uppercase
                 empl = Utility_Methods.FirstCharToUpper(empl.Trim());
 
@@ -6154,28 +6132,22 @@ namespace hist_mmorpg
             if (String.IsNullOrWhiteSpace(this.familyID))
             {
                 suitableHeir = false;
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("You must choose a family member as your heir.");
-                }
+                string toDisplay = "You must choose a family member as your heir.";
+                Globals_Game.UpdatePlayer(pc.playerID, toDisplay);
             }
 
             else if (this.familyID != pc.familyID)
             {
                 suitableHeir = false;
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("You must choose a family member as your heir.");
-                }
+                string toDisplay = "You must choose a family member as your heir.";
+                Globals_Game.UpdatePlayer(pc.playerID, toDisplay);
             }
 
             else if (!this.isMale)
             {
-                suitableHeir = false;
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("You cannot choose a female as your heir.");
-                }
+                suitableHeir = false; 
+                string toDisplay = "You cannot choose a female as your heir.";
+                Globals_Game.UpdatePlayer(pc.playerID, toDisplay);
             }
 
             return suitableHeir;

@@ -233,19 +233,13 @@ namespace hist_mmorpg
             // catch following IO exceptions that could be thrown by the StreamReader 
             catch (FileNotFoundException fnfe)
             {
+                Globals_Server.logError(fnfe.Message);
                 inputFileError = true;
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show(fnfe.Message);
-                }
             }
             catch (IOException ioe)
             {
                 inputFileError = true;
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show(ioe.Message);
-                }
+                Globals_Server.logError(ioe.Message);
             }
 
             // while there is data in the line
@@ -276,10 +270,11 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
-                            if (Globals_Client.showDebugMessages)
+                            //TODO error handling
+                           /* if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Fief object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -299,10 +294,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Province object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -322,10 +319,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Kingdom object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -345,10 +344,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create PlayerCharacter object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -368,10 +369,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create NonPlayerCharacter object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -392,10 +395,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Trait object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -415,10 +420,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Army object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -438,10 +445,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Language object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -461,10 +470,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create BaseLanguage object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -484,10 +495,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Nationality object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -508,10 +521,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling#
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Rank object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -531,10 +546,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Position object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -554,10 +571,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Siege object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -577,10 +596,12 @@ namespace hist_mmorpg
                         else
                         {
                             inputFileError = true;
+                            //TODO error handling
+                            /*
                             if (Globals_Client.showDebugMessages)
                             {
                                 MessageBox.Show("Unable to create Terrain object: " + lineParts[1]);
-                            }
+                            }*/
                         }
                     }
 
@@ -600,11 +621,12 @@ namespace hist_mmorpg
                         importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                         Globals_Game.AddPastEvent(importErrorEntry);
                     }
-
+                    //TODO error handling
+                    /*
                     if (Globals_Client.showDebugMessages)
                     {
                         MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                    }
+                    }*/
                 }
             }
 
@@ -1319,11 +1341,12 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
+                //TODO error handling
+                /*
                 if (Globals_Client.showDebugMessages)
                 {
                     MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                }*/
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -1335,11 +1358,12 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
+                //TODO error handling
+                /*
                 if (Globals_Client.showDebugMessages)
                 {
                     MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                }*/
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -1351,11 +1375,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -1367,11 +1387,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisFiefSer;
@@ -1425,11 +1441,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -1441,11 +1453,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -1457,11 +1465,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -1473,11 +1477,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisProvSer;
@@ -1527,11 +1527,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -1543,11 +1539,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -1559,11 +1551,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -1575,11 +1563,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisKingSer;
@@ -1817,11 +1801,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -1833,11 +1813,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -1849,11 +1825,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -1865,11 +1837,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisPcSer;
@@ -2014,11 +1982,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2030,11 +1994,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2046,11 +2006,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2062,11 +2018,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisNpcSer;
@@ -2139,11 +2091,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2155,11 +2103,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2171,11 +2115,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2187,11 +2127,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisTrait;
@@ -2250,11 +2186,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2266,11 +2198,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2282,11 +2210,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2298,11 +2222,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisArmy;
@@ -2338,11 +2258,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2354,11 +2270,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2370,11 +2282,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2386,11 +2294,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisLangSer;
@@ -2426,11 +2330,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2442,11 +2342,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2458,11 +2354,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2474,11 +2366,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisBaseLang;
@@ -2514,11 +2402,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2530,11 +2414,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2546,11 +2426,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2562,11 +2438,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisNat;
@@ -2641,11 +2513,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2657,11 +2525,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2673,11 +2537,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2689,11 +2549,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisRank;
@@ -2768,11 +2624,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2784,11 +2636,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2800,11 +2648,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2816,11 +2660,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisPosSer;
@@ -2896,11 +2736,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -2912,11 +2748,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -2928,11 +2760,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -2944,11 +2772,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisSiege;
@@ -2984,11 +2808,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + fe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + fe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + fe.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (ArgumentOutOfRangeException aoore)
@@ -3000,11 +2820,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + aoore.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + aoore.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + aoore.Message);
             }
             // catch exception that could be thrown by several checks in the Fief constructor
             catch (InvalidDataException ide)
@@ -3016,11 +2832,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + ide.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + ide.Message);
             }
             // catch exception that could result from incorrect numeric values
             catch (OverflowException oe)
@@ -3032,11 +2844,7 @@ namespace hist_mmorpg
                     importErrorEntry.description = "Line " + lineNum + ": " + oe.Message;
                     Globals_Game.AddPastEvent(importErrorEntry);
                 }
-
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show("Line " + lineNum + ": " + oe.Message);
-                }
+                Globals_Server.logError("Line " + lineNum + ": " + oe.Message);
             }
 
             return thisTerr;
@@ -3620,18 +3428,12 @@ namespace hist_mmorpg
             catch (FileNotFoundException fnfe)
             {
                 success = false;
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show(fnfe.Message);
-                }
+                Globals_Server.logError(fnfe.Message);
             }
             catch (IOException ioe)
             {
                 success = false;
-                if (Globals_Client.showDebugMessages)
-                {
-                    MessageBox.Show(ioe.Message);
-                }
+                Globals_Server.logError(ioe.Message);
             }
 
             // CREATE HEXMAP ARRAY

@@ -217,19 +217,22 @@ namespace hist_mmorpg
                     }
                     else
                     {
-                        Globals_Client.message
+                        //HACK
+                        /*
                         if (Globals_Client.showMessages)
                         {
                             System.Windows.Forms.MessageBox.Show("Error: JournalEntry not added.", "INSERTION ERROR");
-                        }
+                        }*/
                     }
                 }
                 catch (System.ArgumentException ae)
                 {
+                    //HACK
+                    /*
                     if (Globals_Client.showMessages)
                     {
                         System.Windows.Forms.MessageBox.Show(ae.Message + "\r\nPlease check for duplicate jEventID.", "INSERTION ERROR");
-                    }
+                    }*/
                 }
             }
 
@@ -282,6 +285,10 @@ namespace hist_mmorpg
         /// Holds JournalEntry ID
         /// </summary>
         public uint jEntryID { get; set; }
+        /// <summary>
+        /// Holds PlayerCharacter who owns entry
+        /// </summary>
+        public PlayerCharacter playerChar { get; set; }
         /// <summary>
         /// Holds event year
         /// </summary>
@@ -476,7 +483,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>byte indicating the level of priority</returns>
         /// <param name="jEntry">The JournalEntry</param>
-        public byte CheckEventForPriority()
+        public byte CheckEventForPriority(PlayerCharacter playerChar)
         {
             byte priority = 0;
 
@@ -489,7 +496,7 @@ namespace hist_mmorpg
                 {
                     thisRole = personaeSplit[1];
                 }
-                else if (personaeSplit[0].Equals(Globals_Client.myPlayerCharacter.charID))
+                else if (personaeSplit[0].Equals(playerChar.charID))
                 {
                     thisRole = personaeSplit[1];
                     break;
@@ -516,7 +523,7 @@ namespace hist_mmorpg
         /// Check to see if the JournalEntry is of interest to the player
         /// </summary>
         /// <returns>bool indicating whether the JournalEntry is of interest</returns>
-        public bool CheckEventForInterest()
+        public bool CheckEventForInterest(PlayerCharacter playerChar)
         {
             bool isOfInterest = false;
 
@@ -526,7 +533,7 @@ namespace hist_mmorpg
                 string thisPersonae = this.personae[i];
                 string[] thisPersonaeSplit = thisPersonae.Split('|');
 
-                if (thisPersonaeSplit[0].Equals(Globals_Client.myPlayerCharacter.charID)
+                if (thisPersonaeSplit[0].Equals(playerChar.charID)
                     || (thisPersonaeSplit[0].Equals("all")))
                 {
                     isOfInterest = true;
@@ -541,7 +548,7 @@ namespace hist_mmorpg
         /// Check to see if the JournalEntry requires that the proposal reply controls be enabled
         /// </summary>
         /// <returns>bool indicating whether the controls be enabled</returns>
-        public bool CheckForProposalControlsEnabled()
+        public bool CheckForProposalControlsEnabled(PlayerCharacter playerChar)
         {
             bool controlsEnabled = false;
 
@@ -556,7 +563,7 @@ namespace hist_mmorpg
                     {
                         string thisPersonae = this.personae[i];
                         string[] thisPersonaeSplit = thisPersonae.Split('|');
-                        if (thisPersonaeSplit[0].Equals(Globals_Client.myPlayerCharacter.charID))
+                        if (thisPersonaeSplit[0].Equals(playerChar.charID))
                         {
                             if (thisPersonaeSplit[1].Equals("headOfFamilyBride"))
                             {

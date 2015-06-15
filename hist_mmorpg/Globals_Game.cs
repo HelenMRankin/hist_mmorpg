@@ -486,7 +486,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating success</returns>
         /// <param name="challenge">OwnershipChallenge to be added</param>
-        public static bool AddOwnershipChallenge(OwnershipChallenge challenge, Client c)
+        public static bool AddOwnershipChallenge(OwnershipChallenge challenge)
         {
             bool success = true;
             string toDisplay = "";

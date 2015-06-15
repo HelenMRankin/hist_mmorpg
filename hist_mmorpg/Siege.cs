@@ -672,7 +672,6 @@ namespace hist_mmorpg
             string siegeText = "";
             Fief siegeLocation = this.GetFief();
             PlayerCharacter fiefOwner = siegeLocation.owner;
-            bool isDefender = (fiefOwner == Globals_Client.myPlayerCharacter);
             Army besieger = this.GetBesiegingArmy();
             PlayerCharacter besiegingPlayer = this.GetBesiegingPlayer();
             Army defenderGarrison = this.GetDefenderGarrison();
@@ -709,108 +708,95 @@ namespace hist_mmorpg
             // defending forces
             siegeText += "Defending forces: ";
             // only show details if player is defender
-            if (isDefender)
+            string defenderText = siegeText + "\r\nGarrison: " + defenderGarrison.armyID + "\r\n";
+            defenderText += "- Leader: ";
+           
+            if (defGarrLeader != null)
             {
-                // garrison details
-                siegeText += "\r\nGarrison: " + defenderGarrison.armyID + "\r\n";
-                siegeText += "- Leader: ";
-                if (defGarrLeader != null)
+                defenderText += defGarrLeader.firstName + " " + defGarrLeader.familyName + " (ID: " + defGarrLeader.charID + ")";
+            }
+            else
+            {
+                defenderText += "None";
+            }
+            defenderText += "\r\n";
+            defenderText += "- [Kn: " + defenderGarrison.troops[0] + ";  MAA: " + defenderGarrison.troops[1]
+                + ";  LCav: " + defenderGarrison.troops[2] + ";  Lng: " + defenderGarrison.troops[3]
+                + ";  Crss: " + defenderGarrison.troops[4] + ";  Ft: " + defenderGarrison.troops[5]
+                + ";  Rbl: " + defenderGarrison.troops[6] + "]";
+
+            // additional army details
+            if (defenderAdditional != null)
+            {
+                defenderText += "\r\n\r\nField army: " + defenderAdditional.armyID + "\r\n";
+                defenderText += "- Leader: ";
+                if (defAddLeader != null)
                 {
-                    siegeText += defGarrLeader.firstName + " " + defGarrLeader.familyName + " (ID: " + defGarrLeader.charID + ")";
+                    defenderText += defAddLeader.firstName + " " + defAddLeader.familyName + " (ID: " + defAddLeader.charID + ")";
                 }
                 else
                 {
-                    siegeText += "None";
+                    defenderText += "None";
                 }
-                siegeText += "\r\n";
-                siegeText += "- [Kn: " + defenderGarrison.troops[0] + ";  MAA: " + defenderGarrison.troops[1]
-                    + ";  LCav: " + defenderGarrison.troops[2] + ";  Lng: " + defenderGarrison.troops[3]
-                    + ";  Crss: " + defenderGarrison.troops[4] + ";  Ft: " + defenderGarrison.troops[5]
-                    + ";  Rbl: " + defenderGarrison.troops[6] + "]";
-
-                // additional army details
-                if (defenderAdditional != null)
-                {
-                    siegeText += "\r\n\r\nField army: " + defenderAdditional.armyID + "\r\n";
-                    siegeText += "- Leader: ";
-                    if (defAddLeader != null)
-                    {
-                        siegeText += defAddLeader.firstName + " " + defAddLeader.familyName + " (ID: " + defAddLeader.charID + ")";
-                    }
-                    else
-                    {
-                        siegeText += "None";
-                    }
-                    siegeText += "\r\n";
-                    siegeText += "- [Kn: " + defenderAdditional.troops[0] + ";  MAA: " + defenderAdditional.troops[1]
-                        + ";  LCav: " + defenderAdditional.troops[2] + ";  Lng: " + defenderAdditional.troops[3]
-                        + ";  Crss: " + defenderAdditional.troops[4] + ";  Ft: " + defenderAdditional.troops[5]
-                        + ";  Rbl: " + defenderAdditional.troops[6] + "]";
-                }
-
-                siegeText += "\r\n\r\nTotal defender casualties so far (including attrition): " + this.totalCasualtiesDefender;
+                defenderText += "\r\n";
+                defenderText += "- [Kn: " + defenderAdditional.troops[0] + ";  MAA: " + defenderAdditional.troops[1]
+                    + ";  LCav: " + defenderAdditional.troops[2] + ";  Lng: " + defenderAdditional.troops[3]
+                    + ";  Crss: " + defenderAdditional.troops[4] + ";  Ft: " + defenderAdditional.troops[5]
+                    + ";  Rbl: " + defenderAdditional.troops[6] + "]";
             }
+
+            defenderText += "\r\n\r\nTotal defender casualties so far (including attrition): " + this.totalCasualtiesDefender;
+
 
             // if player not defending, hide defending forces details
-            else
-            {
-                siegeText += "Unknown";
-            }
-            siegeText += "\r\n\r\n";
+            string attackerText = siegeText + "Unknown";
 
             // besieging forces
-            siegeText += "Besieging forces: ";
+            defenderText += "Besieging forces: ";
+            attackerText += "Besieging forces: ";
             // only show details if player is besieger
-            if (!isDefender)
+
+            // besieging forces details
+            attackerText += "\r\nField army: " + besieger.armyID + "\r\n";
+            attackerText += "- Leader: ";
+            if (besiegerLeader != null)
             {
-                // besieging forces details
-                siegeText += "\r\nField army: " + besieger.armyID + "\r\n";
-                siegeText += "- Leader: ";
-                if (besiegerLeader != null)
-                {
-                    siegeText += besiegerLeader.firstName + " " + besiegerLeader.familyName + " (ID: " + besiegerLeader.charID + ")";
-                }
-                else
-                {
-                    siegeText += "None";
-                }
-                siegeText += "\r\n";
-                siegeText += "- [Kn: " + besieger.troops[0] + ";  MAA: " + besieger.troops[1]
-                    + ";  LCav: " + besieger.troops[2] + ";  Lng: " + besieger.troops[3] + ";  Crss: " + besieger.troops[4]
-                    + ";  Ft: " + besieger.troops[5] + ";  Rbl: " + besieger.troops[6] + "]";
-
-                siegeText += "\r\n\r\nTotal attacker casualties so far (including attrition): " + this.totalCasualtiesAttacker;
+                attackerText += besiegerLeader.firstName + " " + besiegerLeader.familyName + " (ID: " + besiegerLeader.charID + ")";
             }
-
-            // if player not besieger, hide besieging forces details
             else
             {
-                siegeText += "Unknown";
+                attackerText += "None";
             }
+            attackerText += "\r\n";
+            attackerText += "- [Kn: " + besieger.troops[0] + ";  MAA: " + besieger.troops[1]
+                + ";  LCav: " + besieger.troops[2] + ";  Lng: " + besieger.troops[3] + ";  Crss: " + besieger.troops[4]
+                + ";  Ft: " + besieger.troops[5] + ";  Rbl: " + besieger.troops[6] + "]";
+
+            attackerText += "\r\n\r\nTotal attacker casualties so far (including attrition): " + this.totalCasualtiesAttacker;
+
+            defenderText += "Unknown";
             siegeText += "\r\n\r\n";
 
             // keep level
-            siegeText += "Keep level:\r\n";
-            // keep level at start
-            siegeText += "- at start of siege: " + this.startKeepLevel + "\r\n";
+            attackerText += "Keep level:\r\n - at start of siege: " + this.startKeepLevel + "\r\n";
+            defenderText += "Keep level:\r\n - at start of siege: " + this.startKeepLevel + "\r\n";
+
 
             // current keep level
-            siegeText += "- current: " + siegeLocation.keepLevel + "\r\n\r\n";
+            attackerText += "- current: " + siegeLocation.keepLevel + "\r\n\r\n";
+            defenderText += "- current: " + siegeLocation.keepLevel + "\r\n\r\n";
 
-            if (!isDefender)
-            {
-                siegeText += "Chance of success in next round:\r\n";
-                // chance of storm success
-                /* double keepLvl = this.calcStormKeepLevel(s);
-                double successChance = this.calcStormSuccess(keepLvl); */
-                // get battle values for both armies
-                uint[] battleValues = besieger.CalculateBattleValues(defenderGarrison, Convert.ToInt32(siegeLocation.keepLevel));
-                double successChance = Battle.CalcVictoryChance(battleValues[0], battleValues[1]);
-                siegeText += "- storm: " + successChance + "\r\n";
+            attackerText += "Chance of success in next round:\r\n";
+            // chance of storm success
+            /* double keepLvl = this.calcStormKeepLevel(s);
+            double successChance = this.calcStormSuccess(keepLvl); */
+            // get battle values for both armies
+            uint[] battleValues = besieger.CalculateBattleValues(defenderGarrison, Convert.ToInt32(siegeLocation.keepLevel));
+            double successChance = Battle.CalcVictoryChance(battleValues[0], battleValues[1]);
+            attackerText += "- storm: " + successChance + "\r\n";
 
-                // chance of negotiated success
-                siegeText += "- negotiated: " + successChance / 2 + "\r\n\r\n";
-            }
+            // chance of negotiated success
+            attackerText += "- negotiated: " + successChance / 2 + "\r\n\r\n";
 
             return siegeText;
         }
@@ -838,10 +824,8 @@ namespace hist_mmorpg
             if (this.days < daysRequired)
             {
                 proceed = false;
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("There are not enough days remaining for this\r\na siege operation.  Operation cancelled.");
-                }
+                string toDisplay = "There are not enough days remaining for this\r\na siege operation.  Operation cancelled.";
+                Globals_Game.UpdatePlayer(GetBesiegingPlayer().playerID, toDisplay);
             }
 
             return proceed;
@@ -1234,10 +1218,7 @@ namespace hist_mmorpg
             this.totalCasualtiesDefender += Convert.ToInt32(defenderCasualties);
 
             // inform player of success
-            if (Globals_Client.showMessages)
-            {
-                System.Windows.Forms.MessageBox.Show(siegeDescription);
-            }
+            Globals_Game.UpdatePlayer(GetDefendingPlayer().playerID, siegeDescription);
 
             return negotiateSuccess;
         }
@@ -1286,10 +1267,9 @@ namespace hist_mmorpg
             if (siegeRaised)
             {
                 // NOTE: if sally was success, siege is ended in Form1.giveBattle
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("The defenders have successfully raised the siege!");
-                }
+                string toDisplay = "The defenders have successfully raised the siege!";
+                Globals_Game.UpdatePlayer(GetDefendingPlayer().playerID, toDisplay);
+                Globals_Game.UpdatePlayer(GetBesiegingPlayer().playerID, toDisplay);
             }
 
             else

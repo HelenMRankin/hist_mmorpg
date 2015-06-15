@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using QuickGraph;
-using CorrugatedIron;
-using CorrugatedIron.Models;
-
+using RiakClient;
+using RiakClient.Models;
 namespace hist_mmorpg
 {
     public static class DatabaseWrite
@@ -412,17 +411,17 @@ namespace hist_mmorpg
 
             foreach (KeyValuePair<string, Client> pair in Globals_Server.clients)
             {
-                DatabaseWrite.DatabaseWrite_Journal(gameID, "clientPastEvents", pair.Value.myPastEvents);
+                DatabaseWrite.DatabaseWrite_Journal(gameID, pair.Value.user+"_journal", pair.Value.myPastEvents);
                 // Globals_Client.myPlayerCharacter
                 if (pair.Value.myPlayerCharacter != null)
                 {
-                    DatabaseWrite.DatabaseWrite_String(gameID, "myPlayerCharacter", pair.Value.myPlayerCharacter.charID);
+                    DatabaseWrite.DatabaseWrite_String(gameID, pair.Value.user+"_playerChar", pair.Value.myPlayerCharacter.charID);
                 }
 
                 // Globals_Client.showMessages
-                DatabaseWrite.DatabaseWrite_Bool(gameID, "showMessages", pair.Value.showMessages);
+                DatabaseWrite.DatabaseWrite_Bool(gameID, pair.Value.user+"_showMessages", pair.Value.showMessages);
                 // Globals_Client.showDebugMessages
-                DatabaseWrite.DatabaseWrite_Bool(gameID, "showDebugMessages", pair.Value.showDebugMessages);
+                DatabaseWrite.DatabaseWrite_Bool(gameID, pair.Value.user+"_showDebugMessages", pair.Value.showDebugMessages);
             }
 
         }
@@ -437,15 +436,12 @@ namespace hist_mmorpg
         public static bool DatabaseWrite_KeyList<T>(string gameID, string k, List<T> kl)
         {
 
-            var rList = new RiakObject(gameID, k, kl);
+            RiakClient.Models.RiakObject rList = new RiakObject(gameID, k, kl);
             var putListResult = Globals_Server.rClient.Put(rList);
 
             if (!putListResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Key list " + rList.Key + " to bucket " + rList.Bucket);
-                }
+                Globals_Server.logError("Write failed: Key list " + rList.Key + " to bucket " + rList.Bucket);
             }
 
             return putListResult.IsSuccess;
@@ -464,10 +460,7 @@ namespace hist_mmorpg
 
             if (!putClockResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: GameClock to bucket " + rClock.Bucket);
-                }
+                Globals_Server.logError("Write failed: GameClock to bucket " + rClock.Bucket);
             }
 
             return putClockResult.IsSuccess;
@@ -487,10 +480,7 @@ namespace hist_mmorpg
 
             if (!putDictResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Dictionary " + key + " to bucket " + rDict.Bucket);
-                }
+                Globals_Server.logError("Write failed: Dictionary " + key + " to bucket " + rDict.Bucket);
             }
 
             return putDictResult.IsSuccess;
@@ -530,10 +520,7 @@ namespace hist_mmorpg
 
             if (!putJournalResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Journal " + key + " to bucket " + rJournal.Bucket);
-                }
+                Globals_Server.logError("Write failed: Journal " + key + " to bucket " + rJournal.Bucket);
             }
 
             return putJournalResult.IsSuccess;
@@ -545,10 +532,7 @@ namespace hist_mmorpg
             var putStringResult = Globals_Server.rClient.Put(rString);
             if (!putStringResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: String variable " + key + " to bucket " + rString.Bucket);
-                }
+                Globals_Server.logError("Write failed: String variable " + key + " to bucket " + rString.Bucket);
             }
 
             return putStringResult.IsSuccess;
@@ -569,10 +553,7 @@ namespace hist_mmorpg
 
             if (!putStringResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: String variable " + key + " to bucket " + rString.Bucket);
-                }
+                Globals_Server.logError("Write failed: String variable " + key + " to bucket " + rString.Bucket);
             }
 
             return putStringResult.IsSuccess;
@@ -592,10 +573,7 @@ namespace hist_mmorpg
 
             if (!putCharVarResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: newID variable " + key + " to bucket " + rCharVar.Bucket);
-                }
+                Globals_Server.logError("Write failed: newID variable " + key + " to bucket " + rCharVar.Bucket);
             }
 
             return putCharVarResult.IsSuccess;
@@ -615,10 +593,7 @@ namespace hist_mmorpg
 
             if (!putBoolResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Bool variable " + key + " to bucket " + rBool.Bucket);
-                }
+                Globals_Server.logError("Write failed: Bool variable " + key + " to bucket " + rBool.Bucket);
             }
 
             return putBoolResult.IsSuccess;
@@ -637,10 +612,7 @@ namespace hist_mmorpg
 
             if (!putTraitResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Trait " + rTrait.Key + " to bucket " + rTrait.Bucket);
-                }
+                Globals_Server.logError("Write failed: Trait " + rTrait.Key + " to bucket " + rTrait.Bucket);
             }
 
             return putTraitResult.IsSuccess;
@@ -660,10 +632,7 @@ namespace hist_mmorpg
 
             if (!putBaseLanguageResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: BaseLanguage " + rBaseLanguage.Key + " to bucket " + rBaseLanguage.Bucket);
-                }
+                Globals_Server.logError("Write failed: BaseLanguage " + rBaseLanguage.Key + " to bucket " + rBaseLanguage.Bucket);
             }
 
             return putBaseLanguageResult.IsSuccess;
@@ -690,10 +659,7 @@ namespace hist_mmorpg
 
             if (!putLanguageResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Language " + rLanguage.Key + " to bucket " + rLanguage.Bucket);
-                }
+                Globals_Server.logError("Write failed: Language " + rLanguage.Key + " to bucket " + rLanguage.Bucket);
             }
 
             return putLanguageResult.IsSuccess;
@@ -725,10 +691,7 @@ namespace hist_mmorpg
 
             if (!putNationalityResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Nationality " + rNationality.Key + " to bucket " + rNationality.Bucket);
-                }
+                Globals_Server.logError("Write failed: Nationality " + rNationality.Key + " to bucket " + rNationality.Bucket);
             }
 
             return putNationalityResult.IsSuccess;
@@ -748,10 +711,7 @@ namespace hist_mmorpg
 
             if (!putRankResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Rank " + rRank.Key + " to bucket " + rRank.Bucket);
-                }
+                Globals_Server.logError("Write failed: Rank " + rRank.Key + " to bucket " + rRank.Bucket);
             }
 
             return putRankResult.IsSuccess;
@@ -777,10 +737,7 @@ namespace hist_mmorpg
 
             if (!putPosResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Position " + rPos.Key + " to bucket " + rPos.Bucket);
-                }
+                Globals_Server.logError("Write failed: Position " + rPos.Key + " to bucket " + rPos.Bucket);
             }
 
             return putPosResult.IsSuccess;
@@ -819,10 +776,7 @@ namespace hist_mmorpg
 
             if (!putNPCresult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: NPC " + rNPC.Key + " to bucket " + rNPC.Bucket);
-                }
+                Globals_Server.logError("Write failed: NPC " + rNPC.Key + " to bucket " + rNPC.Bucket);
             }
 
             return putNPCresult.IsSuccess;
@@ -861,10 +815,7 @@ namespace hist_mmorpg
 
             if (!putPCresult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: PC " + rPC.Key + " to bucket " + rPC.Bucket);
-                }
+                Globals_Server.logError("Write failed: PC " + rPC.Key + " to bucket " + rPC.Bucket);
             }
 
             return putPCresult.IsSuccess;
@@ -902,10 +853,7 @@ namespace hist_mmorpg
 
             if (!putKingResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Kingdom " + rKing.Key + " to bucket " + rKing.Bucket);
-                }
+                Globals_Server.logError("Write failed: Kingdom " + rKing.Key + " to bucket " + rKing.Bucket);
             }
 
             return putKingResult.IsSuccess;
@@ -943,10 +891,7 @@ namespace hist_mmorpg
 
             if (!putProvResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Province " + rProv.Key + " to bucket " + rProv.Bucket);
-                }
+                Globals_Server.logError("Write failed: Province " + rProv.Key + " to bucket " + rProv.Bucket);
             }
 
             return putProvResult.IsSuccess;
@@ -978,10 +923,7 @@ namespace hist_mmorpg
 
             if (!putTerrainResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Terrain " + rTerrain.Key + " to bucket " + rTerrain.Bucket);
-                }
+                Globals_Server.logError("Write failed: Terrain " + rTerrain.Key + " to bucket " + rTerrain.Bucket);
             }
 
             return putTerrainResult.IsSuccess;
@@ -1001,10 +943,7 @@ namespace hist_mmorpg
 
             if (!putVictoryDataResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: VictoryData " + rVictoryData.Key + " to bucket " + rVictoryData.Bucket);
-                }
+                Globals_Server.logError("Write failed: VictoryData " + rVictoryData.Key + " to bucket " + rVictoryData.Bucket);
             }
 
             return putVictoryDataResult.IsSuccess;
@@ -1030,10 +969,7 @@ namespace hist_mmorpg
 
             if (!putFiefResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Fief " + rFief.Key + " to bucket " + rFief.Bucket);
-                }
+                Globals_Server.logError("Write failed: Fief " + rFief.Key + " to bucket " + rFief.Bucket);
             }
 
             return putFiefResult.IsSuccess;
@@ -1064,10 +1000,7 @@ namespace hist_mmorpg
 
             if (!putArmyResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Army " + rArmy.Key + " to bucket " + rArmy.Bucket);
-                }
+                Globals_Server.logError("Write failed: Army " + rArmy.Key + " to bucket " + rArmy.Bucket);
             }
 
             return putArmyResult.IsSuccess;
@@ -1086,10 +1019,7 @@ namespace hist_mmorpg
 
             if (!putSiegeResult.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Siege " + rSiege.Key + " to bucket " + rSiege.Bucket);
-                }
+                Globals_Server.logError("Write failed: Siege " + rSiege.Key + " to bucket " + rSiege.Bucket);
             }
 
             return putSiegeResult.IsSuccess;
@@ -1115,10 +1045,7 @@ namespace hist_mmorpg
 
             if (!putMapResultE.IsSuccess)
             {
-                if (Globals_Client.showMessages)
-                {
-                    System.Windows.Forms.MessageBox.Show("Write failed: Map edges collection " + rMapE.Key + " to bucket " + rMapE.Bucket);
-                }
+                Globals_Server.logError("Write failed: Map edges collection " + rMapE.Key + " to bucket " + rMapE.Bucket);
             }
 
             return putMapResultE.IsSuccess;

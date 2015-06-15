@@ -80,51 +80,14 @@
     <Compile Include="Birth.cs" />
     <Compile Include="Character.cs" />
     <Compile Include="Client.cs" />
-    <Compile Include="Game.cs" />
-    <Compile Include="Server.cs" />
-    <Compile Include="CSVimport.cs" />
+    <Compile Include="CSVimport.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DatabaseRead.cs" />
     <Compile Include="DatabaseWrite.cs" />
+    <Compile Include="Game.cs" />
+    <Compile Include="Server.cs" />
     <Compile Include="Fief.cs" />
-    <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Form1_army.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_character.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_fief.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_household.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_journal.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_marriage.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_meetingPlace.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_movement.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_royal_overlord.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_siege_pillage_rebellion.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1_sysAdmin.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="GameClock.cs" />
     <Compile Include="Globals_Game.cs" />
     <Compile Include="Globals_Server.cs" />
@@ -140,19 +103,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Province.cs" />
     <Compile Include="Rank.cs" />
-    <Compile Include="SelectionForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SelectionForm.Designer.cs">
-      <DependentUpon>SelectionForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Siege.cs" />
     <Compile Include="Trait.cs" />
     <Compile Include="Terrain.cs" />
     <Compile Include="Utility_Methods.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -163,9 +117,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="SelectionForm.resx">
-      <DependentUpon>SelectionForm.cs</DependentUpon>
-    </EmbeddedResource>
     <None Include="app.config" />
     <None Include="CSVs\gameObjects.csv" />
     <None Include="CSVs\map.csv" />

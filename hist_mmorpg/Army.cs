@@ -3,18 +3,23 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Windows.Forms;
+using ProtoBuf;
 
 namespace hist_mmorpg 
 {
     /// <summary>
     /// Class storing data on army 
     /// </summary>
+    /// 
+    [ProtoContract]
     public class Army 
     {
         //TODO Fix boolean logic 
 		/// <summary>
 		/// Holds army ID
 		/// </summary>
+        
+        [ProtoMember(1)]
 		public String armyID { get; set; }
         /// <summary>
         /// Holds troops in army
@@ -26,34 +31,42 @@ namespace hist_mmorpg
         /// 5 = foot
         /// 6 = rabble
         /// </summary>
+        [ProtoMember(2)]
         public uint[] troops = new uint[7] {0, 0, 0, 0, 0, 0, 0};
         /// <summary>
         /// Holds army leader (ID)
         /// </summary>
+        [ProtoMember(3)]
         public string leader { get; set; }
         /// <summary>
         /// Holds army owner (ID)
         /// </summary>
+        [ProtoMember(4)]
         public string owner { get; set; }
         /// <summary>
         /// Holds army's remaining days in season
         /// </summary>
+        [ProtoMember(5)]
         public double days { get; set; }
         /// <summary>
         /// Holds army location (fiefID)
         /// </summary>
+        [ProtoMember(6)]
         public string location { get; set; }
         /// <summary>
         /// Indicates whether army is being actively maintained by owner
         /// </summary>
+        [ProtoMember(7)]
         public bool isMaintained { get; set; }
         /// <summary>
         /// Indicates army's aggression level (automated response to combat)
         /// </summary>
+        [ProtoIgnore]
         public byte aggression { get; set; }
         /// <summary>
         /// Indicates army's combat odds value (i.e. at what odds will attempt automated combat action)
         /// </summary>
+        [global::ProtoBuf.ProtoMember(9)]
         public byte combatOdds { get; set; }
 
         /// <summary>
@@ -137,7 +150,6 @@ namespace hist_mmorpg
                 this.troops = trp;
             }
         }
-
         /// <summary>
         /// Constructor for Army taking no parameters.
         /// For use when de-serialising.
@@ -1828,5 +1840,10 @@ namespace hist_mmorpg
                 }
             }
         }
+  
+     /*   public void Serialize()
+        {
+            Serializer.Serialize(File.Create("myTest.txt"), this);
+        }*/
     }
 }
