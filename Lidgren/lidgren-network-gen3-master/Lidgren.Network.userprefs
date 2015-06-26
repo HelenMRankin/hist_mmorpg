@@ -1,0 +1,14 @@
+﻿<Properties StartupItem="Lidgren.Network/Lidgren.Network.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="e:\Lidgren\lidgren-network-gen3-master\Lidgren.Network\NetPeer.Internal.cs">
+    <Files>
+      <File FileName="F:\Games\UnityLearning\Lidgren testing\Assets\Scripts\Network.cs" Line="39" Column="20" />
+      <File FileName="e:\Lidgren\lidgren-network-gen3-master\Lidgren.Network\NetPeer.Internal.cs" Line="52" Column="104" />
+      <File FileName="e:\Lidgren\lidgren-network-gen3-master\Lidgren.Network\NetBuffer.Read.Reflection.cs" Line="101" Column="28" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

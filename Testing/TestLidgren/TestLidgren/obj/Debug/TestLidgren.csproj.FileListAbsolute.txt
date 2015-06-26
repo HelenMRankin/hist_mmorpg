@@ -1,0 +1,17 @@
+c:\users\cluel_000\documents\visual studio 2013\Projects\TestLidgren\TestLidgren\bin\Debug\TestLidgren.exe.config
+c:\users\cluel_000\documents\visual studio 2013\Projects\TestLidgren\TestLidgren\bin\Debug\TestLidgren.exe
+c:\users\cluel_000\documents\visual studio 2013\Projects\TestLidgren\TestLidgren\bin\Debug\TestLidgren.pdb
+c:\users\cluel_000\documents\visual studio 2013\Projects\TestLidgren\TestLidgren\bin\Debug\Lidgren.Network.dll
+c:\users\cluel_000\documents\visual studio 2013\Projects\TestLidgren\TestLidgren\bin\Debug\Lidgren.Network.pdb
+c:\users\cluel_000\documents\visual studio 2013\Projects\TestLidgren\TestLidgren\obj\Debug\TestLidgren.exe
+c:\users\cluel_000\documents\visual studio 2013\Projects\TestLidgren\TestLidgren\obj\Debug\TestLidgren.pdb
+E:\Testing\TestLidgren\TestLidgren\bin\Debug\TestLidgren.exe.config
+E:\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.exe
+E:\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.pdb
+E:\Testing\TestLidgren\TestLidgren\bin\Debug\TestLidgren.exe
+E:\Testing\TestLidgren\TestLidgren\bin\Debug\TestLidgren.pdb
+E:\Testing\TestLidgren\TestLidgren\bin\Debug\Lidgren.Network.dll
+E:\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.csprojResolveAssemblyReference.cache
+E:\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.dll
+E:\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.pdb
+E:\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.xml

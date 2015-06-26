@@ -1,0 +1,16 @@
+﻿<Properties StartupItem="RiakTest/RiakTest.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="RiakTest/RiakDatabase.cs">
+    <Files>
+      <File FileName="RiakTest/MySQLDatabase.cs" Line="1" Column="1" />
+      <File FileName="RiakTest/Program.cs" Line="1" Column="1" />
+      <File FileName="RiakTest/Tester.cs" Line="82" Column="5" />
+      <File FileName="RiakTest/DataSet.cs" Line="1" Column="1" />
+      <File FileName="RiakTest/RiakDatabase.cs" Line="67" Column="65" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

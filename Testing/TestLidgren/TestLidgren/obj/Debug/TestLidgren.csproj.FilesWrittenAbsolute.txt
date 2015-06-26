@@ -1,0 +1,8 @@
+/media/1092-409E/Testing/TestLidgren/TestLidgren/obj/Debug/.NETFramework,Version=v4.5.1.AssemblyAttribute.cs
+/media/1092-409E/Testing/TestLidgren/TestLidgren/bin/Debug/TestLidgren.exe.config
+/media/1092-409E/Testing/TestLidgren/TestLidgren/bin/Debug/TestLidgren.exe.mdb
+/media/1092-409E/Testing/TestLidgren/TestLidgren/bin/Debug/TestLidgren.exe
+/media/1092-409E/Testing/TestLidgren/TestLidgren/obj/Debug/TestLidgren.exe
+/media/1092-409E/Testing/TestLidgren/TestLidgren/obj/Debug/TestLidgren.exe.mdb
+/media/1092-409E/Testing/TestLidgren/TestLidgren/bin/Debug/Lidgren.Network.dll
+/media/1092-409E/Testing/TestLidgren/TestLidgren/obj/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs

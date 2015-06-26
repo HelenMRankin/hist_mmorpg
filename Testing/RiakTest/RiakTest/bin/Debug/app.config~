@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <configSections>
+    <section name="riakConfig" type="RiakClient.Config.RiakClusterConfiguration, RiakClient" />
+  </configSections>
+  <riakConfig>
+    <nodes>
+      <node name="dev1" hostAddress="127.0.0.1" pbcPort="10017" poolSize="50" />
+      <node name="dev2" hostAddress="127.0.0.1" pbcPort="10027" poolSize="50" />
+      <node name="dev3" hostAddress="127.0.0.1" pbcPort="10037" poolSize="50" />
+      <node name="dev4" hostAddress="127.0.0.1" pbcPort="10047" poolSize="50" />
+      <node name="dev5" hostAddress="127.0.0.1" pbcPort="10057" poolSize="50" />
+    </nodes>
+  </riakConfig>
+</configuration>

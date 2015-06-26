@@ -1,0 +1,10 @@
+/media/helen/1092-409E/RiakTest/RiakTest/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/media/helen/1092-409E/RiakTest/RiakTest/bin/Debug/RiakTest.exe.mdb
+/media/helen/1092-409E/RiakTest/RiakTest/bin/Debug/RiakTest.exe
+/media/helen/1092-409E/RiakTest/RiakTest/obj/x86/Debug/RiakTest.exe
+/media/helen/1092-409E/RiakTest/RiakTest/obj/x86/Debug/RiakTest.exe.mdb
+/media/helen/1092-409E/RiakTest/RiakTest/bin/Debug/RiakClient.dll
+/media/helen/1092-409E/RiakTest/RiakTest/bin/Debug/protobuf-net.dll
+/media/helen/1092-409E/RiakTest/RiakTest/bin/Debug/Newtonsoft.Json.dll
+/media/helen/1092-409E/RiakTest/RiakTest/bin/Debug/MySql.Data.dll
+/media/helen/1092-409E/RiakTest/RiakTest/bin/Debug/MySql.Data.Entity.dll
