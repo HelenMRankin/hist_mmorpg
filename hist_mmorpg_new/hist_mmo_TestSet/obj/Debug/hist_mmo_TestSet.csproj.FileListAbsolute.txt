@@ -1,0 +1,16 @@
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\hist_mmo_TestSet.dll
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\hist_mmo_TestSet.pdb
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\hist_mmorpg.exe
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\protobuf-net.dll
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\QuickGraph.dll
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\RiakClient.dll
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Newtonsoft.Json.dll
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\hist_mmorpg.pdb
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\protobuf-net.pdb
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\protobuf-net.xml
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\QuickGraph.xml
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\RiakClient.xml
+E:\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Newtonsoft.Json.xml
+E:\hist_mmorpg\hist_mmo_TestSet\obj\Debug\hist_mmo_TestSet.csprojResolveAssemblyReference.cache
+E:\hist_mmorpg\hist_mmo_TestSet\obj\Debug\hist_mmo_TestSet.dll
+E:\hist_mmorpg\hist_mmo_TestSet\obj\Debug\hist_mmo_TestSet.pdb
