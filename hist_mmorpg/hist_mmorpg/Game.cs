@@ -12,7 +12,7 @@ namespace hist_mmorpg
     /// For example, if a server gets an incoming message from a client and finds that it is some game action to be taken,
     /// it might send this to Game, where the precise action will be determined from the message, carried out and the result send back via server
     /// </summary>
-    public class Game<T>
+    public class Game
     {
         public Game()
         {
@@ -1108,12 +1108,12 @@ namespace hist_mmorpg
                 PlayerCharacter pc;
                 if (string.IsNullOrWhiteSpace(charID))
                 {
-                    Globals_Game.UpdatePlayer(user, "error:game:Please enter a PlayerCharacter ID");
+                    Globals_Game.UpdatePlayer(user, DisplayMessages.SwitchPlayerErrorNoID);
                 }
                 // Checks that the character is available
                 if (!Globals_Game.pcMasterList.ContainsKey(charID) || Globals_Game.userChars.ContainsValue(Globals_Game.pcMasterList[charID]))
                 {
-                    Globals_Game.UpdatePlayer(user, "error:game:This is not a valid player character");
+                    Globals_Game.UpdatePlayer(user, DisplayMessages.SwitchPlayerErrorIDInvalid);
                 }
                 else
                 {
@@ -1129,6 +1129,102 @@ namespace hist_mmorpg
                         c.fiefToView = pc.location;
                     }
                 }
+            }
+        }
+
+        public static ProtoMessage ActionController(ProtoMessage msgIn, PlayerCharacter pc)
+        {
+            switch ((Actions)msgIn.MessageType)
+            {
+                case Actions.ViewChar:
+                    Character c;
+                    if (Globals_Game.pcMasterList.ContainsKey(msgIn.Message))
+                    {
+                        c = Globals_Game.pcMasterList[msgIn.Message];
+                    }
+                    else if (Globals_Game.npcMasterList.ContainsKey(msgIn.Message))
+                    {
+                        c = Globals_Game.npcMasterList[msgIn.Message];
+                    }
+                    else
+                    {
+                        ProtoMessage msg = new ProtoMessage();
+                        msg.MessageType = Actions.Error;
+                        msg.Message = "CharIDInvalid";
+                        return msg;
+                    }
+                    bool viewAll = PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin,pc,c);
+                    //TODO
+                    break;
+                case Actions.GetNPCList:
+                    break;
+                case Actions.TravelTo:
+                    break;
+                case Actions.MoveCharacter:
+                    break;
+                case Actions.ViewFief:
+                    break;
+                case Actions.AppointBailiff:
+                    break;
+                case Actions.RemoveBailiff:
+                    break;
+                case Actions.BarCharacter:
+                    break;
+                case Actions.UnbarCharacter:
+                    break;
+                case Actions.BarNationality:
+                    break;
+                case Actions.GrantFiefTitle:
+                    break;
+                case Actions.AdjustExpenditure:
+                    break;
+                case Actions.TransferFunds:
+                    break;
+                case Actions.TransferFundsToPlayer:
+                    break;
+                case Actions.EnterExitKeep:
+                    break;
+                case Actions.ListCharsInMeetinPlace:
+                    break;
+                case Actions.TakeThisRoute:
+                    break;
+                case Actions.Camp:
+                    break;
+                case Actions.AddToEntourage:
+                    break;
+                case Actions.ProposeMarriage:
+                    break;
+                case Actions.AppointHeir:
+                    break;
+                case Actions.TryForChild:
+                    break;
+                case Actions.RecruitTroops:
+                    break;
+                case Actions.MaintainArmy:
+                    break;
+                case Actions.AppointLeader:
+                    break;
+                case Actions.DropOffTroops:
+                    break;
+                case Actions.ListDetachments:
+                    break;
+                case Actions.PickUpTroops:
+                    break;
+                case Actions.PillageFief:
+                    break;
+                case Actions.BesiegeFief:
+                    break;
+                case Actions.AdjustCombatValues:
+                    break;
+                case Actions.ExamineArmiesInFief:
+                    break;
+                case Actions.Attack:
+                    break;
+                case Actions.ViewJournalEntries:
+                    break;
+                default:
+                    break;
+
             }
         }
         //TODO remove or implement
@@ -1356,28 +1452,8 @@ namespace hist_mmorpg
 
         } */
 
-        public ProtoMessage<T> messageHandler(ProtoMessage<T> messageIn)
-        {
-            switch (messageIn.getMsgType())
-            {
-                case "ViewCharacter":
-                    string charID = messageIn.getMessage();
-                    break;
-                default:
-                    break;
-            }
-        }
-
         // ------------------- EXIT/CLOSE
     }
 
-    //TODO make a check permissions function
-    /*
-     * Ideas for permission levels: 0=ordinary player
-     *                              1=overlord
-     *                              2=herald
-     *                              3=king
-     *                              4=admin
-     * can create this as a byte enum */
 
 }

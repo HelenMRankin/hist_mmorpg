@@ -5,6 +5,7 @@ using ProtoBuf;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 namespace hist_mmo_TestSet
 {
     [TestClass]
@@ -14,7 +15,9 @@ namespace hist_mmo_TestSet
         [TestMethod]
         public void SerializeTest()
         {
-            ProtoTest m = new ProtoTest("A test",24, "another test");
+            ConstructorInfo info = (typeof(ProtoTest)).GetConstructor(new Type[]{typeof(string),typeof(int),typeof(string)});
+            Object[] visibility = {"A test",24};
+            ProtoTest m = (ProtoTest)info.Invoke(visibility);
             m._age2 = 14;
             Serializer.SerializeWithLengthPrefix<ProtoTest>(File.Create("noName.bin"), m, ProtoBuf.PrefixStyle.Fixed32);
         }
@@ -27,7 +30,7 @@ namespace hist_mmo_TestSet
             {
                 test = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(file, ProtoBuf.PrefixStyle.Fixed32);
                 if (test == null) return;
-                if (test.type.Equals("test"))
+                if (test.GetType() ==typeof(ProtoTest))
                 {
                     Trace.WriteLine("Is prototest!");
                     ProtoTest message = (ProtoTest)test;

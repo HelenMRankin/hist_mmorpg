@@ -199,7 +199,7 @@ namespace hist_mmorpg
                     // display 'no' message
                     toDisplay += "Sorry, milord, to maintain this army would cost £" + maintCost + "\r\n";
                     toDisplay += "and you only have £" + availTreas + " available in the home treasury.";
-                    Globals_Game.UpdatePlayer(owner, "error:army:" + toDisplay);
+                    Globals_Game.UpdatePlayer(this.GetOwner().playerID, "ArmyMaintainError|" + maintCost+"|"+);
                 }
                 //TODO this will be done client side
                 else

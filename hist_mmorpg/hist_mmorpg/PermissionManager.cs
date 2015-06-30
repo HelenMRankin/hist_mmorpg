@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Web.Security;
-using System.Web.Mvc;
 namespace hist_mmorpg
 {
     /// <summary>
@@ -82,9 +80,6 @@ namespace hist_mmorpg
             }
         }
 
-        static AuthorizeDelegate[] delegates = { OverlordOfFief, OwnsFief,isAlive };
-        static PlayerCharacter pc = new PlayerCharacter();
-        static Fief f = new Fief();
-        static bool test = isAuthorized(delegates,pc,f);
+        public static AuthorizeDelegate[] ownsCharOrAdmin = { isAdmin,ownsCharacter };
     }
 }

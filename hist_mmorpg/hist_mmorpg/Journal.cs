@@ -310,13 +310,21 @@ namespace hist_mmorpg
         /// </summary>
         public String location { get; set; }
         /// <summary>
-        /// Holds description of event
+        /// Holds message enum
         /// </summary>
-        public String description { get; set; }
+        public Enum message { get; set; }
         /// <summary>
         /// Indicates whether entry has been viewed
         /// </summary>
         public bool viewed { get; set; }
+        /// <summary>
+        /// Indicates whether entry has been replied to (e.g. for Proposals)
+        /// </summary>
+        public bool replied { get; set; }
+        /// <summary>
+        /// Holds fields to be included with message
+        /// </summary>
+        public string[] fields { get; set; }
 
         /// <summary>
         /// Constructor for JournalEntry
@@ -327,8 +335,8 @@ namespace hist_mmorpg
         /// <param name="pers">String[] holding main objects (IDs) associated with event and thier role</param>
         /// <param name="typ">String holding type of event</param>
         /// <param name="loc">String holding location of event (fiefID)</param>
-        /// <param name="descr">String holding description of event</param>
-        public JournalEntry(uint id, uint yr, byte seas, String[] pers, String typ, String loc = null, String descr = null)
+        /// <param name="descr">Enum representing description of event</param>
+        public JournalEntry(uint id, uint yr, byte seas, String[] pers, String typ, string[] fields, String loc = null, Enum descr = null)
         {
             // VALIDATION
 
@@ -338,7 +346,13 @@ namespace hist_mmorpg
             {
                 throw new InvalidDataException("JournalEntry season must be a byte between 0-3");
             }
-
+            // DESC
+            // check the Enum is a member of Globals_Game.DisplayMessage
+            if (!DisplayMessages.IsDefined(typeof(DisplayMessages), descr))
+            {
+                throw new InvalidDataException("Enum must be recognised from DisplayMessage");
+            }
+            this.fields = fields;
             // PERS
             if (pers.Length > 0)
             {
@@ -393,9 +407,9 @@ namespace hist_mmorpg
             {
                 this.location = loc;
             }
-            if (!String.IsNullOrWhiteSpace(descr))
+            if (descr!=null)
             {
-                this.description = descr;
+                this.message = descr;
             }
             this.viewed = false;
         }
@@ -470,9 +484,9 @@ namespace hist_mmorpg
             }
 
             // description
-            if (!String.IsNullOrWhiteSpace(this.description))
+            if (this.message!=null)
             {
-                entryText += "Description:\r\n" + this.description + "\r\n\r\n";
+                entryText += "Description:\r\n" + this.message + "\r\n\r\n";
             }
 
             return entryText;
@@ -518,32 +532,35 @@ namespace hist_mmorpg
 
             return priority;
         }
-
         /// <summary>
-        /// Check to see if the JournalEntry is of interest to the player
+        /// Returms an array of all PlayerCharacters who may be interested in event
+        /// (Refactored for efficiency)
         /// </summary>
-        /// <returns>bool indicating whether the JournalEntry is of interest</returns>
-        public bool CheckEventForInterest(PlayerCharacter playerChar)
+        /// <returns></returns>
+        public PlayerCharacter[] CheckEventForInterest()
         {
-            bool isOfInterest = false;
-
+            List<PlayerCharacter> interestedParties = new List<PlayerCharacter>();
             for (int i = 0; i < this.personae.Length; i++)
             {
                 // get personae ID
                 string thisPersonae = this.personae[i];
                 string[] thisPersonaeSplit = thisPersonae.Split('|');
-
-                if (thisPersonaeSplit[0].Equals(playerChar.charID)
-                    || (thisPersonaeSplit[0].Equals("all")))
+                // Detect if personae is a player character
+                if (Globals_Game.pcMasterList.ContainsKey(thisPersonaeSplit[0]))
                 {
-                    isOfInterest = true;
-                    break;
+                    interestedParties.Add(Globals_Game.pcMasterList[thisPersonaeSplit[0]]);
+                }
+                // Return all player characters if event effects all
+                else if (thisPersonaeSplit[0].Equals("all"))
+                {
+                    interestedParties = Globals_Game.pcMasterList.Values.ToList();
+                    return Globals_Game.pcMasterList.Values.ToArray();
                 }
             }
-
-            return isOfInterest;
+            return interestedParties.ToArray();
         }
 
+        //TODO remove possibly redundant method
         /// <summary>
         /// Check to see if the JournalEntry requires that the proposal reply controls be enabled
         /// </summary>
@@ -556,7 +573,7 @@ namespace hist_mmorpg
             if (this.type.Equals("proposalMade"))
             {
                 // check if have already replied
-                if (!this.description.Contains("**"))
+                if (!this.replied)
                 {
                     // check if player made or received proposal
                     for (int i = 0; i < this.personae.Length; i++)
@@ -586,7 +603,7 @@ namespace hist_mmorpg
         public bool ReplyToProposal(bool proposalAccepted)
         {
             bool success = true;
-
+            string[] replyFields = new string[4];
             // get interested parties
             PlayerCharacter headOfFamilyBride = null;
             PlayerCharacter headOfFamilyGroom = null;
@@ -655,40 +672,39 @@ namespace hist_mmorpg
             }
 
             // description
-            string description = "On this day of Our Lord the proposed marriage between ";
-            description += groom.firstName + " " + groom.familyName + " and ";
-            description += bride.firstName + " " + bride.familyName + " has been ";
+            replyFields[0] = groom.firstName + " " + groom.familyName;
+            replyFields[1] = bride.firstName + " " + bride.familyName;
+
             if (proposalAccepted)
             {
-                description += "ACCEPTED";
+                replyFields[2] = "ACCEPTED";
             }
             else
             {
-                description += "REJECTED";
+                replyFields[2] = "REJECTED";
             }
-            description += " by " + headOfFamilyBride.firstName + " " + headOfFamilyBride.familyName + ".";
-            if (proposalAccepted)
-            {
-                description += " Let the bells ring out in celebration!";
-            }
+            replyFields[3] = headOfFamilyBride.firstName + " " + headOfFamilyBride.familyName;
 
             // create and send a proposal reply (journal entry)
-            JournalEntry myProposalReply = new JournalEntry(replyID, year, season, myReplyPersonae, type, descr: description);
+            JournalEntry myProposalReply = new JournalEntry(replyID, year, season, myReplyPersonae, type, replyFields, null,  DisplayMessages.JournalProposalReply);
             success = Globals_Game.AddPastEvent(myProposalReply);
 
             if (success)
             {
+                string[] newFields = new string[this.fields.Length + 2];
+                Array.Copy(this.fields, newFields, this.fields.Length);
+                newFields[newFields.Length - 1] = Globals_Game.clock.seasons[season] + ", " + year;
+                this.fields = newFields;
+                this.replied = true;
                 // mark proposal as replied
-                this.description += "\r\n\r\n** You ";
                 if (proposalAccepted)
                 {
-                    this.description += "ACCEPTED ";
+                    this.fields[this.fields.Length - 2] = "ACCEPTED";
                 }
                 else
                 {
-                    this.description += "REJECTED ";
+                    this.fields[this.fields.Length - 2] = "REJECTED";
                 }
-                this.description += "this proposal in " + Globals_Game.clock.seasons[season] + ", " + year;
 
                 // if accepted, process engagement
                 if (proposalAccepted)
@@ -772,7 +788,7 @@ namespace hist_mmorpg
             string type = "marriage";
 
             // create and add a marriage entry to the scheduledEvents journal
-            JournalEntry marriageEntry = new JournalEntry(replyID, year, season, marriagePersonae, type);
+            JournalEntry marriageEntry = new JournalEntry(replyID, year, season, marriagePersonae, type,null);
             success = Globals_Game.AddScheduledEvent(marriageEntry);
 
             // show bride and groom as engaged
@@ -848,14 +864,14 @@ namespace hist_mmorpg
             // type
             string type = "marriage";
 
+            string[] fields = new string[3];
+            fields[0] = groom.firstName + " " + groom.familyName;
+            fields[1] = bride.firstName + " " + groom.familyName;
+            fields[2] = bride.familyName;
             // description
-            string description = "On this day of Our Lord there took place a marriage between ";
-            description += groom.firstName + " " + groom.familyName + " and ";
-            description += bride.firstName + " " + groom.familyName + " (nee " + bride.familyName + ").";
-            description += " Let the bells ring out in celebration!";
 
             // create and add a marriage entry to the pastEvents journal
-            JournalEntry marriageEntry = new JournalEntry(marriageID, year, season, marriagePersonae, type, descr: description);
+            JournalEntry marriageEntry = new JournalEntry(marriageID, year, season, marriagePersonae, type,fields,null, DisplayMessages.JournalMarriage);
             success = Globals_Game.AddPastEvent(marriageEntry);
 
             if (success)

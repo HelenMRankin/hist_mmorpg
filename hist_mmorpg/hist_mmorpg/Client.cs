@@ -81,30 +81,30 @@ namespace hist_mmorpg
         /// Updates the client
         /// </summary>
         /// <param name="info"></param>
-        public void Update(String info)
+        public void Update(DisplayMessages type, string[] fields = null)
         {
-            // get update info
-            string[] infoSplit = info.Split('|');
-            switch (infoSplit[0])
+            switch (type)
             {
-                case "newEvent":
+                case DisplayMessages.newEvent:
                     // get jEntry ID and retrieve from Globals_Game
-                    if (!String.IsNullOrWhiteSpace(infoSplit[1]))
+                    if (fields.Length>0)
                     {
-                        uint newJentryID = Convert.ToUInt32(infoSplit[1]);
-                        JournalEntry newJentry = Globals_Game.pastEvents.entries[newJentryID];
-
-                        // check to see if is of interest to player
-                        if (newJentry.CheckEventForInterest(myPlayerCharacter))
+                        try
                         {
+                            uint newJentryID = Convert.ToUInt32(fields[0]);
+                            JournalEntry newJentry = Globals_Game.pastEvents.entries[newJentryID];
                             myPastEvents.AddNewEntry(newJentry);
+                        }
+                        catch (Exception e)
+                        {
+                            //TODO error logging
                         }
                     }
                     break;
-                case "error":
-                    //TODO implement error messages
-                    break;
                 default:
+                    ProtoMessage m = new ProtoMessage();
+                    m.MessageType = type;
+                    m.MessageFields = fields;
                     break;
             }
         }

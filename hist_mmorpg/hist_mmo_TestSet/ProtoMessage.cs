@@ -27,7 +27,7 @@ namespace hist_mmo_TestSet
         [ProtoMember(3)]
         public string test { get; set; }
 
-        public ProtoTest(string name, int age, string test)
+        public ProtoTest(string name, int age, string test = null)
         {
             this.type = "test";
             this._name2 = name;
