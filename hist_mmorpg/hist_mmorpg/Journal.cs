@@ -312,7 +312,11 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds message enum
         /// </summary>
-        public Enum message { get; set; }
+        public Enum messageIdentifier { get; set; }
+        /// <summary>
+        /// Message description
+        /// </summary>
+        public string description { get; set; }
         /// <summary>
         /// Indicates whether entry has been viewed
         /// </summary>
@@ -335,8 +339,8 @@ namespace hist_mmorpg
         /// <param name="pers">String[] holding main objects (IDs) associated with event and thier role</param>
         /// <param name="typ">String holding type of event</param>
         /// <param name="loc">String holding location of event (fiefID)</param>
-        /// <param name="descr">Enum representing description of event</param>
-        public JournalEntry(uint id, uint yr, byte seas, String[] pers, String typ, string[] fields, String loc = null, Enum descr = null)
+        /// <param name="messageIdentifier">Enum representing description of event</param>
+        public JournalEntry(uint id, uint yr, byte seas, String[] pers, String typ, string[] fields = null, String loc = null, string desc = null, Enum messageIdentifier = null)
         {
             // VALIDATION
 
@@ -348,10 +352,11 @@ namespace hist_mmorpg
             }
             // DESC
             // check the Enum is a member of Globals_Game.DisplayMessage
-            if (!DisplayMessages.IsDefined(typeof(DisplayMessages), descr))
+            if (!DisplayMessages.IsDefined(typeof(DisplayMessages), messageIdentifier))
             {
                 throw new InvalidDataException("Enum must be recognised from DisplayMessage");
             }
+            this.description = desc;
             this.fields = fields;
             // PERS
             if (pers.Length > 0)
@@ -407,9 +412,9 @@ namespace hist_mmorpg
             {
                 this.location = loc;
             }
-            if (descr!=null)
+            if (messageIdentifier!=null)
             {
-                this.message = descr;
+                this.messageIdentifier = messageIdentifier;
             }
             this.viewed = false;
         }
@@ -484,9 +489,9 @@ namespace hist_mmorpg
             }
 
             // description
-            if (this.message!=null)
+            if (this.messageIdentifier!=null)
             {
-                entryText += "Description:\r\n" + this.message + "\r\n\r\n";
+                entryText += "Description:\r\n" + this.messageIdentifier + "\r\n\r\n";
             }
 
             return entryText;
@@ -686,7 +691,7 @@ namespace hist_mmorpg
             replyFields[3] = headOfFamilyBride.firstName + " " + headOfFamilyBride.familyName;
 
             // create and send a proposal reply (journal entry)
-            JournalEntry myProposalReply = new JournalEntry(replyID, year, season, myReplyPersonae, type, replyFields, null,  DisplayMessages.JournalProposalReply);
+            JournalEntry myProposalReply = new JournalEntry(replyID, year, season, myReplyPersonae, type, replyFields, null,null,  DisplayMessages.JournalProposalReply);
             success = Globals_Game.AddPastEvent(myProposalReply);
 
             if (success)
@@ -871,7 +876,7 @@ namespace hist_mmorpg
             // description
 
             // create and add a marriage entry to the pastEvents journal
-            JournalEntry marriageEntry = new JournalEntry(marriageID, year, season, marriagePersonae, type,fields,null, DisplayMessages.JournalMarriage);
+            JournalEntry marriageEntry = new JournalEntry(marriageID, year, season, marriagePersonae, type,fields,null,null, DisplayMessages.JournalMarriage);
             success = Globals_Game.AddPastEvent(marriageEntry);
 
             if (success)

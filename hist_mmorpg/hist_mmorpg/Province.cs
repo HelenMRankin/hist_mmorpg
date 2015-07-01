@@ -114,7 +114,7 @@ namespace hist_mmorpg
                 description += "the current owner, " + currentOwner.firstName + " " + currentOwner.familyName + ".";
 
                 // create and send a proposal (journal entry)
-                JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType, descr: description, loc: entryLoc);
+                JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType, messageIdentifier: description, loc: entryLoc);
                 Globals_Game.AddPastEvent(myEntry);
             }
         }

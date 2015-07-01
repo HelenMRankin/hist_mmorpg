@@ -97,7 +97,7 @@ namespace hist_mmorpg
                 description += "and depose the current king, His Highness " + currentOwner.firstName + " " + currentOwner.familyName + ", King of " + this.name + ".";
 
                 // create and send a proposal (journal entry)
-                JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType, descr: description, loc: entryLoc);
+                JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType, messageIdentifier: description, loc: entryLoc);
                 Globals_Game.AddPastEvent(myEntry);
             }
         }

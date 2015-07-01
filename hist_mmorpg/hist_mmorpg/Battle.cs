@@ -380,14 +380,14 @@ namespace hist_mmorpg
 
                         if (!battleHasCommenced)
                         {
-                            Globals_Game.UpdatePlayer(attacker.owner, "update:battle:You failed to bring the defending army to battle");
-                            Globals_Game.UpdatePlayer(defender.owner, "update:battle:An attacking army tried and failed to engage you in battle");
+                            Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringFail,new string[]{"You have","the defending army"});
+                            Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringFail,new string[] {"An enemy army has","you"});
                             defender.ProcessRetreat(1);
                         }
                         else
                         {
-                            Globals_Game.UpdatePlayer(defender.owner, "update:battle:You have been brought to battle by an opposing army!");
-                            Globals_Game.UpdatePlayer(attacker.owner, "update:battle:You have successfully brought the enemy army to battle!");
+                            Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringSuccess, new string[] { "You have", "the defending army" });
+                            Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringSuccess, new string[] { "An enemy army has", "you" });
                         }
 
                     }
@@ -406,14 +406,14 @@ namespace hist_mmorpg
 
                 if (!battleHasCommenced)
                 {
-                    Globals_Game.UpdatePlayer(attacker.owner, "update:battle:You failed to bring the defending army to battle");
-                    Globals_Game.UpdatePlayer(defender.owner, "update:battle:An attacking army tried and failed to engage you in battle");
+                    Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringFail, new string[] { "You have", "the defending army" });
+                    Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringFail, new string[] { "An enemy army has", "you" });
                     defender.ProcessRetreat(1);
                 }
                 else
                 {
-                    Globals_Game.UpdatePlayer(defender.owner, "update:battle:You have been brought to battle by an opposing army!");
-                    Globals_Game.UpdatePlayer(attacker.owner, "update:battle:You have successfully brought the enemy army to battle!");
+                    Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringSuccess, new string[] { "You have", "the defending army" });
+                    Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringSuccess, new string[] { "An enemy army has", "you" });
                 }
             }
 
@@ -855,20 +855,21 @@ namespace hist_mmorpg
             string battleDescription = toDisplay;
 
             // put together new journal entry
-            JournalEntry battleResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, battlePersonae, "battle", loc: battleLocation, descr: battleDescription);
+            JournalEntry battleResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, battlePersonae, "battle", loc: battleLocation, desc: battleDescription);
 
             // add new journal entry to pastEvents
             Globals_Game.AddPastEvent(battleResult);
 
-            //ASK if both attacker and defender should receive message
+            //HACK need a better way of sending battle data
             // display pop-up informational message
-            Globals_Game.UpdatePlayer(attacker.owner, "update:battle:BATTLE RESULTS," + toDisplay);
-            Globals_Game.UpdatePlayer(defender.owner, "update:battle:BATTLE RESULTS," + toDisplay);
+            Globals_Game.UpdatePlayer(attacker.owner, DisplayMessages.BattleResults, new String[]{toDisplay});
+            Globals_Game.UpdatePlayer(defender.owner, DisplayMessages.BattleResults, new String[]{toDisplay});
 
             // end siege if appropriate
             if (siegeRaised)
             {
-                thisSiege.SiegeEnd(false, siegeDescription);
+                //HACK
+                thisSiege.SiegeEnd(false, DisplayMessages.BattleResults,new string[]{siegeDescription});
                 thisSiege = null;
 
                 // ensure if siege raised correct value returned to Form1.siegeReductionRound method

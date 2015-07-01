@@ -233,18 +233,15 @@ namespace hist_mmorpg
             string type = "grantPosition";
 
             // description
-            string description = "On this day of Our Lord the position of " + this.title[0].name;
-            description += " was granted by His Majesty " + king.firstName + " " + king.familyName + " to ";
-            description += newPositionHolder.firstName + " " + newPositionHolder.familyName;
+            
+            String[] fields = new string[] { this.title[0].name, king.firstName + " " + king.familyName, newPositionHolder.firstName + " " + newPositionHolder.familyName, "" };
             if (oldPositionHolder != null)
             {
-                description += "; This has necessitated the removal of ";
-                description += oldPositionHolder.firstName + " " + oldPositionHolder.familyName + " from the position";
+                fields[3] = "; This has necessitated the removal of " + oldPositionHolder.firstName + " " + oldPositionHolder.familyName + " from the position";
             }
-            description += ".";
-
+            
             // create and add a journal entry to the pastEvents journal
-            JournalEntry thisEntry = new JournalEntry(entryID, year, season, thisPersonae, type, descr: description);
+            JournalEntry thisEntry = new JournalEntry(entryID, year, season, thisPersonae, type,fields, messageIdentifier: DisplayMessages.RankTitleTransfer);
             success = Globals_Game.AddPastEvent(thisEntry);
         }
 

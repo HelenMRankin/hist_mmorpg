@@ -607,7 +607,7 @@ namespace hist_mmorpg
             }
             
             // put together new journal entry
-            JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siegeEnd",fields, loc: siegeLocation, descr: messageType);
+            JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siegeEnd",fields, loc: siegeLocation, messageIdentifier: messageType);
 
             // add new journal entry to pastEvents
             Globals_Game.AddPastEvent(siegeResult);
@@ -1080,7 +1080,7 @@ namespace hist_mmorpg
             }
 
             // create and send JOURNAL ENTRY
-            JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siegeStorm",fields, loc: siegeLocation, descr: messageType);
+            JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siegeStorm",fields, loc: siegeLocation, messageIdentifier: messageType);
 
             // add new journal entry to pastEvents
             Globals_Game.AddPastEvent(siegeResult);
@@ -1198,7 +1198,7 @@ namespace hist_mmorpg
             }
 
             // create and send JOURNAL ENTRY
-            JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siegeStorm", fields, loc: siegeLocation, descr: messageType);
+            JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siegeStorm", fields, loc: siegeLocation, messageIdentifier: messageType);
 
             // add new journal entry to pastEvents
             Globals_Game.AddPastEvent(siegeResult);

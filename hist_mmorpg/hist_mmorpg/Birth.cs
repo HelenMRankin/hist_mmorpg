@@ -221,7 +221,7 @@ namespace hist_mmorpg
                     if (isPlayer)
                     {  
                         string message = "You have to be in the same fief to do that!";
-                        Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, message);
+                        Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID,DisplayMessages.ErrorGenericNotInSameFief);
                     }
                     proceed = false;
                 }
@@ -233,8 +233,7 @@ namespace hist_mmorpg
                     {
                         if (isPlayer)
                         {
-                            string message = "error:birth:" + wife.firstName + " " + wife.familyName + " is already pregnant, milord.  Don't be so impatient!";
-                            Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID,message);
+                            Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID,DisplayMessages.BirthAlreadyPregnant,new string[]{wife.firstName + " " + wife.familyName});
                         }
                         proceed = false;
                     }
@@ -247,7 +246,7 @@ namespace hist_mmorpg
                             if (isPlayer)
                             {
                                 string message = "error:birth:I'm afraid the husband and wife are being separated by the ongoing siege.";
-                                Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, message);
+                                Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, DisplayMessages.BirthSiegeSeparation);
                             }
                             proceed = false;
                         }
@@ -261,8 +260,7 @@ namespace hist_mmorpg
                             {
                                 if (isPlayer)
                                 {
-                                    string message = "error:birth:Sorry, you don't have enough time left for this in the current season.";
-                                    Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, message);
+                                    Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, DisplayMessages.ErrorGenericNotEnoughDays);
                                 }
                                 proceed = false;
                             }
@@ -296,7 +294,6 @@ namespace hist_mmorpg
             // otherwise, the husband is the son of a player- alert the husband's father's user
             else
             {
-                string toDisplay;
                 string whoThisIs = "";
                 if (isPlayer)
                 {
@@ -306,11 +303,10 @@ namespace hist_mmorpg
                 {
                     whoThisIs = "This man is ";
                 }
-                toDisplay = "error:birth:," + whoThisIs + "not married, my lord.";
-                if(isPlayer) Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, toDisplay);
+                if(isPlayer) Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, DisplayMessages.BirthNotMarried, new string[]{whoThisIs});
                 else
                 {
-                    Globals_Game.UpdatePlayer(((PlayerCharacter)husband.GetFather()).playerID, toDisplay);
+                    Globals_Game.UpdatePlayer(((PlayerCharacter)husband.GetFather()).playerID, DisplayMessages.BirthNotMarried,new string[]{whoThisIs});
                 }
                 proceed = false;
             }

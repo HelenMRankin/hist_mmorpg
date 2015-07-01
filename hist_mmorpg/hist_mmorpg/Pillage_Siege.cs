@@ -265,7 +265,7 @@ namespace hist_mmorpg
             pillageDescription += pillageResults;
 
             // put together new journal entry
-            JournalEntry pillageEntry = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, pillagePersonae, type, loc: pillageLocation, descr: pillageDescription);
+            JournalEntry pillageEntry = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, pillagePersonae, type, loc: pillageLocation, messageIdentifier: pillageDescription);
 
             // add new journal entry to pastEvents
             Globals_Game.AddPastEvent(pillageEntry);
@@ -646,7 +646,7 @@ namespace hist_mmorpg
             siegeDescription += ".";
 
             // put together new journal entry
-            JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siege", loc: siegeLocation, descr: siegeDescription);
+            JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siege", loc: siegeLocation, messageIdentifier: siegeDescription);
 
             // add new journal entry to pastEvents
             Globals_Game.AddPastEvent(siegeResult);

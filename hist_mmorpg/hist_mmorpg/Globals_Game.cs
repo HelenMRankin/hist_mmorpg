@@ -22,8 +22,14 @@ namespace hist_mmorpg
     /// </summary>
     public enum DisplayMessages
     {
-        ArmyErrorMaintain, ArmyMaintainCost, ArmyMaintainConfirm, JournalProposal, JournalProposalReply, JournalMarriage, ChallengeKingSuccess, ChallengeKingFail, ChallengeProvinceSuccess, ChallengeProvinceFail, newEvent,
-        SwitchPlayerErrorNoID, SwitchPlayerErrorIDInvalid, ChallengeErrorExists, SiegeNegotiateSuccess, SiegeNegotiateFail, SiegeStormSuccess, SiegeStormFail, SiegeEndDefault, SiegeErrorDays, SiegeRaised, SiegeReduction
+        None = 0, ArmyMaintainInsufficientFunds, ArmyMaintainCost, ArmyMaintainConfirm, JournalProposal, JournalProposalReply, JournalMarriage, ChallengeKingSuccess, ChallengeKingFail, ChallengeProvinceSuccess, ChallengeProvinceFail, newEvent,
+        SwitchPlayerErrorNoID, SwitchPlayerErrorIDInvalid, ChallengeErrorExists, SiegeNegotiateSuccess, SiegeNegotiateFail, SiegeStormSuccess, SiegeStormFail, SiegeEndDefault, SiegeErrorDays, SiegeRaised, SiegeReduction, ArmyMove,
+        ArmyAttritionDebug, ArmyDetachmentArrayWrongLength, ArmyDetachmentNotEnoughTroops, ArmyDetachmentNotSelected, ErrorGenericNotEnoughDays, ErrorGenericPoorOrganisation, ErrorGenericUnidentifiedRecipient, ArmyNoLeader, ArmyBesieged,
+        ArmyAttackSelf, ArmyPickupsDenied, ArmyPickupsNotEnoughDays, BattleBringSuccess, BattleBringFail, BattleResults, ErrorGenericNotInSameFief, BirthAlreadyPregnant, BirthSiegeSeparation, BirthNotMarried, CharacterMarriageDeath, CharacterDeath, CharacterEnterArmy,
+        CharacterAlreadyArmy, CharacterNationalityBarred, CharacterBarred, CharacterRoyalGiftPlayer, CharacterRoyalGiftSelf, CharacterNotMale, CharacterNotOfAge, CharacterLeaderLocation, CharacterLeadingArmy, CharacterDaysJourney, CharacterSpousePregnant, CharacterSpouseNotPregnant, CharacterSpouseNeverPregnant,
+        CharacterBirthOK, CharacterBirthChildDead, CharacterBirthMumDead, CharacterBirthAllDead, RankTitleTransfer, CharacterCombatInjury, CharacterProposalMan, CharacterProposalUnderage, CharacterProposalEngaged, CharacterProposalMarried, CharacterProposalFamily, CharacterProposalIncest, CharacterRemovedFromEntourage, CharacterCamp,
+        CharacterCampAttrition, CharacterBailiffDuty, CharacterInvalidMovement, ErrorGenericFiefUnidentified, CharacterOfferLow, CharacterOfferHigh, CharacterOfferOk, CharacterOfferAlmost, CharacterOfferHaggle, CharacterBarredKeep, CharacterRecruitOwn, CharacterRecruitAlready, CharacterLoyaltyLanguage, ErrorGenericInsufficientFunds, CharacterRecruitSiege, CharacterRecruitRebellion ,
+        CharacterTransferTitle, CharacterTitleOwner, CharacterTitleHighest, CharacterTitleKing, CharacterTitleAncestral, CharacterHeir 
     }
     /// <summary>
     /// Class storing any required game-wide static variables and related methods
@@ -755,7 +761,7 @@ namespace hist_mmorpg
                         // entry ID
                         uint entryID = Globals_Game.GetNextJournalEntryID();
 
-                        JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType, fields, descr: messageType, loc: entryLoc );
+                        JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType, fields, messageIdentifier: messageType, loc: entryLoc );
                         Globals_Game.AddPastEvent(myEntry);
                     }
                 }
@@ -1124,21 +1130,37 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="player"></param>
         /// <param name="message"></param>
-        public static void UpdatePlayer(string player, DisplayMessages message, string[] fields = null)
+        public static void UpdatePlayer(string player, DisplayMessages message, string[] fields = null, string type = null)
         {
             if(string.IsNullOrWhiteSpace(player)||(message == null)) {
                 return;
             }
-            // if a user is currently signed in send the message direct to client
-            if (Globals_Server.clients.ContainsKey(player))
+            if (string.IsNullOrWhiteSpace(type))
             {
-                Globals_Server.clients[player].Update(message,fields);
+                // if a user is currently signed in send the message direct to client
+                if (Globals_Server.clients.ContainsKey(player))
+                {
+                    Globals_Server.clients[player].Update(message, fields);
+                }
+                // if user is away store message in database to view when user next logs in
+                else
+                {
+                    //TODO user message log
+                }
             }
-            // if user is away store message in database to view when user next logs in
-            else
+            // Detect whether to send debug message
+            else if (type.Equals("DEBUG"))
             {
-                //TODO user message log
+                if (Globals_Server.clients.ContainsKey(player))
+                {
+                    if (Globals_Server.clients[player].showDebugMessages)
+                    {
+                        Globals_Server.clients[player].Update(message, fields);
+                    }
+                }
+
             }
+            
         }
 
         /// <summary>

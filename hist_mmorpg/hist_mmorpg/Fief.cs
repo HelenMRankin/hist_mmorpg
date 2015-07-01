@@ -944,29 +944,19 @@ namespace hist_mmorpg
 
         /// <summary>
         /// Adjusts fief tax rate
+        /// (rate adjustment messages done client side)
         /// </summary>
         /// <param name="tx">double containing new tax rate</param>
         public void AdjustTaxRate(double tx)
         {
-            string user = this.owner.playerID;
             // ensure max 100 and min 0
             if (tx > 100)
             {
                 tx = 100;
-                if (!string.IsNullOrEmpty(user))
-                {
-                    string toDisplay = "The maximum tax rate is 100%.  Rate adjusted.";
-                    Globals_Game.UpdatePlayer(user, toDisplay);
-                }
             }
             else if (tx < 0)
             {
                 tx = 0;
-                if (!string.IsNullOrEmpty(user))
-                {
-                    string toDisplay = "The minimum tax rate is 0%.  Rate adjusted.";
-                    Globals_Game.UpdatePlayer(user, toDisplay);
-                }
             }
 
             this.taxRateNext = tx;
@@ -2056,7 +2046,7 @@ namespace hist_mmorpg
                 description += " changed from " + oldStatus + " to " + newStatus + ".";
 
                 // create and add a journal entry to the pastEvents journal
-                JournalEntry newEntry = new JournalEntry(entryID, year, season, thisPersonae, type, loc: location, descr: description);
+                JournalEntry newEntry = new JournalEntry(entryID, year, season, thisPersonae, type, loc: location, messageIdentifier: description);
                 success = Globals_Game.AddPastEvent(newEntry);
             }
 
@@ -2569,7 +2559,7 @@ namespace hist_mmorpg
                 description += newOwner.firstName + " " + newOwner.familyName + ".";
 
                 // create and add a journal entry to the pastEvents journal
-                JournalEntry thisEntry = new JournalEntry(entryID, year, season, thisPersonae, type, loc: location, descr: description);
+                JournalEntry thisEntry = new JournalEntry(entryID, year, season, thisPersonae, type, loc: location, messageIdentifier: description);
                 entryAdded = Globals_Game.AddPastEvent(thisEntry);
             }
 
@@ -2718,7 +2708,7 @@ namespace hist_mmorpg
                 description += "\r\n\r\nThe army was forced to retreat into an adjoining fief.";
 
                 // create and add a journal entry to the pastEvents journal
-                JournalEntry quellEntry = new JournalEntry(entryID, year, season, quellPersonae, type, loc: location, descr: description);
+                JournalEntry quellEntry = new JournalEntry(entryID, year, season, quellPersonae, type, loc: location, messageIdentifier: description);
                 success = Globals_Game.AddPastEvent(quellEntry);
             }
 

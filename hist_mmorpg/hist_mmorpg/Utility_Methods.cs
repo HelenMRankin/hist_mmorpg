@@ -30,10 +30,10 @@ namespace hist_mmorpg
                 string[] jEntryPersonae = new string[] { sysAdminEntry };
 
                 // description
-                string description = "To be added";
+                DisplayMessages description = DisplayMessages.None;
 
                 // create and send a proposal (journal entry)
-                jEntry = new JournalEntry(jEntryID, year, season, jEntryPersonae, "CSV_importError", descr: description);
+                jEntry = new JournalEntry(jEntryID, year, season, jEntryPersonae, "CSV_importError", messageIdentifier: description);
             }
 
             return jEntry;
