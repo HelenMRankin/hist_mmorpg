@@ -1363,7 +1363,7 @@ namespace hist_mmorpg
                     fields[4] = besiegedFief.keepLevel + "";
 
                     // put together new journal entry
-                    JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siegeReduction", fields loc: siegeLocation, descr: messageType);
+                    JournalEntry siegeResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, siegePersonae, "siegeReduction", fields, loc: siegeLocation, messageIdentifier: messageType);
 
                     // add new journal entry to pastEvents
                     Globals_Game.AddPastEvent(siegeResult);

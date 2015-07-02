@@ -55,8 +55,7 @@ namespace hist_mmorpg
             // ensure aren't current owner
             if (challenger == this.owner)
             {
-                string toDisplay = "You are already the King of " + this.name + "!";
-                Globals_Game.UpdatePlayer(challenger.playerID, toDisplay);
+                Globals_Game.UpdatePlayer(challenger.playerID, DisplayMessages.KingdomAlreadyKing);
             }
 
             else
@@ -92,12 +91,14 @@ namespace hist_mmorpg
                 string entryType = "depose_new";
 
                 // journal entry description
-                string description = "On this day of Our Lord a challenge for the crown of " + this.name + " (" + this.id + ")";
-                description += " has COMMENCED.  " + challenger.firstName + " " + challenger.familyName + " seeks to press his claim ";
-                description += "and depose the current king, His Highness " + currentOwner.firstName + " " + currentOwner.familyName + ", King of " + this.name + ".";
-
+                string[] fields = new string[4];
+                fields[0] = this.name;
+                fields[1] = this.id;
+                fields[2] = challenger.firstName + " " + challenger.familyName;
+                fields[3] = currentOwner.firstName + " " + currentOwner.familyName;
+               
                 // create and send a proposal (journal entry)
-                JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType, messageIdentifier: description, loc: entryLoc);
+                JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType,fields, messageIdentifier: DisplayMessages.KingdomOwnershipChallenge, loc: entryLoc);
                 Globals_Game.AddPastEvent(myEntry);
             }
         }

@@ -585,6 +585,10 @@ namespace hist_mmorpg
         /// </summary>
         public uint troops { get; set; }
         /// <summary>
+        /// Holds number of troops that can be recruited in this fief
+        /// </summary>
+        public int militia { get; set; }
+        /// <summary>
         /// Holds fief tax rate
         /// </summary>
         public double taxRate { get; set; }
@@ -630,6 +634,10 @@ namespace hist_mmorpg
         /// Holds key data for previous season
         /// </summary>
         public double[] keyStatsPrevious = new double[14];
+        /// <summary>
+        /// Holds key data for next season
+        /// </summary>
+        public double[] keyStatsNext = new double[14];
         /// <summary>
         /// Holds fief keep level
         /// </summary>
@@ -689,6 +697,7 @@ namespace hist_mmorpg
 
         public ProtoFief(Fief f)
         {
+            this.militia = f.CalcMaxTroops();
             this.fiefID = f.id;
             this.titleHolder = f.titleHolder+ "|"+f.GetTitleHolder().firstName+"|"+f.GetTitleHolder().familyName;
             this.owner = f.owner.charID + "|"+f.owner.firstName + "|"+f.owner.familyName;
@@ -739,19 +748,47 @@ namespace hist_mmorpg
             i = 0;
         }
           
-
+        /// <summary>
+        /// Includes all data in the ProtoMessage (useful for fief 
+        /// </summary>
+        /// <param name="f"></param>
         public void includeAll(Fief f) {
-            this.taxRateNext = f.taxRateNext;
-            this.officialsSpendNext = f.officialsSpendNext;
-            this.garrisonSpendNext = f.garrisonSpendNext;
-            this.infrastructureSpendNext = f.infrastructureSpendNext;
-            this.keepSpendNext = f.keepSpendNext;
+            this.keyStatsNext[0] = f.CalcNewLoyalty();
+            this.keyStatsNext[1] = f.CalcNewGDP();
+            this.keyStatsNext[2] = taxRateNext;
+            this.keyStatsNext[3] = f.officialsSpendNext;
+            this.keyStatsNext[4] = f.garrisonSpendNext;
+            this.keyStatsNext[5] = f.infrastructureSpendNext;
+            this.keyStatsNext[6] = f.keepSpendNext;
+            this.keyStatsNext[7] = f.CalcNewKeepLevel();
+            this.keyStatsNext[8] = f.CalcNewIncome();
+            this.keyStatsNext[9] = f.CalcFamilyExpenses();
+            this.keyStatsNext[10] = f.CalcNewExpenses() + f.CalcFamilyExpenses();
+            this.keyStatsNext[11] = f.CalcNewOlordTaxes();
+            this.keyStatsNext[12] = f.province.taxRate;
+            this.keyStatsNext[13] = f.CalcNewBottomLine();
+     
             this.keyStatsCurrent = f.keyStatsCurrent;
             this.keyStatsPrevious = f.keyStatsPrevious;
             this.loyalty = f.loyalty;
             this.bailiffDaysInFief = f.bailiffDaysInFief;
             this.treasury = f.treasury;
-        } 
+        }
+        /// Holds key data for current season.
+        /// 0 = loyalty,
+        /// 1 = GDP,
+        /// 2 = tax rate,
+        /// 3 = official expenditure,
+        /// 4 = garrison expenditure,
+        /// 5 = infrastructure expenditure,
+        /// 6 = keep expenditure,
+        /// 7 = keep level,
+        /// 8 = income,
+        /// 9 = family expenses,
+        /// 10 = total expenses,
+        /// 11 = overlord taxes,
+        /// 12 = overlord tax rate,
+        /// 13 = bottom line
     }
 
     /// <summary>
@@ -800,7 +837,7 @@ namespace hist_mmorpg
         public ProtoCharacterOverview(Character c)
         {
             this.charID = c.charID;
-            this.charName = c.firstName + "|" + c.familyName;
+            this.charName = c.firstName + " " + c.familyName;
 
             if (c is NonPlayerCharacter)
             {
@@ -833,8 +870,11 @@ namespace hist_mmorpg
                         this.role = "Herald";
                     }
                 }
-            }
-                    
+            }    
+        }
+        public void showLocation(Character c)
+        {
+            this.locationID = c.location.id;
         }
     }
 
@@ -842,15 +882,32 @@ namespace hist_mmorpg
     public class ProtoPillageResult : ProtoMessage
     {
         public string fiefID { get; set; }
+        public string fiefName { get; set; }
+        public bool isPillage { get; set; }
+
+        public string fiefOwner { get; set; }
+        public string defenderLeader { get; set; }
+        public string armyOwner { get; set; }
+        public string armyLeader { get; set; }
+
         public double daysTaken { get; set; }
-        public uint populationLoss { get; set; }
+        public int populationLoss { get; set; }
         public int treasuryLoss { get; set; }
+        public double industryLoss { get; set; }
         public double loyaltyLoss { get; set; }
         public double fieldsLoss { get; set; }
         public double baseMoneyPillaged { get; set; }
         public double bonusMoneyPillaged { get; set; }
+        public double moneyPillagedOwner { get; set; }
         public double jackpot { get; set; }
-        public double statuteModifier { get; set; }
+        public double statureModifier { get; set; }
+
+
+
+        public ProtoPillageResult()
+        {
+
+        }
     }
 
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
@@ -974,79 +1031,229 @@ namespace hist_mmorpg
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoJournalEntry
     {
+        /// <summary>
+        /// Holds JournalEntry ID
+        /// </summary>
+        public uint jEntryID { get; set; }
+        /// <summary>
+        /// Holds event year
+        /// </summary>
+        public uint year { get; set; }
+        /// <summary>
+        /// Holds event season
+        /// </summary>
+        public byte season { get; set; }
+        /// <summary>
+        /// Holds characters associated with event and their role
+        /// </summary>
+        public ProtoCharacterOverview[] personae { get; set; }
+        /// <summary>
+        /// Holds type of event (e.g. battle, birth)
+        /// </summary>
+        public String type { get; set; }
+        /// <summary>
+        /// Holds location of event (fiefID)
+        /// </summary>
+        public String location { get; set; }
+        /// <summary>
+        /// Holds message enum
+        /// </summary>
+        public Enum messageIdentifier { get; set; }
+        /// <summary>
+        /// Message description
+        /// </summary>
+        public string description { get; set; }
+        /// <summary>
+        /// Indicates whether entry has been viewed
+        /// </summary>
+        public bool viewed { get; set; }
+        /// <summary>
+        /// Indicates whether entry has been replied to (e.g. for Proposals)
+        /// </summary>
+        public bool replied { get; set; }
+        /// <summary>
+        /// Holds fields to be included with message
+        /// </summary>
+        public string[] fields { get; set; }
+        /// <summary>
+        /// Holds ProtoMessage containing details of event. More flexible than strings.
+        /// </summary>
+        public ProtoMessage dataFields { get; set; }
 
+        public void getCharacterOverviews(JournalEntry j)
+        {
+            List<ProtoCharacterOverview> overviews = new List<ProtoCharacterOverview>();
+            for (int i = 0; i < j.personae.Length; i++)
+            {
+                string thisPersonae = j.personae[i];
+                string[] thisPersonaeSplit = thisPersonae.Split('|');
+                Character thisCharacter = null;
+
+                // get character
+                if (thisPersonaeSplit[0] != null)
+                {
+                    // filter out any "all|all" entries
+                    if (!thisPersonaeSplit[0].Equals("all"))
+                    {
+                        if (Globals_Game.pcMasterList.ContainsKey(thisPersonaeSplit[0]))
+                        {
+                            thisCharacter = Globals_Game.pcMasterList[thisPersonaeSplit[0]];
+                        }
+                        else if (Globals_Game.npcMasterList.ContainsKey(thisPersonaeSplit[0]))
+                        {
+                            thisCharacter = Globals_Game.npcMasterList[thisPersonaeSplit[0]];
+                        }
+                    }
+                }
+
+                if (thisCharacter != null)
+                {
+                    ProtoCharacterOverview overview = (new ProtoCharacterOverview(thisCharacter));
+                    // set the character's role to the role defined by the journal
+                    overview.role = thisPersonaeSplit[1];
+                    overviews.Add(overview);
+                }
+            }
+            this.personae = overviews.ToArray();
+        }
+
+        public ProtoJournalEntry(JournalEntry j)
+        {
+            this.jEntryID = j.jEntryID;
+            this.year = j.year;
+            this.season = j.season;
+            this.type = j.type;
+            this.location = j.location;
+            this.messageIdentifier = j.messageIdentifier;
+            this.description = j.description;
+            this.dataFields = j.dataFields;
+            this.viewed = j.viewed;
+            this.replied = j.replied;
+            this.fields = j.fields;
+            getCharacterOverviews(j);
+        }
+
+        public ProtoJournalEntry()
+        {
+
+        }
+    }
+    /// <summary>
+    /// ProtoMessage for sending an entire Journal
+    /// </summary>
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class ProtoJournal : ProtoMessage  {
+        /// <summary>
+        /// Holds entries
+        /// </summary>
+        public ProtoJournalEntry[] entries;
+        /// <summary>
+        /// Indicates presence of new (unread) entries
+        /// </summary>
+        public bool areNewEntries = false;
+        /// <summary>
+        /// Priority level of new (unread) entries
+        /// </summary>
+        public byte priority = 0;
+
+        public ProtoJournal(Journal j)
+        {
+            this.areNewEntries = j.areNewEntries;
+            this.priority = j.priority;
+        }
+
+        public void setEntries(List<JournalEntry> l)
+        {
+            List<ProtoJournalEntry> entries = new List<ProtoJournalEntry>();
+            foreach (JournalEntry entry in l)
+            {
+                entries.Add(new ProtoJournalEntry(entry));
+            }
+            this.entries = entries.ToArray();
+        }
+        public ProtoJournal()
+        {
+
+        }
     }
 
 
-        /**************** MESSAGES FROM CLIENT ***********************/
 
-        /// <summary>
-        /// Class for sending details of a detachment
-        /// Character ID of PlayerCharacter leaving detachment is obtained via connection details
-        /// </summary>
-        [ProtoContract]
-        public class ProtoDetachment : ProtoMessage
-        {
-            /// <summary>
-            /// Array of troops (size = 7)
-            /// </summary>
-            [ProtoMember(1)]
-            public uint[] troops;
-            [ProtoMember(2)]
-            public string leftFor { get; set; }
 
-            public ProtoDetachment(uint[] troops, string leftFor)
-            {
-                this.troops = troops;
-                this.leftFor = leftFor;
-            }
-        }
-        /// <summary>
-        /// Class for handling the transfer of money between fiefs
-        /// </summary>
-        [ProtoContract]
-        public class ProtoTransfer : ProtoMessage
-        {
-            // ID of the fief transferring the funds
-            [ProtoMember(1)]
-            public string fiefTo { get; set; }
-            // ID of the fief receiving the funds
-            [ProtoMember(2)]
-            public string fiefFrom { get; set; }
-            [ProtoMember(3)]
-            // amount being transferred
-            public int amount { get; set; }
-        }
-        /// <summary>
-        /// Class for transferring money between players (player sending money obtained from connection
-        /// </summary>
-        [ProtoContract]
-        public class ProtoTransferPlayer : ProtoMessage
-        {
-            // ID of player to receive money- will transfer the funds to their PlayerCharacter
-            [ProtoMember(1)]
-            public string playerTo { get; set; }
-            // amount to transfer
-            [ProtoMember(2)]
-            public int amount { get; set; }
-        }
+    /**************** MESSAGES FROM CLIENT ***********************/
 
+    /// <summary>
+    /// Class for sending details of a detachment
+    /// Character ID of PlayerCharacter leaving detachment is obtained via connection details
+    /// </summary>
+    [ProtoContract]
+    public class ProtoDetachment : ProtoMessage
+    {
         /// <summary>
-        /// Class for specifying which fief to travel to, via which route and which character
-        /// Essentially handles TravelTo, MoveCharacter and multimoves
+        /// Array of troops (size = 7)
         /// </summary>
-        [ProtoContract]
-        public class ProtoTravelTo : ProtoMessage
+        [ProtoMember(1)]
+        public uint[] troops;
+        [ProtoMember(2)]
+        public string leftFor { get; set; }
+
+        public ProtoDetachment(uint[] troops, string leftFor)
         {
-            // Fief to travel to
-            [ProtoMember(1)]
-            public string travelTo { get; set; }
-            // Route to take, if any
-            [ProtoMember(2)]
-            public string[] travelVia { get; set; }
-            // character who will be travelling
-            [ProtoMember(3)]
-            public string characterID { get; set; }
+            this.troops = troops;
+            this.leftFor = leftFor;
         }
+    }
+    /// <summary>
+    /// Class for handling the transfer of money between fiefs
+    /// </summary>
+    [ProtoContract]
+    public class ProtoTransfer : ProtoMessage
+    {
+        // ID of the fief transferring the funds
+        [ProtoMember(1)]
+        public string fiefTo { get; set; }
+        // ID of the fief receiving the funds
+        [ProtoMember(2)]
+        public string fiefFrom { get; set; }
+        [ProtoMember(3)]
+        // amount being transferred
+        public int amount { get; set; }
+    }
+    /// <summary>
+    /// Class for transferring money between players (player sending money obtained from connection
+    /// </summary>
+    [ProtoContract]
+    public class ProtoTransferPlayer : ProtoMessage
+    {
+        // ID of player to receive money- will transfer the funds to their PlayerCharacter
+        [ProtoMember(1)]
+        public string playerTo { get; set; }
+        // amount to transfer
+        [ProtoMember(2)]
+        public int amount { get; set; }
+    }
+
+    /// <summary>
+    /// Class for specifying which fief to travel to, via which route and which character
+    /// Essentially handles TravelTo, MoveCharacter and multimoves
+    /// </summary>
+    [ProtoContract]
+    public class ProtoTravelTo : ProtoMessage
+    {
+        // Fief to travel to
+        [ProtoMember(1)]
+        public string travelTo { get; set; }
+        // Route to take, if any
+        [ProtoMember(2)]
+        public string[] travelVia { get; set; }
+        // character who will be travelling
+        [ProtoMember(3)]
+        public string characterID { get; set; }
+
+        public ProtoTravelTo()
+        {
+            this.MessageType = Actions.TravelTo;
+        }
+    }
         
 }

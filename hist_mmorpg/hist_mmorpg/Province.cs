@@ -72,8 +72,7 @@ namespace hist_mmorpg
             if (challenger == this.owner)
             {
                 proceed = false;
-                string toDisplay = "You already own " + this.name + "!";
-                Globals_Game.UpdatePlayer(challenger.playerID, toDisplay);
+                Globals_Game.UpdatePlayer(challenger.playerID, DisplayMessages.ProvinceAlreadyOwn);
             }
 
             else
@@ -109,12 +108,14 @@ namespace hist_mmorpg
                 string entryType = "ownershipChallenge_new";
 
                 // journal entry description
-                string description = "On this day of Our Lord a challenge for the ownership of " + this.name + " (" + this.id + ")";
-                description += " has COMMENCED.  " + challenger.firstName + " " + challenger.familyName + " seeks to rest ownership from ";
-                description += "the current owner, " + currentOwner.firstName + " " + currentOwner.familyName + ".";
+                string[] fields = new string[4];
+                fields[0] = this.name;
+                fields[1] = this.id;
+                fields[2] = challenger.firstName + " " + challenger.familyName;
+                fields[3] = currentOwner.firstName + " " + currentOwner.familyName;
 
                 // create and send a proposal (journal entry)
-                JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType, messageIdentifier: description, loc: entryLoc);
+                JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType,fields, messageIdentifier: DisplayMessages.ProvinceOwnershipChallenge, loc: entryLoc);
                 Globals_Game.AddPastEvent(myEntry);
             }
         }
@@ -129,14 +130,10 @@ namespace hist_mmorpg
             if (tx > 100)
             {
                 tx = 100;
-                string toDisplay = "The maximum tax rate is 100%.  Rate adjusted.";
-                Globals_Game.UpdatePlayer(this.owner.playerID, toDisplay);
             }
             else if (tx < 0)
             {
                 tx = 0;
-                string toDisplay = "The minimum tax rate is 0%.  Rate adjusted.";
-                Globals_Game.UpdatePlayer(this.owner.playerID, toDisplay);
             }
 
             this.taxRate = tx;

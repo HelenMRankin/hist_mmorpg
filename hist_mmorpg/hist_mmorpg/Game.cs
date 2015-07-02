@@ -1154,14 +1154,111 @@ namespace hist_mmorpg
                         return msg;
                     }
                     bool viewAll = PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin,pc,c);
-                    //TODO
-                    break;
+                    ProtoCharacter characterDetails = new ProtoCharacter(c);
+                    if (viewAll)
+                    {
+                        characterDetails.includeAll(c);
+                    }
+                    return characterDetails;
                 case Actions.GetNPCList:
+                    if (msgIn.Message.Equals("FIEF"))
+                    {
+                        Fief fief = pc.location;
+                        List<ProtoCharacterOverview> charList = new List<ProtoCharacterOverview>();
+                        foreach (Character character in fief.charactersInFief) {
+                            charList.Add(new ProtoCharacterOverview(character));
+                        }
+                        ProtoGenericArray< ProtoCharacterOverview> charsInFief= new ProtoGenericArray<ProtoCharacterOverview>(charList.ToArray());
+                        return charsInFief;
+                    }
+                    else if (msgIn.Message.Equals("COURT")||msgIn.Message.Equals("TAVERN"))
+                    {
+                        Fief fief = pc.location;
+                        List<ProtoCharacterOverview> charList = new List<ProtoCharacterOverview>();
+                        foreach (Character character in fief.charactersInFief)
+                        {
+                            if (character != pc)
+                            {
+                                if (msgIn.Message.Equals("TAVERN"))
+                                {
+                                    if (string.IsNullOrWhiteSpace((character as NonPlayerCharacter).employer))
+                                    {
+                                        charList.Add(new ProtoCharacterOverview(character));
+                                    }
+                                }
+                                else
+                                {
+                                    charList.Add(new ProtoCharacterOverview(character));
+                                }
+                            }
+                        }
+                        ProtoGenericArray<ProtoCharacterOverview> charsInFief = new ProtoGenericArray<ProtoCharacterOverview>(charList.ToArray());
+                        return charsInFief;
+                    }
+                    
                     break;
                 case Actions.TravelTo:
-                    break;
-                case Actions.MoveCharacter:
-                    break;
+                    ProtoTravelTo travelTo = msgIn as ProtoTravelTo;
+                    if (travelTo != null)
+                    {
+                        Character charToMove = Globals_Game.pcMasterList[travelTo.characterID];
+                        if (charToMove == null)
+                        {
+                            charToMove = Globals_Game.npcMasterList[travelTo.characterID];
+                        }
+                        if (charToMove == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = Actions.Error;
+                            error.Message = "CharIDInvalid";
+                            return error;
+                        }
+                        else
+                        {
+                            if (PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, charToMove))
+                            {
+                                if (Globals_Game.fiefMasterList.ContainsKey(travelTo.travelTo))
+                                {
+                                    Fief fief = Globals_Game.fiefMasterList[msgIn.Message];
+                                    double travelCost = charToMove.location.getTravelCost(fief, charToMove.armyID);
+                                    if (charToMove.MoveCharacter(fief, travelCost))
+                                    {
+                                        return new ProtoFief(fief);
+                                    }
+                                    else
+                                    {
+                                        return null;
+                                    }
+                                }
+                                else if (travelTo.travelVia != null)
+                                {
+                                    charToMove.TakeThisRoute(travelTo.travelVia);
+                                    return new ProtoFief(charToMove.location);
+                                }
+                                else
+                                {
+                                    ProtoMessage msg = new ProtoMessage();
+                                    msg.MessageType = Actions.Error;
+                                    msg.Message = "FiefIDInvalid";
+                                    return msg;
+                                }
+                            }
+                            else
+                            {
+                                ProtoMessage unauthorised = new ProtoMessage();
+                                unauthorised.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                return unauthorised;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ProtoMessage error = new ProtoMessage();
+                        error.MessageType = Actions.Error;
+                        error.Message = "InvalidTravelMessage";
+                        return error;
+                    }
+
                 case Actions.ViewFief:
                     break;
                 case Actions.AppointBailiff:

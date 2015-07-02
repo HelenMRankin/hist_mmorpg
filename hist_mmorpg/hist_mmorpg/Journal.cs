@@ -286,10 +286,6 @@ namespace hist_mmorpg
         /// </summary>
         public uint jEntryID { get; set; }
         /// <summary>
-        /// Holds PlayerCharacter who owns entry
-        /// </summary>
-        public PlayerCharacter playerChar { get; set; }
-        /// <summary>
         /// Holds event year
         /// </summary>
         public uint year { get; set; }
@@ -329,7 +325,10 @@ namespace hist_mmorpg
         /// Holds fields to be included with message
         /// </summary>
         public string[] fields { get; set; }
-
+        /// <summary>
+        /// Holds ProtoMessage containing details of event. More flexible than strings.
+        /// </summary>
+        public ProtoMessage dataFields { get; set; }
         /// <summary>
         /// Constructor for JournalEntry
         /// </summary>
@@ -419,6 +418,91 @@ namespace hist_mmorpg
             this.viewed = false;
         }
 
+        /// <summary>
+        /// Create a new JournalEntry- used for more complex messages that would be more appropriate to be reconstructed on the client side
+        /// </summary>
+        /// <param name="m"></param>
+        /// <param name="id"></param>
+        /// <param name="yr"></param>
+        /// <param name="seas"></param>
+        /// <param name="pers"></param>
+        /// <param name="typ"></param>
+        /// <param name="loc"></param>
+        /// <param name="desc"></param>
+        public JournalEntry(ProtoMessage m,uint id, uint yr, byte seas, String[] pers, String typ,  String loc = null, string desc = null )
+        {
+
+            this.dataFields = m;
+            // VALIDATION
+
+            // SEAS
+            // check between 0-3
+            if (!Utility_Methods.ValidateSeason(seas))
+            {
+                throw new InvalidDataException("JournalEntry season must be a byte between 0-3");
+            }
+
+            // PERS
+            if (pers.Length > 0)
+            {
+                for (int i = 0; i < pers.Length; i++)
+                {
+                    // split using'|'
+                    string[] persSplit = pers[i].Split('|');
+                    if (persSplit.Length > 1)
+                    {
+                        // character ID: trim and ensure 1st is uppercase
+                        if (!persSplit[0].Contains("all"))
+                        {
+                            persSplit[0] = Utility_Methods.FirstCharToUpper(persSplit[0].Trim());
+                        }
+                        // trim role
+                        persSplit[1] = persSplit[1].Trim();
+                        // put back together
+                        pers[i] = persSplit[0] + "|" + persSplit[1];
+                    }
+
+                    if (!Utility_Methods.ValidateJentryPersonae(pers[i]))
+                    {
+                        throw new InvalidDataException("Each JournalEntry personae must consist of 2 sections of letters, divided by '|', the 1st of which must be a valid character ID");
+                    }
+                }
+            }
+
+            // TYPE
+            if (String.IsNullOrWhiteSpace(typ))
+            {
+                throw new InvalidDataException("JournalEntry type must be a string > 0 characters in length");
+            }
+
+            // LOC
+            if (!String.IsNullOrWhiteSpace(loc))
+            {
+                // trim and ensure is uppercase
+                loc = loc.Trim().ToUpper();
+
+                if (!Utility_Methods.ValidatePlaceID(loc))
+                {
+                    throw new InvalidDataException("JournalEntry location id must be 5 characters long, start with a letter, and end in at least 2 numbers");
+                }
+            }
+
+            this.jEntryID = id;
+            this.year = yr;
+            this.season = seas;
+            this.personae = pers;
+            this.type = typ;
+            if (!String.IsNullOrWhiteSpace(loc))
+            {
+                this.location = loc;
+            }
+            if (!String.IsNullOrWhiteSpace(desc))
+            {
+                this.description = desc;
+            }
+            this.viewed = false;
+
+        }
         /// <summary>
         /// Returns a string containing the details of a JournalEntry
         /// </summary>
