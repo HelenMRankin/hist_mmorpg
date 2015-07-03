@@ -12,8 +12,8 @@ namespace hist_mmorpg
     /// </summary>
     public enum Actions
     {
-        ViewChar, GetNPCList, TravelTo, MoveCharacter, ViewFief, AppointBailiff, RemoveBailiff, BarCharacter, BarNationality, UnbarCharacter, UnbarNationality, GrantFiefTitle, AdjustExpenditure, TransferFunds,
-        TransferFundsToPlayer, EnterExitKeep, ListCharsInMeetinPlace, TakeThisRoute, Camp, AddToEntourage, ProposeMarriage, AppointHeir, TryForChild, RecruitTroops, MaintainArmy, AppointLeader, DropOffTroops,
+        ViewChar, GetNPCList, TravelTo, MoveCharacter, ViewFief, AppointBailiff, RemoveBailiff, BarCharacters, BarNationalities, UnbarCharacters, UnbarNationalities, GrantFiefTitle, AdjustExpenditure, TransferFunds,
+        TransferFundsToPlayer, EnterExitKeep, ListCharsInMeetingPlace, TakeThisRoute, Camp, AddToEntourage, ProposeMarriage, AppointHeir, TryForChild, RecruitTroops, MaintainArmy, AppointLeader, DropOffTroops,
         ListDetachments, PickUpTroops, PillageFief, BesiegeFief, AdjustCombatValues, ExamineArmiesInFief, Attack, ViewJournalEntries, Error, Success, Result
     }
     /// <summary>
@@ -30,7 +30,8 @@ namespace hist_mmorpg
         CharacterBirthOK, CharacterBirthChildDead, CharacterBirthMumDead, CharacterBirthAllDead, RankTitleTransfer, CharacterCombatInjury, CharacterProposalMan, CharacterProposalUnderage, CharacterProposalEngaged, CharacterProposalMarried, CharacterProposalFamily, CharacterProposalIncest, CharacterRemovedFromEntourage, CharacterCamp,
         CharacterCampAttrition, CharacterBailiffDuty, CharacterInvalidMovement, ErrorGenericFiefUnidentified, CharacterOfferLow, CharacterOfferHigh, CharacterOfferOk, CharacterOfferAlmost, CharacterOfferHaggle, CharacterBarredKeep, CharacterRecruitOwn, CharacterRecruitAlready, CharacterLoyaltyLanguage, ErrorGenericInsufficientFunds, CharacterRecruitSiege, CharacterRecruitRebellion ,
         CharacterTransferTitle, CharacterTitleOwner, CharacterTitleHighest, CharacterTitleKing, CharacterTitleAncestral, CharacterHeir, PillageInitiateSiege, PillageRetreat, PillageDays, PillageOwnFief, PillageUnderSiege, PillageSiegeAlready, PillageAlready, PillageArmyDefeat, PillageSiegeRebellion, FiefExpenditureAdjustment, FiefExpenditureAdjusted, FiefStatus, FiefOwnershipHome ,
-        FiefOwnershipNewHome, FiefOwnershipNoFiefs, FiefChangeOwnership, FiefQuellRebellionFail, FiefEjectCharacter, ProvinceAlreadyOwn, KingdomAlreadyKing, KingdomOwnershipChallenge, ProvinceOwnershipChallenge, ErrorGenericCharacterUnidentified, ErrorGenericUnauthorised 
+        FiefOwnershipNewHome, FiefOwnershipNoFiefs, FiefChangeOwnership, FiefQuellRebellionFail, FiefEjectCharacter, ProvinceAlreadyOwn, KingdomAlreadyKing, KingdomOwnershipChallenge, ProvinceOwnershipChallenge, ErrorGenericCharacterUnidentified, ErrorGenericUnauthorised, ErrorGenericMessageInvalid, ErrorGenericTooFarFromFief, FiefNoBailiff, FiefCouldNotBar, FiefCouldNotUnbar,
+        ErrorGenericBarOwnNationality, ErrorGenericPositiveInteger, GenericReceivedFunds, ErrorGenericNoHomeFief
     }
     /// <summary>
     /// Class storing any required game-wide static variables and related methods

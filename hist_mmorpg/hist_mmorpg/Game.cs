@@ -1137,39 +1137,62 @@ namespace hist_mmorpg
             switch ((Actions)msgIn.MessageType)
             {
                 case Actions.ViewChar:
-                    Character c;
-                    if (Globals_Game.pcMasterList.ContainsKey(msgIn.Message))
                     {
-                        c = Globals_Game.pcMasterList[msgIn.Message];
+                        NonPlayerCharacter npcTemp;
+                        PlayerCharacter playerCharTemp;
+                        Character c = null;
+                        bool isValidPC = Globals_Game.pcMasterList.TryGetValue(msgIn.Message, out playerCharTemp);
+                        bool isValidNPC = Globals_Game.npcMasterList.TryGetValue(msgIn.Message, out npcTemp);
+                        if (isValidPC)
+                        {
+                            c = playerCharTemp as Character;
+                        }
+                        if (isValidNPC)
+                        {
+                            c = npcTemp as Character;
+                        }
+                        if(c==null)
+                        {
+                            ProtoMessage msg = new ProtoMessage();
+                            msg.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return msg;
+                        }
+                        bool viewAll = PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c);
+                        ProtoCharacter characterDetails = new ProtoCharacter(c);
+                        if (viewAll)
+                        {
+                            characterDetails.includeAll(c);
+                        }
+                        return characterDetails;
                     }
-                    else if (Globals_Game.npcMasterList.ContainsKey(msgIn.Message))
-                    {
-                        c = Globals_Game.npcMasterList[msgIn.Message];
-                    }
-                    else
-                    {
-                        ProtoMessage msg = new ProtoMessage();
-                        msg.MessageType = Actions.Error;
-                        msg.Message = "CharIDInvalid";
-                        return msg;
-                    }
-                    bool viewAll = PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin,pc,c);
-                    ProtoCharacter characterDetails = new ProtoCharacter(c);
-                    if (viewAll)
-                    {
-                        characterDetails.includeAll(c);
-                    }
-                    return characterDetails;
                 case Actions.GetNPCList:
                     if (msgIn.Message.Equals("FIEF"))
                     {
-                        Fief fief = pc.location;
-                        List<ProtoCharacterOverview> charList = new List<ProtoCharacterOverview>();
-                        foreach (Character character in fief.charactersInFief) {
-                            charList.Add(new ProtoCharacterOverview(character));
+                        Fief fief = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.MessageFields[0], out fief);
+                        if (fief == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
                         }
-                        ProtoGenericArray< ProtoCharacterOverview> charsInFief= new ProtoGenericArray<ProtoCharacterOverview>(charList.ToArray());
-                        return charsInFief;
+                        bool hasCharInFief = PermissionManager.isAuthorized(PermissionManager.canSeeFiefOrAdmin, pc, fief);
+                        if (hasCharInFief)
+                        {
+                            List<ProtoCharacterOverview> charList = new List<ProtoCharacterOverview>();
+                            foreach (Character character in fief.charactersInFief)
+                            {
+                                charList.Add(new ProtoCharacterOverview(character));
+                            }
+                            ProtoGenericArray<ProtoCharacterOverview> charsInFief = new ProtoGenericArray<ProtoCharacterOverview>(charList.ToArray());
+                            return charsInFief;
+                        }
+                        else
+                        {
+                            ProtoMessage m = new ProtoMessage();
+                            m.MessageType = DisplayMessages.ErrorGenericTooFarFromFief;
+                            return m;
+                        }
                     }
                     else if (msgIn.Message.Equals("COURT")||msgIn.Message.Equals("TAVERN"))
                     {
@@ -1197,29 +1220,38 @@ namespace hist_mmorpg
                     }
                     
                     break;
+                // Can travel to fief if are/own character, and have valid fief. Days etc taken into account elsewhere
                 case Actions.TravelTo:
                     ProtoTravelTo travelTo = msgIn as ProtoTravelTo;
                     if (travelTo != null)
                     {
-                        Character charToMove = Globals_Game.pcMasterList[travelTo.characterID];
-                        if (charToMove == null)
+                        Character charToMove;
+                        NonPlayerCharacter npcTemp = null;
+                        PlayerCharacter pcTemp = null;
+                        Globals_Game.pcMasterList.TryGetValue(travelTo.characterID, out pcTemp);
+                        if (pcTemp != null)
                         {
-                            charToMove = Globals_Game.npcMasterList[travelTo.characterID];
+                            charToMove = pcTemp as Character;
+                        }
+                        else
+                        {
+                            Globals_Game.npcMasterList.TryGetValue(travelTo.characterID, out npcTemp);
+                            charToMove = npcTemp as Character;
                         }
                         if (charToMove == null)
                         {
                             ProtoMessage error = new ProtoMessage();
-                            error.MessageType = Actions.Error;
-                            error.Message = "CharIDInvalid";
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
                             return error;
                         }
                         else
                         {
                             if (PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, charToMove))
                             {
-                                if (Globals_Game.fiefMasterList.ContainsKey(travelTo.travelTo))
+                                Fief fief = null;
+                                Globals_Game.fiefMasterList.TryGetValue(travelTo.travelTo, out fief);
+                                if (fief !=null)
                                 {
-                                    Fief fief = Globals_Game.fiefMasterList[msgIn.Message];
                                     double travelCost = charToMove.location.getTravelCost(fief, charToMove.armyID);
                                     if (charToMove.MoveCharacter(fief, travelCost))
                                     {
@@ -1227,6 +1259,7 @@ namespace hist_mmorpg
                                     }
                                     else
                                     {
+                                        //If charToMove returns false, the relevant error message has already been sent
                                         return null;
                                     }
                                 }
@@ -1238,8 +1271,7 @@ namespace hist_mmorpg
                                 else
                                 {
                                     ProtoMessage msg = new ProtoMessage();
-                                    msg.MessageType = Actions.Error;
-                                    msg.Message = "FiefIDInvalid";
+                                    msg.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
                                     return msg;
                                 }
                             }
@@ -1254,36 +1286,648 @@ namespace hist_mmorpg
                     else
                     {
                         ProtoMessage error = new ProtoMessage();
-                        error.MessageType = Actions.Error;
+                        error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
                         error.Message = "InvalidTravelMessage";
                         return error;
                     }
 
+                // Can view a fief if in it, own it, or have a character in it
                 case Actions.ViewFief:
-                    break;
+                    {
+                        Fief f = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message,out f);
+                        if (f == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                        else
+                        {
+                            ProtoFief fiefToView = new ProtoFief(f);
+                            if (pc.ownedFiefs.Contains(f))
+                            {
+                                fiefToView.includeAll(f);
+                                return fiefToView;
+                            }
+                            bool hasCharInFief = PermissionManager.isAuthorized(PermissionManager.canSeeFiefOrAdmin, pc, f);
+                            if (hasCharInFief)
+                            {
+                                return fiefToView;
+                            }
+                            else
+                            {
+                                ProtoMessage m = new ProtoMessage();
+                                m.MessageType = DisplayMessages.ErrorGenericTooFarFromFief;
+                                return m;
+                            }
+                        }
+                    }
                 case Actions.AppointBailiff:
-                    break;
+                    {
+                        Fief f = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out f);
+                        Character c = null;
+                        NonPlayerCharacter npcTemp = null;
+                        PlayerCharacter pcTemp = null;
+                        Globals_Game.npcMasterList.TryGetValue(msgIn.MessageFields[0],out npcTemp);
+
+                        if (npcTemp == null)
+                        {
+                            Globals_Game.pcMasterList.TryGetValue(msgIn.MessageFields[0], out pcTemp);
+                            c = pcTemp as Character;
+                        }
+                        else
+                        {
+                            c = npcTemp as Character;
+                        }
+                        if (c != null&&f!=null)
+                        {
+                            // Ensure character owns fief and character, or is admin
+                            if (PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c) && PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, f))
+                            {
+                                // Check character can become bailiff
+                                if (c.ChecksBeforeGranting(pc, "bailiff", false))
+                                {
+                                    // set bailiff, return fief
+                                    f.bailiff = c;
+                                    ProtoFief fiefToView = new ProtoFief(f);
+                                    fiefToView.includeAll(f);
+                                    return fiefToView;
+                                }
+                                else
+                                {
+                                    // error message returned from ChecksBeforeGranting
+                                    return null;
+                                }
+                            }
+                            // User unauthorised
+                            else
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                return error;
+                            }
+                        }
+                        // If character or fief not recognised
+                        else
+                        {
+                            if (c == null)
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                                return error;
+                            }
+                            else
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                                return error;
+                            }
+                        }
+                    }
                 case Actions.RemoveBailiff:
+                    {
+                        Fief f = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out f);
+                        if(f!=null) {
+                            bool hasPermission = PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, f);
+                            if (hasPermission)
+                            {
+                                if (f.bailiff != null)
+                                {
+                                    f.bailiff = null;
+                                    ProtoFief fiefToView = new ProtoFief(f);
+                                    fiefToView.includeAll(f);
+                                    return fiefToView;
+                                }
+                                else
+                                {
+                                    ProtoMessage error = new ProtoMessage();
+                                    error.MessageType = DisplayMessages.FiefNoBailiff;
+                                    return error;
+                                }
+                            }
+                            else
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                return error;
+                            }
+                        }
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                        
+                    }
+                case Actions.BarCharacters:
+                    {
+                        // check fief is valid
+                        Fief fief = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out fief);
+                        if (fief != null)
+                        {
+                            // Check player owns fief
+                            if (!PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, fief))
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                return error;
+                            }
+                            // List of characters that for whatever reason could not be barred
+                            List<string> couldNotBar = new List<string>();
+                            // Bar characters
+                            foreach (string charID in msgIn.MessageFields)
+                            {
+                                NonPlayerCharacter npcTemp = null;
+                                PlayerCharacter pcTemp = null;
+                                Globals_Game.pcMasterList.TryGetValue(charID, out pcTemp);
+                                Character charToBar = null;
+                                if (pcTemp != null)
+                                {
+                                    charToBar = pcTemp as Character;
+
+                                }
+                                else
+                                {
+                                    Globals_Game.npcMasterList.TryGetValue(charID, out npcTemp);
+                                    if (npcTemp != null)
+                                    {
+                                        charToBar = npcTemp as Character;
+                                    }
+                                    // If cannot identify character add to list of IDs that could not be barred
+                                    else
+                                    {
+                                        couldNotBar.Add(charID);
+                                    }
+                                }
+                                if (charToBar != null)
+                                {
+                                    if (!fief.BarCharacter(charToBar))
+                                    {
+                                        couldNotBar.Add(charToBar.firstName + " " + charToBar.familyName);
+                                    }
+                                }
+                            }
+                            ProtoFief fiefToReturn = new ProtoFief(fief);
+
+                            if (couldNotBar.Count > 0)
+                            {
+                                fiefToReturn.MessageType = DisplayMessages.FiefCouldNotBar;
+                                fiefToReturn.MessageFields = couldNotBar.ToArray();
+                            }
+                            fiefToReturn.includeAll(fief);
+                            return fiefToReturn;
+                        }
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                    }
+                case Actions.UnbarCharacters:
+                    {
+                        // check fief is valid
+                        Fief fief = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out fief);
+                        if (fief != null)
+                        {
+                            // Check player owns fief
+                            if (!PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, fief))
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                return error;
+                            }
+                            // List of characters that for whatever reason could not be barred
+                            List<string> couldNotUnbar = new List<string>();
+                            // Bar characters
+                            foreach (string charID in msgIn.MessageFields)
+                            {
+                                NonPlayerCharacter npcTemp = null;
+                                PlayerCharacter pcTemp = null;
+                                Globals_Game.pcMasterList.TryGetValue(charID, out pcTemp);
+                                Character charToUnbar = null;
+                                if (pcTemp != null)
+                                {
+                                    charToUnbar = pcTemp as Character;
+
+                                }
+                                else
+                                {
+                                    Globals_Game.npcMasterList.TryGetValue(charID, out npcTemp);
+                                    if (npcTemp != null)
+                                    {
+                                        charToUnbar = npcTemp as Character;
+                                    }
+                                    // If cannot identify character add to list of IDs that could not be barred
+                                    else
+                                    {
+                                        couldNotUnbar.Add(charID);
+                                    }
+                                }
+                                if (charToUnbar != null)
+                                {
+                                    if (!fief.UnbarCharacter(charToUnbar.charID))
+                                    {
+                                        couldNotUnbar.Add(charToUnbar.firstName + " " + charToUnbar.familyName);
+                                    }
+                                }
+                            }
+                            ProtoFief returnFiefState = new ProtoFief(fief);
+                            if (couldNotUnbar.Count > 0)
+                            {
+                                returnFiefState.MessageType = DisplayMessages.FiefCouldNotUnbar;
+                                returnFiefState.MessageFields = couldNotUnbar.ToArray();
+                            }
+                            returnFiefState.includeAll(fief);
+                            return returnFiefState;
+                        }
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                    }
+                case Actions.BarNationalities:
+                    {
+                        // check fief is valid
+                        Fief fief = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out fief);
+                        if (fief != null)
+                        {
+                            // Check player owns fief
+                            if (!PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, fief))
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                return error;
+                            }
+                            // Attempt to bar nationalities
+                            List<string> failedToBar = new List<string>();
+                            foreach (string natID in msgIn.MessageFields)
+                            {
+                                Nationality natToBar = null;
+                                Globals_Game.nationalityMasterList.TryGetValue(natID, out natToBar);
+                                if (natToBar != null)
+                                {
+                                    // Cannot ban self
+                                    if (natToBar == fief.owner.nationality)
+                                    {
+                                        failedToBar.Add(natID);
+                                        continue;
+                                    }
+                                    // Attempt to bar nationality
+                                    if (!fief.BarNationality(natID))
+                                    {
+                                        failedToBar.Add(natID);
+                                    }
+                                }
+                                else
+                                {
+                                    failedToBar.Add(natID);
+                                }
+                            }
+                            ProtoFief fiefToReturn = new ProtoFief(fief);
+                            if (failedToBar.Count > 0)
+                            {
+                                fiefToReturn.MessageType = DisplayMessages.FiefCouldNotBar;
+                                fiefToReturn.MessageFields = failedToBar.ToArray();
+                            }
+                            fiefToReturn.includeAll(fief);
+                            return fiefToReturn;
+                        }
+                        // Fief is invalid
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                    }
                     break;
-                case Actions.BarCharacter:
-                    break;
-                case Actions.UnbarCharacter:
-                    break;
-                case Actions.BarNationality:
+                case Actions.UnbarNationalities:
+                    {
+                        // check fief is valid
+                        Fief fief = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out fief);
+                        if (fief != null)
+                        {
+                            // Check player owns fief
+                            if (!PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, fief))
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                return error;
+                            }
+                            // Attempt to bar nationalities
+                            List<string> failedToUnbar = new List<string>();
+                            foreach (string natID in msgIn.MessageFields)
+                            {
+                                Nationality natToUnbar = null;
+                                Globals_Game.nationalityMasterList.TryGetValue(natID, out natToUnbar);
+                                if (natToUnbar != null)
+                                {
+                                    // Cannot ban self
+                                    if (natToUnbar == fief.owner.nationality)
+                                    {
+                                        failedToUnbar.Add(natID);
+                                        continue;
+                                    }
+                                    // Attempt to bar nationality
+                                    if (!fief.UnbarNationality(natID))
+                                    {
+                                        failedToUnbar.Add(natID);
+                                    }
+                                }
+                                else
+                                {
+                                    failedToUnbar.Add(natID);
+                                }
+                            }
+                            ProtoFief fiefToReturn = new ProtoFief(fief);
+                            if (failedToUnbar.Count > 0)
+                            {
+                                fiefToReturn.MessageType = DisplayMessages.FiefCouldNotUnbar;
+                                fiefToReturn.MessageFields = failedToUnbar.ToArray();
+                            }
+                            fiefToReturn.includeAll(fief);
+                            return fiefToReturn;
+                        }
+                        // Fief is invalid
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                    }
                     break;
                 case Actions.GrantFiefTitle:
+                    {
+                        Fief fief = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out fief);
+                        if (fief != null)
+                        {
+                            // Ensure player has permission to grant title
+                            if (!PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, fief))
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                return error;
+                            }
+
+                            NonPlayerCharacter npcTemp = null;
+                            PlayerCharacter pcTemp = null;
+                            Character charToGrant = null;
+                            Globals_Game.pcMasterList.TryGetValue(msgIn.MessageFields[0], out pcTemp);
+                            if (pcTemp != null)
+                            {
+                                charToGrant = pcTemp as Character;
+                            }
+                            else
+                            {
+                                Globals_Game.npcMasterList.TryGetValue(msgIn.MessageFields[0], out npcTemp);
+                                if (npcTemp != null)
+                                {
+                                    charToGrant = npcTemp as Character;
+                                }
+                            }
+                            if (charToGrant != null)
+                            {
+                                bool canGrant = charToGrant.ChecksBeforeGranting(pc, "title", false);
+                                if (canGrant)
+                                {
+                                    bool granted = pc.GrantTitle(charToGrant, fief);
+                                    if (granted)
+                                    {
+                                        ProtoFief f = new ProtoFief(fief);
+                                        f.includeAll(fief);
+                                        return f;
+                                    }
+                                    // If granting fails message is returned from GrantTitle
+                                    else
+                                    {
+                                        return null;
+                                    }
+                                }
+                                //Permission denied
+                                else
+                                {
+                                    ProtoMessage error = new ProtoMessage();
+                                    error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                                    return error;
+                                }
+                            }
+                            else
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                                return error;
+                            }
+                        }
+                        // Fief not valid
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                    }
                     break;
                 case Actions.AdjustExpenditure:
+                    {
+                        // Try to convert message to ProtoGenericArray
+                        ProtoGenericArray<double> newRates = msgIn as ProtoGenericArray<double>;
+                        if (newRates == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                            error.Message = "ProtoGenericArray";
+                            return error;
+                        }
+                        Double[] adjustedValues = newRates.fields;
+                        if (adjustedValues.Length != 5)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                            error.Message = "Expected array:5";
+                            return error;
+                        }
+                        Fief fief = null;
+                        Globals_Game.fiefMasterList.TryGetValue(newRates.Message, out fief);
+                        if (fief == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, fief))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        fief.AdjustExpenditures(adjustedValues[0], Convert.ToUInt32(adjustedValues[1]), Convert.ToUInt32(adjustedValues[2]), Convert.ToUInt32(adjustedValues[3]), Convert.ToUInt32(adjustedValues[4]));
+                        ProtoFief fiefToView = new ProtoFief(fief);
+                        fiefToView.includeAll(fief);
+                        return fiefToView;
+                    }
                     break;
                 case Actions.TransferFunds:
+                    {
+                        // Cast message to ProtoTranfer
+                        ProtoTransfer transferDetails = msgIn as ProtoTransfer;
+                        if (msgIn == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                            return error;
+                        }
+                        Fief fiefFrom = null;
+                        Fief fiefTo = null;
+                        Globals_Game.fiefMasterList.TryGetValue(transferDetails.fiefFrom, out fiefFrom);
+                        Globals_Game.fiefMasterList.TryGetValue(transferDetails.fiefTo, out fiefTo);
+                        if (fiefFrom == null || fiefTo == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                        int amount = transferDetails.amount;
+                        if (amount < 0)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericPositiveInteger;
+                            return error;
+                        }
+                        if (amount > fiefFrom.GetAvailableTreasury(true))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericInsufficientFunds;
+                            return error;
+                        }
+                        else
+                        {
+                            if (fiefFrom.TreasuryTransfer(fiefTo, amount))
+                            {
+                                ProtoMessage success = new ProtoMessage();
+                                success.MessageType = Actions.Success;
+                                return success;
+                            }
+                            // an error message will be sent from within TreasuryTransfer
+                            else
+                            {
+                                return null;
+                            }
+
+                        }
+                    }
                     break;
                 case Actions.TransferFundsToPlayer:
+                    {
+                        ProtoTransferPlayer transferDetails = msgIn as ProtoTransferPlayer;
+                        if (transferDetails == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                            return error;
+                        }
+                        PlayerCharacter transferTo = null;
+                        Globals_Game.pcMasterList.TryGetValue(transferDetails.playerTo, out transferTo);
+                        if (transferTo == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                        if (pc.GetHomeFief() == null || transferTo.GetHomeFief() == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericNoHomeFief;
+                            return error;
+                        }
+                        bool success = pc.GetHomeFief().TreasuryTransfer(transferTo.GetHomeFief(),transferDetails.amount);
+                        if(success) {
+                            Globals_Game.UpdatePlayer(transferTo.playerID, DisplayMessages.GenericReceivedFunds, new string[] { transferDetails.amount.ToString(), pc.firstName + " " + pc.familyName });
+                            ProtoMessage result = new ProtoMessage();
+                            result.MessageType = Actions.Success;
+                            return result;
+                        }
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericInsufficientFunds;
+                            return error;
+                        }
+                        
+                    }
                     break;
                 case Actions.EnterExitKeep:
+                    {
+                        Character c = null;
+                        PlayerCharacter pcTemp = null;
+                        NonPlayerCharacter npcTemp = null;
+                        if (Globals_Game.pcMasterList.TryGetValue(msgIn.Message, out pcTemp))
+                        {
+                            c = pcTemp as Character;
+                        }
+                        else if(Globals_Game.npcMasterList.TryGetValue(msgIn.Message, out npcTemp))
+                        {
+                            c = npcTemp as Character;
+                        }
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                        bool success = c.ExitEnterKeep();
+                        if (success)
+                        {
+                            ProtoMessage m = new ProtoMessage();
+                            m.MessageType = Actions.Success;
+                            return m;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
                     break;
-                case Actions.ListCharsInMeetinPlace:
+                case Actions.ListCharsInMeetingPlace:
+                    {
+                        Fief fief = pc.location;
+                        if (msgIn.Message == null)
+                        {
+                            ProtoMessage m = new ProtoMessage();
+                            m.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                            return m;
+                        }
+                        if (msgIn.Message.Equals("court"))
+                        {
+                            if (!pc.inKeep) {
+                                pc.EnterKeep();
+                            }
+                        }
+                        else
+                        {
+                            if (pc.inKeep)
+                            {
+                                pc.ExitKeep();
+                            }
+                        }
+                        ProtoGenericArray<ProtoCharacterOverview> charsInPlace = new ProtoGenericArray<ProtoCharacterOverview>(fief.ListCharsInMeetingPlace(msgIn.Message, pc));
+                        return charsInPlace;
+                    }
                     break;
                 case Actions.TakeThisRoute:
+
                     break;
                 case Actions.Camp:
                     break;

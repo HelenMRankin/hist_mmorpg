@@ -80,7 +80,7 @@ namespace hist_mmorpg
                 if (f.treasury > 0)
                 {
                     pillageResult.treasuryLoss = Convert.ToInt32((f.treasury * (thisLoss / 100)));
-                    f.treasury -= Convert.ToInt32((f.treasury * (thisLoss / 100)));
+                    f.AdjustTreasury(- Convert.ToInt32((f.treasury * (thisLoss / 100))));
                 }
             }
 
@@ -175,7 +175,7 @@ namespace hist_mmorpg
             pillageResult.moneyPillagedOwner = moneyPillagedOwner;
 
             // apply to army owner's home fief treasury
-            armyOwner.GetHomeFief().treasury += Convert.ToInt32(moneyPillagedOwner);
+            armyOwner.GetHomeFief().AdjustTreasury(Convert.ToInt32(moneyPillagedOwner));
 
             // apply loss of stature to army owner if fief has same language
             if (armyOwner.language.id == f.language.id)

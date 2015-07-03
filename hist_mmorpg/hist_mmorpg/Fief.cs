@@ -125,7 +125,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds fief treasury
         /// </summary>
-        public int treasury { get; set; }
+        public int treasury { get { return treasury; } private set { this.treasury = value; } }
         /// <summary>
         /// Holds armies present in the fief (armyIDs)
         /// </summary>
@@ -148,6 +148,16 @@ namespace hist_mmorpg
         /// </summary>
         public String siege { get; set; }
 
+        /**************LOCKS ***************/
+
+        /// <summary>
+        /// Create a new object to use as a treasury lock between transfers
+        /// </summary>
+        private object treasuryTransferLock = new object();
+        /// <summary>
+        /// Create lock for manipulating treasury
+        /// </summary>
+        private object treasuryLock = new object();
         /// <summary>
         /// Constructor for Fief
         /// </summary>
@@ -2828,7 +2838,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="to">The Fief to which funds are to be transferred</param>
         /// <param name="amount">How much to be transferred</param>
-        public void TreasuryTransfer(Fief to, int amount)
+        public bool TreasuryTransfer(Fief to, int amount)
         {
             // ensure number is positive
             amount = Math.Abs(amount);
@@ -2836,17 +2846,31 @@ namespace hist_mmorpg
             if (this.treasury < amount)
             {
                 Globals_Game.UpdatePlayer(this.owner.playerID, DisplayMessages.ErrorGenericInsufficientFunds);
+                return false;
             }
             else
             {
-                // subtract from source treasury
-                this.treasury = this.treasury - amount;
+                // Lock
+                lock (treasuryTransferLock)
+                {
+                    // subtract from source treasury
+                    this.AdjustTreasury(-amount);
 
-                // add to target treasury
-                to.treasury = to.treasury + amount;
+                    // add to target treasury
+                    to.AdjustTreasury(amount);
+                }
+                
+                return true;
             }
         }
 
+        public void AdjustTreasury(int amount)
+        {
+            lock (treasuryLock)
+            {
+                this.treasury += amount;
+            }
+        }
         /// <summary>
         /// Creates a defending army for defence of a fief during pillage or siege
         /// </summary>
@@ -3050,6 +3074,57 @@ namespace hist_mmorpg
             }
 
             return success;
+        }
+
+        /// <summary>
+        /// Returns descriptions of characters in Court, Tavern, outside keep for this fief
+        /// </summary>
+        /// <param name="place">String specifying whether court, tavern, outside keep</param>
+        /// <param name="ch">PlayerCharacter viewing these details </param>
+        public ProtoCharacterOverview[] ListCharsInMeetingPlace(string place, Character pc)
+        {
+            List<ProtoCharacterOverview> charsToView = new List<ProtoCharacterOverview>();
+            // select which characters to display - i.e. in the keep (court) or not (tavern)
+            bool ifInKeep = false;
+            if (place.Equals("court"))
+            {
+                ifInKeep = true;
+            }
+
+            // iterates through characters
+            for (int i = 0; i < this.charactersInFief.Count; i++)
+            {
+                // only display characters in relevant location (in keep, or not)
+                if (this.charactersInFief[i].inKeep == ifInKeep)
+                {
+                    // don't show the player
+                    if (this.charactersInFief[i] != pc)
+                    {
+                        switch (place)
+                        {
+                            case "tavern":
+                                // only show NPCs
+                                if (this.charactersInFief[i] is NonPlayerCharacter)
+                                {
+                                    // only show unemployed
+                                    if ((this.charactersInFief[i] as NonPlayerCharacter).salary == 0)
+                                    {
+                                        // Create an item and subitems for character
+                                        charsToView.Add(new ProtoCharacterOverview(this.charactersInFief[i]));
+                                    }
+                                }
+                                break;
+                            default:
+                                // Create an item and subitems for character
+                                charsToView.Add(new ProtoCharacterOverview(this.charactersInFief[i]));
+                                break;
+                        }
+
+                    }
+                }
+
+            }
+            return charsToView.ToArray();
         }
 
     }

@@ -2168,7 +2168,6 @@ namespace hist_mmorpg
         public bool ChecksBeforeGranting(PlayerCharacter granter, string type, bool priorToList, string armyID = null)
         {
             bool proceed = true;
-            string toDisplay = "";
             // get army if appropriate
             Army armyToLead = null;
             if (!String.IsNullOrWhiteSpace(armyID))
@@ -5226,7 +5225,7 @@ namespace hist_mmorpg
                     }
 
                     // deduct cost of troops from treasury
-                    homeFief.treasury = homeFief.treasury - troopCost;
+                    homeFief.AdjustTreasury( - troopCost);
 
                     // get army nationality
                     string thisNationality = this.nationality.natID;

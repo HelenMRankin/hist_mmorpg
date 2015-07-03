@@ -206,7 +206,7 @@ namespace hist_mmorpg
                     this.isMaintained = true;
 
                     // deduct funds from treasury
-                    homeFief.treasury -= Convert.ToInt32(maintCost);
+                    homeFief.AdjustTreasury(- Convert.ToInt32(maintCost));
 
                     Globals_Game.UpdatePlayer(GetOwner().playerID, DisplayMessages.ArmyMaintainConfirm,new string[] {maintCost.ToString()});
                     

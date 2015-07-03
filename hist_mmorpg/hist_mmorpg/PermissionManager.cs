@@ -68,6 +68,35 @@ namespace hist_mmorpg
             }
             return b;
         }
+        /// <summary>
+        /// Method to determine if player has permission to view fief
+        /// </summary>
+        /// <param name="pc">PlayerCharacter who wants to view fief</param>
+        /// <param name="o">Fief to view</param>
+        /// <returns></returns>
+        public static bool canSeeFief(PlayerCharacter pc, object o)
+        {
+            Fief f = o as Fief;
+            if (pc.ownedFiefs.Contains(f))
+            {
+                return true;
+            }
+            bool isInFief = (pc.location == f);
+            foreach (Character character in pc.myNPCs)
+            {
+                if (character.location == f||isInFief)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        /// <summary>
+        /// Method to determine if a PlayerCharacter owns, or is, a character
+        /// </summary>
+        /// <param name="pc">PlayerCharacter who is/owns </param>
+        /// <param name="o"></param>
+        /// <returns></returns>
         public static bool ownsCharacter(PlayerCharacter pc, object o)
         {
             Character character = (Character)o;
@@ -81,5 +110,7 @@ namespace hist_mmorpg
         }
 
         public static AuthorizeDelegate[] ownsCharOrAdmin = { isAdmin,ownsCharacter };
+        public static AuthorizeDelegate[] ownsFiefOrAdmin = { OwnsFief, isAdmin };
+        public static AuthorizeDelegate[] canSeeFiefOrAdmin = { canSeeFief, isAdmin };
     }
 }

@@ -833,12 +833,13 @@ namespace hist_mmorpg
         public string role { get; set; }
         // Contains location ID
         public string locationID { get; set; }
-
+        // boolean for character gender
+        public bool isMale { get; set; }
         public ProtoCharacterOverview(Character c)
         {
             this.charID = c.charID;
             this.charName = c.firstName + " " + c.familyName;
-
+            this.isMale = c.isMale;
             if (c is NonPlayerCharacter)
             {
                 PlayerCharacter pc = (c as NonPlayerCharacter).GetHeadOfFamily();
@@ -1218,9 +1219,14 @@ namespace hist_mmorpg
         [ProtoMember(3)]
         // amount being transferred
         public int amount { get; set; }
+
+        public ProtoTransfer(): base()
+        {
+            this.MessageType = Actions.TransferFunds;
+        }
     }
     /// <summary>
-    /// Class for transferring money between players (player sending money obtained from connection
+    /// Class for transferring money between players (player sending money obtained from connection)
     /// </summary>
     [ProtoContract]
     public class ProtoTransferPlayer : ProtoMessage
@@ -1228,9 +1234,14 @@ namespace hist_mmorpg
         // ID of player to receive money- will transfer the funds to their PlayerCharacter
         [ProtoMember(1)]
         public string playerTo { get; set; }
-        // amount to transfer
+        // amount to transfer - sends between home fiefs
         [ProtoMember(2)]
         public int amount { get; set; }
+
+        public ProtoTransferPlayer() : base()
+        {
+            this.MessageType = Actions.TransferFundsToPlayer;
+        }
     }
 
     /// <summary>

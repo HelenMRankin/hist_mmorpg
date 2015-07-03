@@ -1011,7 +1011,7 @@ namespace hist_mmorpg
                         // calculate ransom (10% of total GDP)
                         thisRansom = Convert.ToInt32(((thisCharacter as PlayerCharacter).GetTotalGDP() * 0.1));
                         // remove from captive's home treasury
-                        (thisCharacter as PlayerCharacter).GetHomeFief().treasury -= thisRansom;
+                        (thisCharacter as PlayerCharacter).GetHomeFief().AdjustTreasury( - thisRansom);
                     }
                     // NPCs (family of fief's old owner)
                     else
@@ -1021,11 +1021,11 @@ namespace hist_mmorpg
                         string thisFunction = (thisCharacter as NonPlayerCharacter).GetFunction(this.GetDefendingPlayer());
                         thisRansom = Convert.ToInt32((thisCharacter as NonPlayerCharacter).CalcFamilyAllowance(thisFunction));
                         // remove from head of family's home treasury
-                        this.GetDefendingPlayer().GetHomeFief().treasury -= thisRansom;
+                        this.GetDefendingPlayer().GetHomeFief().AdjustTreasury( - thisRansom);
                     }
 
                     // add to besieger's home treasury
-                    attackingPlayer.GetHomeFief().treasury += thisRansom;
+                    attackingPlayer.GetHomeFief().AdjustTreasury( thisRansom);
                     totalRansom += thisRansom;
                 }
 
