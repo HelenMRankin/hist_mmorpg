@@ -111,6 +111,7 @@ namespace hist_mmorpg
 
         public static AuthorizeDelegate[] ownsCharOrAdmin = { isAdmin,ownsCharacter };
         public static AuthorizeDelegate[] ownsFiefOrAdmin = { OwnsFief, isAdmin };
+        public static AuthorizeDelegate[] ownsArmyOrAdmin = { OwnsArmy, isAdmin };
         public static AuthorizeDelegate[] canSeeFiefOrAdmin = { canSeeFief, isAdmin };
     }
 }

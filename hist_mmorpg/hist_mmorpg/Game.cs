@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Collections;
 namespace hist_mmorpg
 {
     /// <summary>
@@ -399,13 +400,13 @@ namespace hist_mmorpg
             List<string> armies007 = new List<string>();
 
             // create troop transfer lists for fiefs
-            Dictionary<string, string[]> transfers001 = new Dictionary<string, string[]>();
-            Dictionary<string, string[]> transfers002 = new Dictionary<string, string[]>();
-            Dictionary<string, string[]> transfers003 = new Dictionary<string, string[]>();
-            Dictionary<string, string[]> transfers004 = new Dictionary<string, string[]>();
-            Dictionary<string, string[]> transfers005 = new Dictionary<string, string[]>();
-            Dictionary<string, string[]> transfers006 = new Dictionary<string, string[]>();
-            Dictionary<string, string[]> transfers007 = new Dictionary<string, string[]>();
+            Dictionary<string, ProtoDetachment> transfers001 = new Dictionary<string, ProtoDetachment>();
+            Dictionary<string, ProtoDetachment> transfers002 = new Dictionary<string, ProtoDetachment>();
+            Dictionary<string, ProtoDetachment> transfers003 = new Dictionary<string, ProtoDetachment>();
+            Dictionary<string, ProtoDetachment> transfers004 = new Dictionary<string, ProtoDetachment>();
+            Dictionary<string, ProtoDetachment> transfers005 = new Dictionary<string, ProtoDetachment>();
+            Dictionary<string, ProtoDetachment> transfers006 = new Dictionary<string, ProtoDetachment>();
+            Dictionary<string, ProtoDetachment> transfers007 = new Dictionary<string, ProtoDetachment>();
 
             // create barredNationalities for fiefs
             List<string> barredNats01 = new List<string>();
@@ -821,13 +822,6 @@ namespace hist_mmorpg
             toAdd.Clear();
         }
 
-        public void PerformAction(PlayerCharacter pc, string action, string object_ID = null)
-        {
-            switch (action)
-            {
-
-            }
-        }
         // ------------------- SEASONAL UPDATE
 
         /// <summary>
@@ -1136,27 +1130,18 @@ namespace hist_mmorpg
         {
             switch ((Actions)msgIn.MessageType)
             {
+                // View a specific character
                 case Actions.ViewChar:
                     {
-                        NonPlayerCharacter npcTemp;
-                        PlayerCharacter playerCharTemp;
-                        Character c = null;
-                        bool isValidPC = Globals_Game.pcMasterList.TryGetValue(msgIn.Message, out playerCharTemp);
-                        bool isValidNPC = Globals_Game.npcMasterList.TryGetValue(msgIn.Message, out npcTemp);
-                        if (isValidPC)
-                        {
-                            c = playerCharTemp as Character;
-                        }
-                        if (isValidNPC)
-                        {
-                            c = npcTemp as Character;
-                        }
+                        Character c = Globals_Game.getCharFromID(msgIn.Message);
+                        // Ensure character exists
                         if(c==null)
                         {
                             ProtoMessage msg = new ProtoMessage();
                             msg.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
                             return msg;
                         }
+                        // Check whether player owns character, include additional information if so
                         bool viewAll = PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c);
                         ProtoCharacter characterDetails = new ProtoCharacter(c);
                         if (viewAll)
@@ -1165,79 +1150,51 @@ namespace hist_mmorpg
                         }
                         return characterDetails;
                     }
+                // Get a list of NPCs- if listing chars in meeting place use "ListCharsInMeetingPlace"
                 case Actions.GetNPCList:
-                    if (msgIn.Message.Equals("FIEF"))
                     {
-                        Fief fief = null;
-                        Globals_Game.fiefMasterList.TryGetValue(msgIn.MessageFields[0], out fief);
-                        if (fief == null)
+                        List<ProtoCharacterOverview> listOfChars = new List<ProtoCharacterOverview>();
+                        if (msgIn.Message.Equals("entourage"))
                         {
-                            ProtoMessage error = new ProtoMessage();
-                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
-                            return error;
-                        }
-                        bool hasCharInFief = PermissionManager.isAuthorized(PermissionManager.canSeeFiefOrAdmin, pc, fief);
-                        if (hasCharInFief)
-                        {
-                            List<ProtoCharacterOverview> charList = new List<ProtoCharacterOverview>();
-                            foreach (Character character in fief.charactersInFief)
+                            foreach (Character entourageChar in pc.myEntourage)
                             {
-                                charList.Add(new ProtoCharacterOverview(character));
+                                listOfChars.Add(new ProtoCharacterOverview(entourageChar));
                             }
-                            ProtoGenericArray<ProtoCharacterOverview> charsInFief = new ProtoGenericArray<ProtoCharacterOverview>(charList.ToArray());
-                            return charsInFief;
                         }
-                        else
+                        if (msgIn.Message.Contains("employ"))
                         {
-                            ProtoMessage m = new ProtoMessage();
-                            m.MessageType = DisplayMessages.ErrorGenericTooFarFromFief;
-                            return m;
-                        }
-                    }
-                    else if (msgIn.Message.Equals("COURT")||msgIn.Message.Equals("TAVERN"))
-                    {
-                        Fief fief = pc.location;
-                        List<ProtoCharacterOverview> charList = new List<ProtoCharacterOverview>();
-                        foreach (Character character in fief.charactersInFief)
-                        {
-                            if (character != pc)
+                            foreach (NonPlayerCharacter employee in pc.myNPCs)
                             {
-                                if (msgIn.Message.Equals("TAVERN"))
+                                // ensure character is employee
+                                if (!string.IsNullOrWhiteSpace(employee.employer))
                                 {
-                                    if (string.IsNullOrWhiteSpace((character as NonPlayerCharacter).employer))
-                                    {
-                                        charList.Add(new ProtoCharacterOverview(character));
-                                    }
-                                }
-                                else
-                                {
-                                    charList.Add(new ProtoCharacterOverview(character));
+                                    listOfChars.Add(new ProtoCharacterOverview(employee));
                                 }
                             }
                         }
-                        ProtoGenericArray<ProtoCharacterOverview> charsInFief = new ProtoGenericArray<ProtoCharacterOverview>(charList.ToArray());
-                        return charsInFief;
+                        if (msgIn.Message.Contains("family"))
+                        {
+                            foreach (NonPlayerCharacter family in pc.myNPCs)
+                            {
+                                // ensure character is employee
+                                if (!string.IsNullOrWhiteSpace(family.familyID))
+                                {
+                                    listOfChars.Add(new ProtoCharacterOverview(family));
+                                }
+                            }
+                        }
+                        ProtoGenericArray<ProtoCharacterOverview> result = new ProtoGenericArray<ProtoCharacterOverview>(listOfChars.ToArray());
+                        result.Message = msgIn.Message;
+                        return result;
                     }
-                    
-                    break;
                 // Can travel to fief if are/own character, and have valid fief. Days etc taken into account elsewhere
                 case Actions.TravelTo:
+                    // Attempt to convert message to ProtoTravelTo
                     ProtoTravelTo travelTo = msgIn as ProtoTravelTo;
                     if (travelTo != null)
                     {
-                        Character charToMove;
-                        NonPlayerCharacter npcTemp = null;
-                        PlayerCharacter pcTemp = null;
-                        Globals_Game.pcMasterList.TryGetValue(travelTo.characterID, out pcTemp);
-                        if (pcTemp != null)
-                        {
-                            charToMove = pcTemp as Character;
-                        }
-                        else
-                        {
-                            Globals_Game.npcMasterList.TryGetValue(travelTo.characterID, out npcTemp);
-                            charToMove = npcTemp as Character;
-                        }
+                        // Identify character to move
+                        Character charToMove = Globals_Game.getCharFromID(travelTo.characterID);
                         if (charToMove == null)
                         {
                             ProtoMessage error = new ProtoMessage();
@@ -1246,13 +1203,16 @@ namespace hist_mmorpg
                         }
                         else
                         {
+                            // Check permissions
                             if (PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, charToMove))
                             {
+                                // Identify fief
                                 Fief fief = null;
                                 Globals_Game.fiefMasterList.TryGetValue(travelTo.travelTo, out fief);
                                 if (fief !=null)
                                 {
                                     double travelCost = charToMove.location.getTravelCost(fief, charToMove.armyID);
+                                    // If successful send details of fief
                                     if (charToMove.MoveCharacter(fief, travelCost))
                                     {
                                         return new ProtoFief(fief);
@@ -1263,11 +1223,13 @@ namespace hist_mmorpg
                                         return null;
                                     }
                                 }
+                                // If specifying a route, attempt to move character and return final location
                                 else if (travelTo.travelVia != null)
                                 {
                                     charToMove.TakeThisRoute(travelTo.travelVia);
                                     return new ProtoFief(charToMove.location);
                                 }
+                                // If fief unidentified return error
                                 else
                                 {
                                     ProtoMessage msg = new ProtoMessage();
@@ -1275,6 +1237,7 @@ namespace hist_mmorpg
                                     return msg;
                                 }
                             }
+                            // If unauthorised return error
                             else
                             {
                                 ProtoMessage unauthorised = new ProtoMessage();
@@ -1283,6 +1246,7 @@ namespace hist_mmorpg
                             }
                         }
                     }
+                    // Message was not valid
                     else
                     {
                         ProtoMessage error = new ProtoMessage();
@@ -1291,7 +1255,7 @@ namespace hist_mmorpg
                         return error;
                     }
 
-                // Can view a fief if in it, own it, or have a character in it
+                // View a fief. Can view a fief if in it, own it, or have a character in it
                 case Actions.ViewFief:
                     {
                         Fief f = null;
@@ -1323,24 +1287,14 @@ namespace hist_mmorpg
                             }
                         }
                     }
+                // Appoint a character as a bailiff to a fief
                 case Actions.AppointBailiff:
                     {
+                        // Fief
                         Fief f = null;
                         Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out f);
-                        Character c = null;
-                        NonPlayerCharacter npcTemp = null;
-                        PlayerCharacter pcTemp = null;
-                        Globals_Game.npcMasterList.TryGetValue(msgIn.MessageFields[0],out npcTemp);
-
-                        if (npcTemp == null)
-                        {
-                            Globals_Game.pcMasterList.TryGetValue(msgIn.MessageFields[0], out pcTemp);
-                            c = pcTemp as Character;
-                        }
-                        else
-                        {
-                            c = npcTemp as Character;
-                        }
+                        // Character to become bailiff
+                        Character c = Globals_Game.getCharFromID(msgIn.MessageFields[0]);
                         if (c != null&&f!=null)
                         {
                             // Ensure character owns fief and character, or is admin
@@ -1386,14 +1340,18 @@ namespace hist_mmorpg
                             }
                         }
                     }
+                // Remove bailiff from fief
                 case Actions.RemoveBailiff:
                     {
+                        // Fief
                         Fief f = null;
                         Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out f);
                         if(f!=null) {
+                            // Ensure player is authorized
                             bool hasPermission = PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, f);
                             if (hasPermission)
                             {
+                                // Remove bailiff and return fief details
                                 if (f.bailiff != null)
                                 {
                                     f.bailiff = null;
@@ -1401,6 +1359,7 @@ namespace hist_mmorpg
                                     fiefToView.includeAll(f);
                                     return fiefToView;
                                 }
+                                // Error- no bailiff
                                 else
                                 {
                                     ProtoMessage error = new ProtoMessage();
@@ -1408,6 +1367,7 @@ namespace hist_mmorpg
                                     return error;
                                 }
                             }
+                            // Unauthorised
                             else
                             {
                                 ProtoMessage error = new ProtoMessage();
@@ -1415,14 +1375,15 @@ namespace hist_mmorpg
                                 return error;
                             }
                         }
+                        // Could not identify fief
                         else
                         {
                             ProtoMessage error = new ProtoMessage();
                             error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
                             return error;
                         }
-                        
                     }
+                // Bar a number of characters from a fief
                 case Actions.BarCharacters:
                     {
                         // check fief is valid
@@ -1442,36 +1403,24 @@ namespace hist_mmorpg
                             // Bar characters
                             foreach (string charID in msgIn.MessageFields)
                             {
-                                NonPlayerCharacter npcTemp = null;
-                                PlayerCharacter pcTemp = null;
-                                Globals_Game.pcMasterList.TryGetValue(charID, out pcTemp);
-                                Character charToBar = null;
-                                if (pcTemp != null)
-                                {
-                                    charToBar = pcTemp as Character;
+                                Character charToBar = Globals_Game.getCharFromID(charID);
 
-                                }
-                                else
-                                {
-                                    Globals_Game.npcMasterList.TryGetValue(charID, out npcTemp);
-                                    if (npcTemp != null)
-                                    {
-                                        charToBar = npcTemp as Character;
-                                    }
-                                    // If cannot identify character add to list of IDs that could not be barred
-                                    else
-                                    {
-                                        couldNotBar.Add(charID);
-                                    }
-                                }
                                 if (charToBar != null)
                                 {
+                                    // Try to bar, if fail add to list of unbarrables
                                     if (!fief.BarCharacter(charToBar))
                                     {
                                         couldNotBar.Add(charToBar.firstName + " " + charToBar.familyName);
                                     }
                                 }
+                                // If could not identify character, add to list of unbarrables
+                                else
+                                {
+                                    couldNotBar.Add(charID);
+                                }
+                                
                             }
+                            // return fief, along with details of characters that could not be barred
                             ProtoFief fiefToReturn = new ProtoFief(fief);
 
                             if (couldNotBar.Count > 0)
@@ -1482,6 +1431,7 @@ namespace hist_mmorpg
                             fiefToReturn.includeAll(fief);
                             return fiefToReturn;
                         }
+                        // if could not identify fief
                         else
                         {
                             ProtoMessage error = new ProtoMessage();
@@ -1489,6 +1439,7 @@ namespace hist_mmorpg
                             return error;
                         }
                     }
+                // Unbar a number of characters from fief
                 case Actions.UnbarCharacters:
                     {
                         // check fief is valid
@@ -1508,28 +1459,7 @@ namespace hist_mmorpg
                             // Bar characters
                             foreach (string charID in msgIn.MessageFields)
                             {
-                                NonPlayerCharacter npcTemp = null;
-                                PlayerCharacter pcTemp = null;
-                                Globals_Game.pcMasterList.TryGetValue(charID, out pcTemp);
-                                Character charToUnbar = null;
-                                if (pcTemp != null)
-                                {
-                                    charToUnbar = pcTemp as Character;
-
-                                }
-                                else
-                                {
-                                    Globals_Game.npcMasterList.TryGetValue(charID, out npcTemp);
-                                    if (npcTemp != null)
-                                    {
-                                        charToUnbar = npcTemp as Character;
-                                    }
-                                    // If cannot identify character add to list of IDs that could not be barred
-                                    else
-                                    {
-                                        couldNotUnbar.Add(charID);
-                                    }
-                                }
+                                Character charToUnbar = Globals_Game.getCharFromID(charID);
                                 if (charToUnbar != null)
                                 {
                                     if (!fief.UnbarCharacter(charToUnbar.charID))
@@ -1537,7 +1467,12 @@ namespace hist_mmorpg
                                         couldNotUnbar.Add(charToUnbar.firstName + " " + charToUnbar.familyName);
                                     }
                                 }
+                                else
+                                {
+                                    couldNotUnbar.Add(charID);
+                                }
                             }
+                            // Return fief along with characters that could not be unbarred
                             ProtoFief returnFiefState = new ProtoFief(fief);
                             if (couldNotUnbar.Count > 0)
                             {
@@ -1547,6 +1482,7 @@ namespace hist_mmorpg
                             returnFiefState.includeAll(fief);
                             return returnFiefState;
                         }
+                        // error if fief unidentified
                         else
                         {
                             ProtoMessage error = new ProtoMessage();
@@ -1554,6 +1490,7 @@ namespace hist_mmorpg
                             return error;
                         }
                     }
+                // Bar a number of nationalities from fief
                 case Actions.BarNationalities:
                     {
                         // check fief is valid
@@ -1593,6 +1530,7 @@ namespace hist_mmorpg
                                     failedToBar.Add(natID);
                                 }
                             }
+                            // Return fief + nationalities failed to bar
                             ProtoFief fiefToReturn = new ProtoFief(fief);
                             if (failedToBar.Count > 0)
                             {
@@ -1610,7 +1548,7 @@ namespace hist_mmorpg
                             return error;
                         }
                     }
-                    break;
+                // Unbar a number of nationalities from fief
                 case Actions.UnbarNationalities:
                     {
                         // check fief is valid
@@ -1650,6 +1588,7 @@ namespace hist_mmorpg
                                     failedToUnbar.Add(natID);
                                 }
                             }
+                            // return fief along with nationalities that could not be unbarred
                             ProtoFief fiefToReturn = new ProtoFief(fief);
                             if (failedToUnbar.Count > 0)
                             {
@@ -1667,9 +1606,10 @@ namespace hist_mmorpg
                             return error;
                         }
                     }
-                    break;
+                // Grant a fief title to a character
                 case Actions.GrantFiefTitle:
                     {
+                        // Get fief
                         Fief fief = null;
                         Globals_Game.fiefMasterList.TryGetValue(msgIn.Message, out fief);
                         if (fief != null)
@@ -1681,23 +1621,8 @@ namespace hist_mmorpg
                                 error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                                 return error;
                             }
-
-                            NonPlayerCharacter npcTemp = null;
-                            PlayerCharacter pcTemp = null;
-                            Character charToGrant = null;
-                            Globals_Game.pcMasterList.TryGetValue(msgIn.MessageFields[0], out pcTemp);
-                            if (pcTemp != null)
-                            {
-                                charToGrant = pcTemp as Character;
-                            }
-                            else
-                            {
-                                Globals_Game.npcMasterList.TryGetValue(msgIn.MessageFields[0], out npcTemp);
-                                if (npcTemp != null)
-                                {
-                                    charToGrant = npcTemp as Character;
-                                }
-                            }
+                            // Get Character
+                            Character charToGrant = Globals_Game.getCharFromID(msgIn.MessageFields[0]);
                             if (charToGrant != null)
                             {
                                 bool canGrant = charToGrant.ChecksBeforeGranting(pc, "title", false);
@@ -1707,6 +1632,7 @@ namespace hist_mmorpg
                                     if (granted)
                                     {
                                         ProtoFief f = new ProtoFief(fief);
+                                        f.Message = "grantedTitle";
                                         f.includeAll(fief);
                                         return f;
                                     }
@@ -1724,6 +1650,7 @@ namespace hist_mmorpg
                                     return error;
                                 }
                             }
+                            // Character not valid
                             else
                             {
                                 ProtoMessage error = new ProtoMessage();
@@ -1739,7 +1666,7 @@ namespace hist_mmorpg
                             return error;
                         }
                     }
-                    break;
+                // Adjust fief expenditure
                 case Actions.AdjustExpenditure:
                     {
                         // Try to convert message to ProtoGenericArray
@@ -1751,6 +1678,7 @@ namespace hist_mmorpg
                             error.Message = "ProtoGenericArray";
                             return error;
                         }
+                        // Check array is right length
                         Double[] adjustedValues = newRates.fields;
                         if (adjustedValues.Length != 5)
                         {
@@ -1759,6 +1687,7 @@ namespace hist_mmorpg
                             error.Message = "Expected array:5";
                             return error;
                         }
+                        // Get fief
                         Fief fief = null;
                         Globals_Game.fiefMasterList.TryGetValue(newRates.Message, out fief);
                         if (fief == null)
@@ -1767,18 +1696,20 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
                             return error;
                         }
+                        // Check permissions
                         if (!PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, fief))
                         {
                             ProtoMessage error = new ProtoMessage();
                             error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                             return error;
                         }
+                        // Return fief after adjusting expenditures
                         fief.AdjustExpenditures(adjustedValues[0], Convert.ToUInt32(adjustedValues[1]), Convert.ToUInt32(adjustedValues[2]), Convert.ToUInt32(adjustedValues[3]), Convert.ToUInt32(adjustedValues[4]));
                         ProtoFief fiefToView = new ProtoFief(fief);
                         fiefToView.includeAll(fief);
                         return fiefToView;
                     }
-                    break;
+                // Transfer funds between fiefs
                 case Actions.TransferFunds:
                     {
                         // Cast message to ProtoTranfer
@@ -1789,6 +1720,7 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
                             return error;
                         }
+                        // Check both fiefs are valid
                         Fief fiefFrom = null;
                         Fief fiefTo = null;
                         Globals_Game.fiefMasterList.TryGetValue(transferDetails.fiefFrom, out fiefFrom);
@@ -1799,6 +1731,7 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
                             return error;
                         }
+                        // Check amount is valid
                         int amount = transferDetails.amount;
                         if (amount < 0)
                         {
@@ -1806,6 +1739,7 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericPositiveInteger;
                             return error;
                         }
+                        // Ensure fief has sufficient funds
                         if (amount > fiefFrom.GetAvailableTreasury(true))
                         {
                             ProtoMessage error = new ProtoMessage();
@@ -1814,10 +1748,12 @@ namespace hist_mmorpg
                         }
                         else
                         {
+                            // return success
                             if (fiefFrom.TreasuryTransfer(fiefTo, amount))
                             {
                                 ProtoMessage success = new ProtoMessage();
-                                success.MessageType = Actions.Success;
+                                success.Message = "transferfunds";
+                                success.MessageType = DisplayMessages.Success;
                                 return success;
                             }
                             // an error message will be sent from within TreasuryTransfer
@@ -1828,16 +1764,19 @@ namespace hist_mmorpg
 
                         }
                     }
-                    break;
+                // Transfer funds from pc's home fief to another player's home fief
                 case Actions.TransferFundsToPlayer:
                     {
+                        // Try to convert to ProtoTransferPlayer
                         ProtoTransferPlayer transferDetails = msgIn as ProtoTransferPlayer;
+                        // If failed return error
                         if (transferDetails == null)
                         {
                             ProtoMessage error = new ProtoMessage();
                             error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
                             return error;
                         }
+                        // Get player to transfer to
                         PlayerCharacter transferTo = null;
                         Globals_Game.pcMasterList.TryGetValue(transferDetails.playerTo, out transferTo);
                         if (transferTo == null)
@@ -1846,17 +1785,20 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
                             return error;
                         }
+                        // Confirm both players have a home fief
                         if (pc.GetHomeFief() == null || transferTo.GetHomeFief() == null)
                         {
                             ProtoMessage error = new ProtoMessage();
                             error.MessageType = DisplayMessages.ErrorGenericNoHomeFief;
                             return error;
                         }
+                        // Perform treasury transfer, update
                         bool success = pc.GetHomeFief().TreasuryTransfer(transferTo.GetHomeFief(),transferDetails.amount);
                         if(success) {
                             Globals_Game.UpdatePlayer(transferTo.playerID, DisplayMessages.GenericReceivedFunds, new string[] { transferDetails.amount.ToString(), pc.firstName + " " + pc.familyName });
                             ProtoMessage result = new ProtoMessage();
-                            result.MessageType = Actions.Success;
+                            result.MessageType = DisplayMessages.Success;
+                            result.Message = "transferfundsplayer";
                             return result;
                         }
                         else
@@ -1865,43 +1807,42 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericInsufficientFunds;
                             return error;
                         }
-                        
                     }
-                    break;
+                // Instruct a character to enter or exit keep
                 case Actions.EnterExitKeep:
                     {
-                        Character c = null;
-                        PlayerCharacter pcTemp = null;
-                        NonPlayerCharacter npcTemp = null;
-                        if (Globals_Game.pcMasterList.TryGetValue(msgIn.Message, out pcTemp))
-                        {
-                            c = pcTemp as Character;
-                        }
-                        else if(Globals_Game.npcMasterList.TryGetValue(msgIn.Message, out npcTemp))
-                        {
-                            c = npcTemp as Character;
-                        }
-                        else
+                        // get character, check is valid
+                        Character c = Globals_Game.getCharFromID(msgIn.Message);
+                        if (c == null)
                         {
                             ProtoMessage error = new ProtoMessage();
                             error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                        // check authorization
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                             return error;
                         }
                         bool success = c.ExitEnterKeep();
                         if (success)
                         {
                             ProtoMessage m = new ProtoMessage();
-                            m.MessageType = Actions.Success;
+                            m.MessageType = DisplayMessages.Success;
                             return m;
                         }
                         else
                         {
+                            // Error messages handled within enter/exit keep
                             return null;
                         }
                     }
-                    break;
+                // List chars in court, tavern or outside fief
                 case Actions.ListCharsInMeetingPlace:
                     {
+                        // fief is current player fief- May change later to allow a player's characters to scout out NPCs in fiefs
                         Fief fief = pc.location;
                         if (msgIn.Message == null)
                         {
@@ -1909,6 +1850,7 @@ namespace hist_mmorpg
                             m.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
                             return m;
                         }
+                        // Enter/exit keep as appropriate depending on whether viewing court
                         if (msgIn.Message.Equals("court"))
                         {
                             if (!pc.inKeep) {
@@ -1922,50 +1864,697 @@ namespace hist_mmorpg
                                 pc.ExitKeep();
                             }
                         }
+                        // Get and return charcters in meeting place
                         ProtoGenericArray<ProtoCharacterOverview> charsInPlace = new ProtoGenericArray<ProtoCharacterOverview>(fief.ListCharsInMeetingPlace(msgIn.Message, pc));
+                        charsInPlace.MessageType = DisplayMessages.Characters;
                         return charsInPlace;
                     }
-                    break;
+                // take a specific route using movement instructions
                 case Actions.TakeThisRoute:
-
-                    break;
+                    {
+                        // validate character
+                        Character c = Globals_Game.getCharFromID(msgIn.Message);
+                        if (c == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                        // Ensure player owns character
+                        if (PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c))
+                        {
+                            // attempt to take route and return resulting character location fief details
+                            c.TakeThisRoute(msgIn.MessageFields);
+                            return new ProtoFief(c.location);
+                        }
+                        // If unauthorised, return error
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                    }
+                // Instruct a character to camp where they are for a number of days
                 case Actions.Camp:
-                    break;
-                case Actions.AddToEntourage:
-                    break;
+                    {
+                        // Validate character
+                        Character c = Globals_Game.getCharFromID(msgIn.Message);
+                        if(c==null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                        // Perform authorization
+                        if (PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c))
+                        {
+                            // Attempt to camp
+                            try
+                            {
+                                c.CampWaitHere(Convert.ToByte(msgIn.MessageFields[0]));
+                                ProtoMessage msg = new ProtoMessage();
+                                msg.MessageType = DisplayMessages.Success;
+                                return msg;
+                            }
+                            catch (Exception e)
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                                error.Message = e.ToString();
+                                return error;
+                            }
+                            
+                        }
+                        // if unauthorised, error
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                    }
+                // add or remove a character to the entourage
+                case Actions.AddRemoveEntourage:
+                    {
+                        // validate character
+                        Character c = Globals_Game.getCharFromID(msgIn.Message);
+                        NonPlayerCharacter myNPC = (c as NonPlayerCharacter);
+                        if (myNPC == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                        // ensure player is authorized to add to entourage
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, myNPC))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        // If in intourage, remove- otherwise, add
+                        if ((c as NonPlayerCharacter).inEntourage == true)
+                        {
+                            pc.RemoveFromEntourage(myNPC);
+                        }
+                        else
+                        {
+                            pc.AddToEntourage(myNPC);
+                        }
+                        // return entourage
+                        List<ProtoCharacterOverview> newEntourage = new List<ProtoCharacterOverview>();
+                        foreach (Character entourageChar in pc.myEntourage)
+                        {
+                            newEntourage.Add(new ProtoCharacterOverview(entourageChar));
+                        }
+                        ProtoGenericArray<ProtoCharacterOverview> result = new ProtoGenericArray<ProtoCharacterOverview>(newEntourage.ToArray());
+                        return result;
+                    }
+                // Propose marriage between two characters
                 case Actions.ProposeMarriage:
-                    break;
+                    Character charFromProposer = Globals_Game.getCharFromID(msgIn.Message);
+                    if (charFromProposer == null)
+                    {
+                        ProtoMessage error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                        return error;
+                    }
+                    if (!PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, charFromProposer))
+                    {
+                        ProtoMessage error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.ErrorGenericUnauthorised ;
+                        return error;
+                    }
+                    Character charProposeTo = Globals_Game.getCharFromID(msgIn.MessageFields[0]);
+                    if (charProposeTo == null)
+                    {
+                        ProtoMessage error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                        return error;
+                    }
+                    bool madeProposal = false;
+                    if (charFromProposer.ChecksBeforeProposal(charProposeTo))
+                    {
+                        madeProposal = charFromProposer.ProposeMarriage(charProposeTo);
+                    }
+                    if (!madeProposal)
+                    {
+                        ProtoMessage error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.Error;
+                        error.Message = "Proposal failed";
+                        return error;
+                    }
+                    else
+                    {
+                        ProtoMessage success = new ProtoMessage();
+                        success.MessageType = DisplayMessages.Success;
+                        success.Message = "Proposal success";
+                        return success;
+                    }
+                // Reply to a proposal (accept or reject)
+                case Actions.AcceptRejectProposal:
+                    {
+                        // Attempt to get Journal entry
+                        JournalEntry jEntry = null;
+                        Client client = Globals_Server.clients[pc.playerID];
+                        // Player must be logged in (but if not logged on, nobody to send result to
+                        if (client == null)
+                        {
+                            return null;
+                        }
+                        client.myPastEvents.entries.TryGetValue(Convert.ToUInt32(msgIn.Message),out jEntry);
+                        if (jEntry == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.JournalEntryUnrecognised;
+                            return error;
+                        }
+                        if (!jEntry.CheckForProposal(pc))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.JournalEntryNotProposal;
+                            return error;
+                        }
+                        bool success = jEntry.ReplyToProposal(Convert.ToBoolean(msgIn.MessageFields[0]));
+                        if (success)
+                        {
+                            ProtoMessage proposeresult = new ProtoMessage();
+                            proposeresult.MessageType = DisplayMessages.Success;
+                            return proposeresult;
+                        }
+                        else
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.Error;
+                            return error;
+                        }
+                    }
+                // Appoint a new heir
                 case Actions.AppointHeir:
-                    break;
+                    {
+                        // validate character
+                        Character heirTemp = Globals_Game.getCharFromID(msgIn.Message);
+                        if (heirTemp == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                    
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, heirTemp))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        NonPlayerCharacter heir = (heirTemp as NonPlayerCharacter);
+                        if (heir==null || !heir.ChecksForHeir(pc))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.CharacterHeir;
+                            return error;
+                        }
+                        else {
+                            // check for an existing heir and remove
+                            foreach (NonPlayerCharacter npc in pc.myNPCs)
+                            {
+                                if (npc.isHeir)
+                                {
+                                    npc.isHeir = false;
+                                }
+                            }
+                            heir.isHeir = true;
+                            ProtoCharacter result = new ProtoCharacter(heir);
+                            result.includeAll(heir);
+                            return result;
+                        }
+                    }
+                // Attempt to have a child
                 case Actions.TryForChild:
-                    break;
+                    {
+                        // Get father
+                        Character father = Globals_Game.getCharFromID(msgIn.Message);
+                        if (father == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                        // Authorize
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, father))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        // Confirm can get pregnant
+                        if (!Birth.ChecksBeforePregnancyAttempt(father))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.Error;
+                            return error;
+                        }
+                        // Move so that both husband and wife are in/out of keep
+                        father.GetSpouse().inKeep = father.inKeep;
+                        bool pregnant = father.GetSpousePregnant(father.GetSpouse());
+                        // At this point the rest is handled by the GetSpousePregnant method
+                        ProtoMessage result = new ProtoMessage();
+                        result.MessageType = DisplayMessages.Success;
+                        return result;
+                    }
+                // Recruit troops from fief
                 case Actions.RecruitTroops:
-                    break;
+                    {
+                        // convert incoming message to ProtoRecruit
+                        ProtoRecruit recruitmentDetails = (msgIn as ProtoRecruit);
+                        if (recruitmentDetails == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                            return error;
+                        }
+                        // Get army to recruit into
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(recruitmentDetails.armyID, out army);
+                        if (army == null || !pc.myArmies.Contains(army))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        // recruit troops
+                        uint numTroops = recruitmentDetails.amount ;
+                        return pc.RecruitTroops(numTroops, army,recruitmentDetails.isConfirm);
+                    }
+                // Maintain an army
                 case Actions.MaintainArmy:
-                    break;
+                    {
+                        // get army
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(msgIn.Message, out army);
+                        if (army == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, pc, army))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        // messages sent from within maintain army
+                        army.MaintainArmy();
+                        return null;
+                    }
+                // Appoint a new army leader
                 case Actions.AppointLeader:
-                    break;
+                    {
+                        // Get army
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(msgIn.Message, out army);
+                        if (army == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        // Get leader
+                        Character newLeader = Globals_Game.getCharFromID(msgIn.MessageFields[0]);
+                        if (newLeader == null )
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
+                            return error;
+                        }
+                        // Authorize
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, pc, army) || (!PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, newLeader)))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        // Check char can be leader, grant
+                        bool canBeLeader = newLeader.ChecksBeforeGranting(pc, "leader", false, army.armyID);
+                        if (canBeLeader)
+                        {
+                            army.AssignNewLeader(newLeader);
+                            return new ProtoArmy(army,pc);
+                        }
+                        // Checks before granting will return own error messages
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                // Drop off troops in fief 
                 case Actions.DropOffTroops:
-                    break;
+                    {
+                        // Convert to ProtoDetachment
+                        ProtoDetachment detachmentDetails = (msgIn as ProtoDetachment);
+                        if (detachmentDetails == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                            return error;
+                        }
+                        // Get army
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(detachmentDetails.armyID, out army);
+                        if (army == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        // Authorize
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, pc, army))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        // Create a detachment
+                        if (army.CreateDetachment(detachmentDetails.troops, detachmentDetails.leftFor))
+                        {
+                            ProtoMessage success = new ProtoMessage();
+                            success.MessageType = DisplayMessages.Success;
+                            return success;
+                        }
+                        else
+                        {
+                            // CreateDetachment sends its own error messages- return null
+                            return null;
+                        }
+                    }
+                // List detachments in fief
                 case Actions.ListDetachments:
-                    break;
+                    {
+                        // Get army to pick up detachments
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(msgIn.Message, out army);
+                        if (army == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        // check permissions
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, pc, army))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        // List available transfers
+                        List<ProtoDetachment> myAvailableTransfers = new List<ProtoDetachment>();
+                        foreach (ProtoDetachment transferDetails in army.GetLocation().troopTransfers.Values)
+                        {
+                            if(transferDetails.leftFor.Equals(pc.charID)) {
+                                myAvailableTransfers.Add(transferDetails);
+                            }
+                        }
+                        ProtoGenericArray<ProtoDetachment> detachmentList = new ProtoGenericArray<ProtoDetachment>(myAvailableTransfers.ToArray());
+                        detachmentList.MessageType = DisplayMessages.Success;
+                        return detachmentList;
+                    }
+                // Pick up detachments 
                 case Actions.PickUpTroops:
-                    break;
+                    {
+                        // Army to pick up detachments
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(msgIn.Message, out army);
+                        if (army == null )
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, pc, army))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        army.ProcessPickups(msgIn.MessageFields);
+                        return new ProtoArmy(army,pc);
+                    }
+                // Pillage a fief
                 case Actions.PillageFief:
-                    break;
+                    {
+                        // Get army
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(msgIn.Message, out army);
+                        if (army == null )
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, pc, army))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        bool canPillage = Pillage_Siege.ChecksBeforePillageSiege(army, army.GetLocation());
+                        if (canPillage)
+                        {
+                            Pillage_Siege.PillageFief(army, army.GetLocation());
+                            ProtoMessage result = new ProtoMessage();
+                            result.MessageType = DisplayMessages.Success;
+                            result.Message = "pillage";
+                            return result;
+                        }
+                        // CheckBeforePillage returns own error messages
+                        return null;
+                    }
+                // Besiege a fief
                 case Actions.BesiegeFief:
-                    break;
+                    {
+                        // Get army
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(msgIn.Message, out army);
+                        if (army == null )
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, pc, army))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        bool canSiege = Pillage_Siege.ChecksBeforePillageSiege(army, army.GetLocation(),"siege");
+                        if (canSiege)
+                        {
+                            Siege newSiege = Pillage_Siege.SiegeStart(army, army.GetLocation());
+                            ProtoSiegeDisplay result = new ProtoSiegeDisplay(newSiege);
+                            result.MessageType = DisplayMessages.Success;
+                            result.Message = "siege";
+                            return result;
+                        }
+                        return null;
+                    }
+                // Perform siege negotiation round
+                case Actions.SiegeRoundNegotiate:
+                    {
+                        // Get siege
+                        Siege siege = pc.GetSiege(msgIn.Message);
+                        if (siege == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericSiegeUnidentified;
+                            return error;
+                        }
+                        // Check besieger is pc
+                        if (siege.besiegingPlayer != pc.charID)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.SiegeNotBesieger;
+                            return error;
+                        }
+                        siege.SiegeReductionRound("negotiation");
+                        return new ProtoSiegeDisplay(siege);
+                    }
+                // Perform a siege reduction round
+                case Actions.SiegeRoundReduction:
+                    {
+                        // get siege
+                        Siege siege = pc.GetSiege(msgIn.Message);
+                        if (siege == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericSiegeUnidentified;
+                            return error;
+                        }
+                        // check player is besieger
+                        if (siege.besiegingPlayer != pc.charID)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.SiegeNotBesieger;
+                            return error;
+                        }
+                        siege.SiegeReductionRound();
+                        return new ProtoSiegeDisplay(siege);
+                    }
+                // Perform siege storm round
+                case Actions.SiegeRoundStorm:
+                    {
+                        // Get siege
+                        Siege siege = pc.GetSiege(msgIn.Message);
+                        if (siege == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericSiegeUnidentified;
+                            return error;
+                        }
+                        // check player is besieger
+                        if (siege.besiegingPlayer != pc.charID)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.SiegeNotBesieger;
+                            return error;
+                        }
+                        siege.SiegeReductionRound("storm");
+                        return new ProtoSiegeDisplay(siege);
+                    }
+                // List player's sieges
+                case Actions.SiegeList:
+                    {
+                        List<ProtoSiegeOverview> sieges = new List<ProtoSiegeOverview>();
+                        foreach(String siegeID in pc.mySieges) {
+                            sieges.Add(new ProtoSiegeOverview(pc.GetSiege(siegeID)));
+                        }
+                        ProtoGenericArray<ProtoSiegeOverview> siegeList = new ProtoGenericArray<ProtoSiegeOverview>(sieges.ToArray());
+                        return siegeList;
+                    }
+                // Adjust combat values
                 case Actions.AdjustCombatValues:
-                    break;
+                    {
+                        // Convert incoming message to ProtoCombatValues
+                        ProtoCombatValues newValues = (msgIn as ProtoCombatValues);
+                        if (newValues == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                            return error;
+                        }
+                        // Get army
+                        Army army = null;
+                        Globals_Game.armyMasterList.TryGetValue(newValues.armyID, out army);
+                        if (army == null)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin,pc, army)) {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
+                            return error;
+                        }
+                        // Attempt to adjust standing orders
+                        bool success= army.AdjustStandingOrders(newValues.aggression, newValues.odds);
+                        if (success)
+                        {
+                            ProtoCombatValues result = new ProtoCombatValues(army.aggression,army.combatOdds,army.armyID);
+                            return result;
+                        }
+                        else {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.Error;
+                            error.Message = "adjust standing orders";
+                            return error;
+                        }
+                    }
+                // Examine the armies in a fief
                 case Actions.ExamineArmiesInFief:
-                    break;
+                    {
+                        // get fief
+                        Fief fief = null;
+                        Globals_Game.fiefMasterList.TryGetValue(msgIn.Message,out fief);
+                        if(fief == null) {
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
+                            return error;
+                        }
+                        // get list of armies
+                        List<ProtoArmyOverview> armies = new List<ProtoArmyOverview>();
+                        foreach(string armyID in fief.armies) {
+                            Army army = null;
+                            Globals_Game.armyMasterList.TryGetValue(armyID,out army);
+                            if(army!=null) {
+                                armies.Add(new ProtoArmyOverview(army));
+                            }
+                        }
+                        // Return array of overviews
+                        ProtoGenericArray<ProtoArmyOverview> armyList = new ProtoGenericArray<ProtoArmyOverview>(armies.ToArray());
+                        armyList.MessageType =DisplayMessages.Armies;
+                        return armyList;
+                    }
+                // Attack an army
                 case Actions.Attack:
-                    break;
-                case Actions.ViewJournalEntries:
-                    break;
-                default:
-                    break;
+                    {
+                        // Get attacker and defender
+                        Army armyAttacker = null;
+                        Army armyDefender = null;
+                        Globals_Game.armyMasterList.TryGetValue(msgIn.Message, out armyAttacker);
+                        Globals_Game.armyMasterList.TryGetValue(msgIn.MessageFields[0], out armyDefender);
+                        if (armyAttacker == null || armyDefender == null)
+                        {
 
+                            ProtoMessage error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
+                        if (armyAttacker.ChecksBeforeAttack(armyDefender))
+                        {
+                            // GiveBattle returns necessary messages
+                            Battle.GiveBattle(armyAttacker, armyDefender);
+                        }
+                        return null;
+                    }
+                // View journal entries
+                case Actions.ViewJournalEntries:
+                    {
+                        // Get client
+                        Client client = null;
+                        Globals_Server.clients.TryGetValue(pc.playerID, out client);
+                        if (client != null)
+                        {
+                            // Get list of journal entries for scope
+                            string scope = msgIn.Message;
+                            var entries = client.myPastEvents.getJournalEntrySet(scope, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason);
+                            ProtoJournalEntry[] entryList = new ProtoJournalEntry[entries.Count];
+                            int i = 0;
+                            foreach (var entry in entries)
+                            {
+                                ProtoJournalEntry newEntry = new ProtoJournalEntry(entry.Value);
+                                entryList[i] = newEntry;
+                                i++;
+                            }
+                            ProtoGenericArray<ProtoJournalEntry> result = new ProtoGenericArray<ProtoJournalEntry>(entryList);
+                            result.MessageType = DisplayMessages.JournalEntries;
+                            return result;
+                        }
+                        // if no client, nobody to send error to
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                default:
+                    {
+
+                        ProtoMessage error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.ErrorGenericMessageInvalid;
+                        return error;
+                    }
             }
         }
         //TODO remove or implement

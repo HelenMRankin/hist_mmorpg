@@ -1328,7 +1328,7 @@ namespace hist_mmorpg
                     finCurr, finPrev, Convert.ToDouble(fiefData[42]), Convert.ToDouble(fiefData[43]),
                     Convert.ToChar(fiefData[44]), fiefData[45], fiefData[46], characters, barredChars,
                     barredNats, Convert.ToDouble(fiefData[47]), Convert.ToInt32(fiefData[48]), armies,
-                    Convert.ToBoolean(fiefData[49]), new Dictionary<string, string[]>(), Convert.ToBoolean(fiefData[50]),
+                    Convert.ToBoolean(fiefData[49]), new Dictionary<string, ProtoDetachment>(), Convert.ToBoolean(fiefData[50]),
                     Convert.ToByte(fiefData[51]), tiHo: tiHo, own: own, ancOwn: ancOwn, bail: bail, sge: sge);
             }
             // catch exception that could result from incorrect conversion of string to numeric 

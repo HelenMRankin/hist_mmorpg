@@ -910,7 +910,39 @@ namespace hist_mmorpg
 
         }
     }
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class ProtoSiegeOverview : ProtoMessage
+    {
+        /// <summary>
+        /// Holds siege ID
+        /// </summary>
+        public String siegeID { get; set; }
+        /// <summary>
+        /// Holds fief being besieged (fiefID)
+        /// </summary>
+        public String besiegedFief { get; set; }
+        /// <summary>
+        /// Holds besieging player
+        /// </summary>
+        public string besiegingPlayer { get; set; }
+        /// <summary>
+        /// Holds defending player
+        /// </summary>
+        public string defendingPlayer { get; set; }
 
+        public ProtoSiegeOverview(Siege s)
+        {
+            this.siegeID = s.siegeID;
+            this.besiegedFief = s.besiegedFief;
+            this.besiegingPlayer = s.besiegingPlayer;
+            this.defendingPlayer = s.defendingPlayer;
+        }
+        public ProtoSiegeOverview()
+        {
+
+        }
+
+    }
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoSiegeDisplay : ProtoMessage
     {
@@ -1187,36 +1219,51 @@ namespace hist_mmorpg
     /// Class for sending details of a detachment
     /// Character ID of PlayerCharacter leaving detachment is obtained via connection details
     /// </summary>
-    [ProtoContract]
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoDetachment : ProtoMessage
     {
         /// <summary>
         /// Array of troops (size = 7)
         /// </summary>
-        [ProtoMember(1)]
         public uint[] troops;
-        [ProtoMember(2)]
+        /// <summary>
+        /// Character detachment is left for
+        /// </summary>
         public string leftFor { get; set; }
-
-        public ProtoDetachment(uint[] troops, string leftFor)
+        /// <summary>
+        /// ArmyID of army from which detachment was created
+        /// </summary>
+        public string armyID { get; set; }
+        /// <summary>
+        /// Details of person who left this detachment (used in sending details of detachments to client)
+        /// </summary>
+        public string leftBy { get; set; }
+        /// <summary>
+        /// Days left of person who created detachment at time of creation
+        /// </summary>
+        public int days { get; set; }
+        public ProtoDetachment(uint[] troops, string leftFor, string armyID)
         {
             this.troops = troops;
             this.leftFor = leftFor;
+            this.armyID = armyID;
+            this.MessageType = Actions.DropOffTroops;
+        }
+        public ProtoDetachment()
+        {
+
         }
     }
     /// <summary>
     /// Class for handling the transfer of money between fiefs
     /// </summary>
-    [ProtoContract]
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoTransfer : ProtoMessage
     {
         // ID of the fief transferring the funds
-        [ProtoMember(1)]
         public string fiefTo { get; set; }
         // ID of the fief receiving the funds
-        [ProtoMember(2)]
         public string fiefFrom { get; set; }
-        [ProtoMember(3)]
         // amount being transferred
         public int amount { get; set; }
 
@@ -1228,14 +1275,12 @@ namespace hist_mmorpg
     /// <summary>
     /// Class for transferring money between players (player sending money obtained from connection)
     /// </summary>
-    [ProtoContract]
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoTransferPlayer : ProtoMessage
     {
         // ID of player to receive money- will transfer the funds to their PlayerCharacter
-        [ProtoMember(1)]
         public string playerTo { get; set; }
         // amount to transfer - sends between home fiefs
-        [ProtoMember(2)]
         public int amount { get; set; }
 
         public ProtoTransferPlayer() : base()
@@ -1248,22 +1293,82 @@ namespace hist_mmorpg
     /// Class for specifying which fief to travel to, via which route and which character
     /// Essentially handles TravelTo, MoveCharacter and multimoves
     /// </summary>
-    [ProtoContract]
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoTravelTo : ProtoMessage
     {
         // Fief to travel to
-        [ProtoMember(1)]
         public string travelTo { get; set; }
         // Route to take, if any
-        [ProtoMember(2)]
         public string[] travelVia { get; set; }
         // character who will be travelling
-        [ProtoMember(3)]
         public string characterID { get; set; }
 
         public ProtoTravelTo()
         {
             this.MessageType = Actions.TravelTo;
+        }
+    }
+
+    /// <summary>
+    /// Class for storing recruitment information
+    /// </summary>
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class ProtoRecruit : ProtoMessage
+    {
+        /// <summary>
+        /// Army ID of army to recruit into (null = new army)
+        /// </summary>
+        public string armyID { get; set; }
+        /// <summary>
+        /// Amount of troops to recruit
+        /// </summary>
+        public uint amount { get; set; }
+        /// <summary>
+        /// Bool representing whether the player has confirmed that they are happy to purchase troops
+        /// </summary>
+        public bool isConfirm { get; set; }
+        /// <summary>
+        /// Holds amount in player's treasury, in the event that game has to send fail message to client
+        /// </summary>
+        public int treasury { get; set; }
+
+        public int cost { get; set; }
+        public ProtoRecruit() : base()
+        {
+            this.MessageType = Actions.RecruitTroops;
+        }
+    }
+
+    /// <summary>
+    /// Class for sending combat values (bytes)
+    /// </summary>
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class ProtoCombatValues : ProtoMessage
+    {
+        /// <summary>
+        /// Army aggression value
+        /// </summary>
+        public byte aggression { get; set; }
+        /// <summary>
+        /// Army combat odds
+        /// </summary>
+        public byte odds { get; set; }
+        /// <summary>
+        /// Army whose combat values are to be adjusted
+        /// </summary>
+        public string armyID { get; set; }
+
+        public ProtoCombatValues(byte aggr, byte odds, string armyID)
+        {
+            this.MessageType = Actions.AdjustCombatValues;
+            this.aggression = aggr;
+            this.odds = odds;
+            this.armyID = armyID;
+        }
+
+        public ProtoCombatValues()
+        {
+            this.MessageType = Actions.AdjustCombatValues;
         }
     }
         

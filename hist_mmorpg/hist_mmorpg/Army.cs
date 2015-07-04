@@ -180,7 +180,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Maintains the specified field army
         /// </summary>
-        public void MantainArmy()
+        public void MaintainArmy()
         {
             // get cost
             uint maintCost = this.CalcArmySize() * 500;
@@ -308,7 +308,7 @@ namespace hist_mmorpg
                 // if new leader is NPC, remove from player's entourage
                 if (newLeader is NonPlayerCharacter)
                 {
-                    (newLeader as NonPlayerCharacter).inEntourage = false;
+                    (newLeader as NonPlayerCharacter).removeSelfFromEntourage();
                 }
 
                 // calculate days synchronisation
@@ -665,8 +665,11 @@ namespace hist_mmorpg
                 Fief thisFief = this.GetLocation();
 
                 // create transfer entry
-                string[] thisTransfer = new string[10] { this.owner, leftFor, troops[0].ToString(), troops[1].ToString(), troops[2].ToString(),
-                            troops[3].ToString(), troops[4].ToString(), troops[5].ToString(), troops[6].ToString(), (this.days - daysTaken).ToString() };
+                ProtoDetachment thisTransfer = new ProtoDetachment();
+                thisTransfer.leftBy = this.owner;
+                thisTransfer.leftFor = leftFor;
+                thisTransfer.troops = troops;
+                thisTransfer.days = (int)this.days - daysTaken;
 
                 // add to fief's troopTransfers list
                 string tranferID = Globals_Game.GetNextDetachmentID();
@@ -1519,9 +1522,9 @@ namespace hist_mmorpg
 
         }
 
-        //TODO find original purpose and refactor
         /// <summary>
         /// Processes the addition of one or more detachments to the army
+        /// UPDATE: Can now leave detachments for other players. Allows to better team play
         /// </summary>
         /// <param name="detachments">The detachments to add</param>
         public void ProcessPickups(string[] detachmentIDs)
@@ -1532,7 +1535,7 @@ namespace hist_mmorpg
             double minDays = 0;
             bool displayNotAllMsg = false;
             uint[] totTroopsToAdd = new uint[] { 0, 0, 0, 0, 0, 0, 0 };
-            Dictionary<string, string[]> troops = new Dictionary<string,string[]>();
+            Dictionary<string, ProtoDetachment> troops = new Dictionary<string,ProtoDetachment>();
             DisplayMessages toDisplay = DisplayMessages.None;
 
             // set minDays to thisArmy.days (as default value)
@@ -1567,21 +1570,21 @@ namespace hist_mmorpg
                     foreach (string id in detachmentIDs)
                     {
                         if(this.GetLocation().troopTransfers.ContainsKey(id)) {
-                            string[] details = this.GetLocation().troopTransfers[id];
+                            ProtoDetachment details = this.GetLocation().troopTransfers[id];
                             // get donating player
                             PlayerCharacter pcFrom = null;
-                            if (Globals_Game.pcMasterList.ContainsKey(details[0]))
+                            if (Globals_Game.pcMasterList.ContainsKey(details.leftBy))
                             {
-                                pcFrom = Globals_Game.pcMasterList[details[0]];
+                                pcFrom = Globals_Game.pcMasterList[details.leftBy];
                             }
                             // get target player
                             PlayerCharacter pcFor = null;
-                            if (Globals_Game.pcMasterList.ContainsKey(details[1]))
+                            if (Globals_Game.pcMasterList.ContainsKey(details.leftFor))
                             {
-                                pcFor = Globals_Game.pcMasterList[details[1]];
+                                pcFor = Globals_Game.pcMasterList[details.leftFor];
                             }
                             // check for appropriate collecting player
-                            if ((myOwner != pcFrom) && (myOwner != pcFor))
+                            if (myOwner != pcFor)
                             {
                                 Globals_Game.UpdatePlayer(owner, DisplayMessages.ArmyPickupsDenied);
                                 proceed = false;
@@ -1590,9 +1593,9 @@ namespace hist_mmorpg
                             else
                             {
                                 troops.Add(id,details);
-                                if (minDays < Convert.ToDouble(details[9]))
+                                if (minDays < Convert.ToDouble(details.days))
                                 {
-                                    minDays = Convert.ToDouble(details[9]);
+                                    minDays = Convert.ToDouble(details.days);
                                 }
                             }
                         }
@@ -1606,10 +1609,10 @@ namespace hist_mmorpg
                 Fief thisFief = this.GetLocation();
 
                 // check for minimum days
-                foreach (KeyValuePair<string,string[]> pair in troops)
+                foreach (KeyValuePair<string,ProtoDetachment> pair in troops)
                 {
-                    string[] item = pair.Value;
-                    double thisDays = Convert.ToDouble(item[9]);
+                    ProtoDetachment item = pair.Value;
+                    double thisDays = Convert.ToDouble(item.days);
 
                     // check if detachment has enough days for transfer in this instance
                     // if not, flag display of message at end of process, but do nothing else
@@ -1620,12 +1623,9 @@ namespace hist_mmorpg
                     }
                     else
                     {
-                        uint[] thisTroops = new uint[] { Convert.ToUInt32(item[2]), Convert.ToUInt32(item[3]),
-                            Convert.ToUInt32(item[4]), Convert.ToUInt32(item[5]),
-                            Convert.ToUInt32(item[6]), Convert.ToUInt32(item[7]),
-                            Convert.ToUInt32(item[8]) };
+                        uint[] thisTroops = item.troops;
 
-                        Army tempArmy = new Army(Globals_Game.GetNextArmyID(), null, item[1],
+                        Army tempArmy = new Army(Globals_Game.GetNextArmyID(), null, item.leftFor,
                                 thisDays, this.location, trp: thisTroops);
                         if (thisDays > minDays)
                         {

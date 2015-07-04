@@ -13,7 +13,7 @@ namespace TestLidgren
 {
     class Server
     {
-        NetServer s;
+        NetServer server;
         bool listen = true;
         public Server()
         {
@@ -22,8 +22,8 @@ namespace TestLidgren
             Console.WriteLine(config.MaximumConnections);
             config.MaximumConnections = 2000;
             config.Port = 8000;
-            s = new NetServer(config);
-            s.Start();
+            server = new NetServer(config);
+            server.Start();
             Console.WriteLine("Server has started.");
            
         }
@@ -32,7 +32,7 @@ namespace TestLidgren
             while (listen)
             {
                 NetIncomingMessage im;
-                while ((im = s.ReadMessage()) != null)
+                while ((im = server.ReadMessage()) != null)
                 {
                     
                     switch (im.MessageType)
@@ -61,7 +61,7 @@ namespace TestLidgren
                             break;
                         default: Console.WriteLine("not recognised"); break;
                     }
-                    s.Recycle(im);
+                    server.Recycle(im);
                 }
                 Thread.Sleep(1);
             }

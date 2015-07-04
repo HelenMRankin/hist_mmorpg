@@ -121,6 +121,9 @@ namespace hist_mmorpg
         /// </summary>
         public Dictionary<string, Ailment> ailments = new Dictionary<string, Ailment>();
 
+
+        /**************LOCKS**************/
+        protected object entourageLock = new Object();
         /// <summary>
         /// Constructor for Character
         /// </summary>
@@ -674,6 +677,7 @@ namespace hist_mmorpg
 
             return highestPlaces;
         }
+
        
         /// <summary>
         /// Calculates character's base or current stature
@@ -1504,7 +1508,7 @@ namespace hist_mmorpg
                 NonPlayerCharacter npc = deceased.myNPCs[i];
 
                 // remove from entourage
-                npc.inEntourage = false;
+                deceased.RemoveFromEntourage(npc);
 
                 // clear goTo queue
                 npc.goTo.Clear();
@@ -3309,7 +3313,7 @@ namespace hist_mmorpg
                     {
                         if ((this as NonPlayerCharacter).inEntourage)
                         {
-                            (this as NonPlayerCharacter).inEntourage = false;
+                            player.RemoveFromEntourage(this as NonPlayerCharacter);
                         }
                     }
 
@@ -4129,7 +4133,7 @@ namespace hist_mmorpg
            {
                if ((this as NonPlayerCharacter).inEntourage)
                {
-                   (this as NonPlayerCharacter).inEntourage = false;
+                   player.RemoveFromEntourage(this as NonPlayerCharacter);
                }
            }
 
@@ -4196,7 +4200,7 @@ namespace hist_mmorpg
                }
                if ((this as NonPlayerCharacter).inEntourage)
                {
-                   (this as NonPlayerCharacter).inEntourage = false;
+                   player.RemoveFromEntourage(this as NonPlayerCharacter);
                }
            }
 
@@ -4276,6 +4280,10 @@ namespace hist_mmorpg
         /// Holds character's sieges (siegeIDs)
         /// </summary>
         public List<string> mySieges = new List<string>();
+        /// <summary>
+        /// Holds Characters in entourage
+        /// </summary>
+        public List<Character> myEntourage = new List<Character>();
 
         /// <summary>
         /// Constructor for PlayerCharacter
@@ -4816,7 +4824,7 @@ namespace hist_mmorpg
             npc.employer = null;
 
             // remove NPC from entourage
-            npc.inEntourage = false;
+            RemoveFromEntourage(npc);
 
             // if NPC has entries in goTo, clear
             if (npc.goTo.Count > 0)
@@ -4836,23 +4844,26 @@ namespace hist_mmorpg
             {
                 npc.goTo.Clear();
             }
-
-            // keep track of original days value for PC
-            double myDays = this.days;
-
-            // ensure days are synchronised
-            double minDays = Math.Min(this.days, npc.days);
-            this.days = minDays;
-            npc.days = minDays;
-
-            // add to entourage
-            npc.inEntourage = true;
-
-            // ensure days of entourage are synched with PC
-            if (this.days != myDays)
+            lock (entourageLock)
             {
-                this.AdjustDays(0);
+                // keep track of original days value for PC
+                double myDays = this.days;
+
+                // ensure days are synchronised
+                double minDays = Math.Min(this.days, npc.days);
+                this.days = minDays;
+                npc.days = minDays;
+
+                // add to entourage
+                npc.setEntourage(true);
+                this.myEntourage.Add(npc);
+                // ensure days of entourage are synched with PC
+                if (this.days != myDays)
+                {
+                    this.AdjustDays(0);
+                }
             }
+           
         }
 
         /// <summary>
@@ -4861,8 +4872,12 @@ namespace hist_mmorpg
         /// <param name="npc">NPC to be removed</param>
         public void RemoveFromEntourage(NonPlayerCharacter npc)
         {
-            //remove from entourage
-            npc.inEntourage = false;
+            lock (entourageLock)
+            {
+                //remove from entourage
+                npc.setEntourage(false);
+                this.myEntourage.Remove(npc);
+            }
         }
 
         /// <summary>
@@ -5120,8 +5135,9 @@ namespace hist_mmorpg
         /// <returns>uint containing number of troops recruited</returns>
         /// <param name="number">How many troops to recruit</param>
         /// <param name="armyExists">bool indicating whether the army already exists</param>
-        public int RecruitTroops(uint number, bool armyExists)
+        public ProtoRecruit RecruitTroops(uint number, Army thisArmy, bool isConfirm)
         {
+            bool armyExists = (thisArmy != null);
             // used to record outcome of various checks
             bool proceed = true;
 
@@ -5134,9 +5150,6 @@ namespace hist_mmorpg
             // get home fief
             Fief homeFief = this.GetHomeFief();
 
-            // get army
-            Army thisArmy = null;
-
             // calculate cost of individual soldier
             if (this.location.ancestralOwner == this)
             {
@@ -5147,8 +5160,6 @@ namespace hist_mmorpg
                 indivTroopCost = 2000;
             }
 
-            // string to hold any messages
-            string toDisplay = "";
 
             // various checks to see whether to proceed
             proceed = this.ChecksBeforeRecruitment();
@@ -5156,7 +5167,7 @@ namespace hist_mmorpg
             // if have not passed all of checks above, return
             if (!proceed)
             {
-                return troopsRecruited;
+                return null;
             }
 
             // actual days taken
@@ -5182,7 +5193,12 @@ namespace hist_mmorpg
                     // work out how many troops can afford
                     double roughNumber = homeFief.GetAvailableTreasury() / indivTroopCost;
                     revisedRecruited = Convert.ToInt32(Math.Floor(roughNumber));
-                    number = Convert.ToUInt32(revisedRecruited);
+                    //Return revised number, ask client to submit new amount
+                    ProtoRecruit recruitDetails = new ProtoRecruit();
+                    recruitDetails.MessageType = DisplayMessages.CharacterRecruitInsufficientFunds;
+                    recruitDetails.MessageFields = new string[] { number.ToString(), revisedRecruited.ToString() };
+                    recruitDetails.amount = Convert.ToUInt32(revisedRecruited);
+                    return recruitDetails;
                 }
 
                 if (proceed)
@@ -5205,7 +5221,15 @@ namespace hist_mmorpg
                         // calculate total cost
                         troopCost = troopsRecruited * indivTroopCost;
                     }
-
+                    if (!isConfirm)
+                    {
+                        ProtoRecruit recruitmentDetails = new ProtoRecruit();
+                        recruitmentDetails.MessageType = DisplayMessages.CharacterRecruitOk;
+                        recruitmentDetails.amount = Convert.ToUInt32(troopsRecruited);
+                        recruitmentDetails.cost = troopCost;
+                        recruitmentDetails.treasury = this.GetHomeFief().treasury;
+                        return recruitmentDetails;
+                    }
                     // if no existing army, create one
                     if (!armyExists)
                     {
@@ -5215,17 +5239,12 @@ namespace hist_mmorpg
                             this.ExitKeep();
                         }
 
-                        thisArmy = new Army(Globals_Game.GetNextArmyID(), this.charID, this.charID, this.days, this.location.id);
+                        thisArmy = new Army(Globals_Game.GetNextArmyID(), null, this.charID, this.days, this.location.id);
                         thisArmy.AddArmy();
                     }
 
-                    else
-                    {
-                        thisArmy = this.GetArmy();
-                    }
-
                     // deduct cost of troops from treasury
-                    homeFief.AdjustTreasury( - troopCost);
+                    homeFief.AdjustTreasury(-troopCost);
 
                     // get army nationality
                     string thisNationality = this.nationality.natID;
@@ -5259,7 +5278,12 @@ namespace hist_mmorpg
             // update character's days
             this.AdjustDays(daysUsed);
 
-            return troopsRecruited;
+            {
+                ProtoRecruit recruitDetails = new ProtoRecruit();
+                recruitDetails.MessageType = DisplayMessages.Success;
+                recruitDetails.MessageFields = new string[] { troopsRecruited.ToString(), troopCost.ToString() };
+                return recruitDetails;
+            }
         }
 
         /// <summary>
@@ -5715,7 +5739,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Denotes if in employer's entourage
         /// </summary>
-        public bool inEntourage { get; set; }
+        public bool inEntourage { get; protected set; }
         /// <summary>
         /// Denotes if is player's heir
         /// </summary>
@@ -5844,6 +5868,33 @@ namespace hist_mmorpg
             return npcText;
         }
 
+        /// <summary>
+        /// Sets entourage value
+        /// </summary>
+        /// <param name="inEntourage"></param>
+        public void setEntourage(bool inEntourage)
+        {
+            this.inEntourage = inEntourage;
+        }
+        /// <summary>
+        /// Removes character from entourage
+        /// </summary>
+        public void removeSelfFromEntourage()
+        {
+            PlayerCharacter pc = this.GetEmployer();
+            if (pc == null)
+            {
+                pc = this.GetHeadOfFamily();
+            }
+            if (pc == null && this.inEntourage)
+            {
+                throw new Exception("Entourage discrepancy");
+            }
+            if (pc != null)
+            {
+                pc.RemoveFromEntourage(this);
+            }
+        }
         /// <summary>
         /// Performs conditional checks prior to assigning the NonPlayerCharacter as heir
         /// </summary>

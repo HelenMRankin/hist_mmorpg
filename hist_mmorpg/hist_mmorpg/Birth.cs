@@ -78,7 +78,7 @@ namespace hist_mmorpg
             // lastOffer (will remain empty for family members)
             newNPC.lastOffer = new Dictionary<string, uint>();
             // inEntourage
-            newNPC.inEntourage = false;
+            newNPC.setEntourage(false); 
             // isHeir
             newNPC.isHeir = false;
 

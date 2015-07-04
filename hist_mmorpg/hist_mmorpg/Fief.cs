@@ -142,7 +142,7 @@ namespace hist_mmorpg
         /// Holds troop detachments in the fief awaiting transfer
         /// String[] contains from (charID), to (charID), troop numbers (each type), days left when detached
         /// </summary>
-        public Dictionary<string, string[]> troopTransfers = new Dictionary<string, string[]>();
+        public Dictionary<string, ProtoDetachment> troopTransfers = new Dictionary<string, ProtoDetachment>();
         /// <summary>
         /// Siege (siegeID) of active siege
         /// </summary>
@@ -199,7 +199,7 @@ namespace hist_mmorpg
         public Fief(String id, String nam, string tiHo, PlayerCharacter own, Rank r, Province prov, int pop, Double fld, Double ind, uint trp, Double tx,
             Double txNxt, uint offNxt, uint garrNxt, uint infraNxt, uint keepNxt, double[] finCurr, double[] finPrev,
             Double kpLvl, Double loy, char stat, Language lang, Terrain terr, List<Character> chars, List<string> barChars, List<string> barNats,
-            double bailInF, int treas, List<string> arms, bool rec, Dictionary<string, string[]> trans, bool pil,
+            double bailInF, int treas, List<string> arms, bool rec, Dictionary<string, ProtoDetachment> trans, bool pil,
             PlayerCharacter ancOwn = null, Character bail = null, string sge = null)
             : base(id, nam, tiHo, own, r)
         {
@@ -1784,15 +1784,12 @@ namespace hist_mmorpg
             this.isPillaged = false;
 
             // update transfers
-            foreach (KeyValuePair<string, string[]> transferEntry in this.troopTransfers)
+            foreach (KeyValuePair<string, ProtoDetachment> transferEntry in this.troopTransfers)
             {
                 // create temporary army to check attrition
-                uint[] thisTroops = new uint[] { Convert.ToUInt32(transferEntry.Value[2]), Convert.ToUInt32(transferEntry.Value[3]),
-                            Convert.ToUInt32(transferEntry.Value[4]), Convert.ToUInt32(transferEntry.Value[5]),
-                            Convert.ToUInt32(transferEntry.Value[6]), Convert.ToUInt32(transferEntry.Value[7]),
-                            Convert.ToUInt32(transferEntry.Value[8]) };
-                int days = Convert.ToInt32(transferEntry.Value[9]);
-                string owner = transferEntry.Value[0];
+                uint[] thisTroops = transferEntry.Value.troops;
+                int days = transferEntry.Value.days;
+                string owner = transferEntry.Value.leftBy;
                 Army tempArmy = new Army(Globals_Game.GetNextArmyID(), null, owner, days, this.id, trp: thisTroops);
 
                 // attrition checks
@@ -1812,7 +1809,7 @@ namespace hist_mmorpg
                 }
 
                 // update detachment days
-                transferEntry.Value[9] = Convert.ToString(90);
+                transferEntry.Value.days = 90;
 
                 // set tempArmy to null
                 tempArmy = null;
@@ -3264,7 +3261,7 @@ namespace hist_mmorpg
         /// Holds troop detachments in the fief awaiting transfer
         /// String[] contains from (charID), to (charID), size, days left when detached
         /// </summary>
-        public Dictionary<string, string[]> troopTransfers = new Dictionary<string, string[]>();
+        public Dictionary<string, ProtoDetachment> troopTransfers = new Dictionary<string, ProtoDetachment>();
         /// <summary>
         /// Siege (siegeID) of active siege
         /// </summary>
@@ -3356,7 +3353,7 @@ namespace hist_mmorpg
         public Fief_Serialised(String id, String nam, string prov, int pop, Double fld, Double ind, uint trp, Double tx,
             Double txNxt, uint offNxt, uint garrNxt, uint infraNxt, uint keepNxt, double[] finCurr, double[] finPrev,
             Double kpLvl, Double loy, char stat, string lang, string terr, List<string> chars, List<string> barChars, List<string> barNats,
-            double bailInF, int treas, List<string> arms, bool rec, Dictionary<string, string[]> trans, bool pil, byte r, String tiHo = null,
+            double bailInF, int treas, List<string> arms, bool rec, Dictionary<string, ProtoDetachment> trans, bool pil, byte r, String tiHo = null,
             string own = null, string ancOwn = null, string bail = null, string sge = null)
             : base(id, nam, own: own, r: r, tiHo: tiHo)
         {

@@ -15,3 +15,6 @@ E:\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.csprojResolveAssemblyRe
 E:\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.dll
 E:\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.pdb
 E:\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.xml
+E:\Git\Testing\TestLidgren\TestLidgren\bin\Debug\TestLidgren.exe.config
+E:\Git\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.exe
+E:\Git\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.pdb

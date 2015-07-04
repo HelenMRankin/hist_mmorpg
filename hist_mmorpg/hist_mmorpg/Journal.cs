@@ -649,14 +649,13 @@ namespace hist_mmorpg
             return interestedParties.ToArray();
         }
 
-        //TODO remove possibly redundant method
         /// <summary>
-        /// Check to see if the JournalEntry requires that the proposal reply controls be enabled
+        /// Check to see if the JournalEntry is a valid proposal
         /// </summary>
         /// <returns>bool indicating whether the controls be enabled</returns>
-        public bool CheckForProposalControlsEnabled(PlayerCharacter playerChar)
+        public bool CheckForProposal(PlayerCharacter playerChar)
         {
-            bool controlsEnabled = false;
+            bool isValidProposal = false;
 
             // check if is a marriage proposal
             if (this.type.Equals("proposalMade"))
@@ -673,7 +672,7 @@ namespace hist_mmorpg
                         {
                             if (thisPersonaeSplit[1].Equals("headOfFamilyBride"))
                             {
-                                controlsEnabled = true;
+                                isValidProposal = true;
                                 break;
                             }
                         }
@@ -681,7 +680,7 @@ namespace hist_mmorpg
                 }
             }
 
-            return controlsEnabled;
+            return isValidProposal;
         }
 
         /// <summary>
