@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 namespace hist_mmorpg
 {
     /// <summary>
@@ -42,6 +43,7 @@ namespace hist_mmorpg
 
         public static bool isAdmin(PlayerCharacter pc, object o = null)
         {
+            Trace.WriteLine("Is admin: " + pc.CheckIsSysAdmin());
             return pc.CheckIsSysAdmin();
         }
         public static bool isKing(PlayerCharacter pc, object o = null)
@@ -102,10 +104,14 @@ namespace hist_mmorpg
             Character character = (Character)o;
             if (character is PlayerCharacter)
             {
-                return (character as PlayerCharacter) == pc;
+                bool owns = (character as PlayerCharacter) == pc;
+                Trace.WriteLine(owns);
+                return owns;
             }
             else{
-                return (character as NonPlayerCharacter).GetHeadOfFamily() == pc || (character as NonPlayerCharacter).GetEmployer() == pc;
+                bool owns =  (character as NonPlayerCharacter).GetHeadOfFamily() == pc || (character as NonPlayerCharacter).GetEmployer() == pc;
+                Trace.WriteLine(owns);
+                return owns;
             }
         }
 

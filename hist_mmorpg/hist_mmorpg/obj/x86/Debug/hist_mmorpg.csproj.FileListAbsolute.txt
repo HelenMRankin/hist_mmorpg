@@ -30,7 +30,6 @@ E:\hist_mmorpg\hist_mmorpg-new\hist_mmorpg\obj\x86\Debug\hist_mmorpg.pdb
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\hist_mmorpg.exe.config
 E:\Git\hist_mmorpg\hist_mmorpg\obj\x86\Debug\hist_mmorpg.exe
 E:\Git\hist_mmorpg\hist_mmorpg\obj\x86\Debug\hist_mmorpg.pdb
-E:\Git\hist_mmorpg\hist_mmorpg\obj\x86\Debug\hist_mmorpg.csprojResolveAssemblyReference.cache
 E:\Git\hist_mmorpg\hist_mmorpg\obj\x86\Debug\hist_mmorpg.Properties.Resources.resources
 E:\Git\hist_mmorpg\hist_mmorpg\obj\x86\Debug\hist_mmorpg.csproj.GenerateResource.Cache
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\hist_mmorpg.exe
@@ -52,3 +51,8 @@ E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\RiakClient.xml
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\CorrugatedIron.xml
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\protobuf-net.pdb
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\protobuf-net.xml
+E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\Facebook.dll
+E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\Lidgren.Network.dll
+E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\Owin.dll
+E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\Facebook.xml
+E:\Git\hist_mmorpg\hist_mmorpg\obj\x86\Debug\hist_mmorpg.csprojResolveAssemblyReference.cache

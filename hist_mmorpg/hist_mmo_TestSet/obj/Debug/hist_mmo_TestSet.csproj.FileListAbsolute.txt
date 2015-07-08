@@ -30,3 +30,15 @@ E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Newtonsoft.Json.xml
 E:\Git\hist_mmorpg\hist_mmo_TestSet\obj\Debug\hist_mmo_TestSet.csprojResolveAssemblyReference.cache
 E:\Git\hist_mmorpg\hist_mmo_TestSet\obj\Debug\hist_mmo_TestSet.dll
 E:\Git\hist_mmorpg\hist_mmo_TestSet\obj\Debug\hist_mmo_TestSet.pdb
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\hist_mmo_TestSet.dll.config
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Facebook.dll
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Lidgren.Network.dll
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Microsoft.Owin.dll
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Microsoft.Owin.Security.dll
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Microsoft.Owin.Security.OAuth.dll
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Owin.dll
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Owin.Security.Providers.dll
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Facebook.xml
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Microsoft.Owin.xml
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Microsoft.Owin.Security.xml
+E:\Git\hist_mmorpg\hist_mmo_TestSet\bin\Debug\Microsoft.Owin.Security.OAuth.xml

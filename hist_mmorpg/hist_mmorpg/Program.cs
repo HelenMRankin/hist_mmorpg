@@ -15,6 +15,7 @@ namespace hist_mmorpg
         [STAThread]
         static void Main()
         {
+            Game game = new Game();
         }
     }
 }

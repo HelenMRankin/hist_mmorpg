@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
-
+using System.Diagnostics;
 namespace hist_mmorpg
 {
     /// <summary>
@@ -2238,6 +2238,7 @@ namespace hist_mmorpg
                 // 1. check is male
                 if (!this.isMale)
                 {
+                    Trace.WriteLine("Not male");
                     proceed = false;
                     if (!priorToList)
                     {
@@ -2253,6 +2254,7 @@ namespace hist_mmorpg
                     // 2. check is of age
                     if (this.CalcAge() < 14)
                     {
+                        Trace.Write("too young");
                         proceed = false;
                         if (!priorToList)
                         {

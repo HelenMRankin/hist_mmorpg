@@ -125,7 +125,8 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds fief treasury
         /// </summary>
-        public int treasury { get { return treasury; } private set { this.treasury = value; } }
+        private int Treasury;
+        public int treasury { get { return this.Treasury; } private set { this.Treasury = value; } }
         /// <summary>
         /// Holds armies present in the fief (armyIDs)
         /// </summary>

@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Collections;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using System.Diagnostics;
 namespace hist_mmorpg
 {
     /// <summary>
@@ -15,6 +18,20 @@ namespace hist_mmorpg
     /// </summary>
     public class Game
     {
+        /// <summary>
+        /// Used for including all subtypes of ProtoMessage
+        /// </summary>
+        public void initialiseTypes()
+        {
+            List<Type> subMessages = typeof(ProtoMessage).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ProtoMessage))).ToList();
+            int i = 4;
+            foreach (Type message in subMessages)
+            {
+                RuntimeTypeModel.Default.Add(typeof(ProtoMessage), true).AddSubType(i, message);
+                i++;
+            }
+        }
+
         public Game()
         {
             Globals_Game.game = this;
@@ -31,7 +48,6 @@ namespace hist_mmorpg
             String mapData = Path.Combine(path, "map.csv");
             this.InitGameObjects(gameID: "fromCSV", objectDataFile: gameObjects, mapDataFile: mapData,
             start: 1194, king1: "Char_47", king2: "Char_40", herald1: "Char_1", sysAdmin: "Char_158");
-
             // this.ImportFromCSV("gameObjects.csv", bucketID: "fromCSV", synch: true, toDatabase: true);
             // this.CreateMapArrayFromCSV ("map.csv", bucketID: "fromCSV", toDatabase: true);
         }
@@ -1154,47 +1170,65 @@ namespace hist_mmorpg
                 case Actions.GetNPCList:
                     {
                         List<ProtoCharacterOverview> listOfChars = new List<ProtoCharacterOverview>();
+                       // List<string> listOfChars = new List<string>();
                         if (msgIn.Message.Equals("entourage"))
                         {
                             foreach (Character entourageChar in pc.myEntourage)
                             {
+                              //  listOfChars.Add(entourageChar.firstName);
                                 listOfChars.Add(new ProtoCharacterOverview(entourageChar));
                             }
                         }
-                        if (msgIn.Message.Contains("employ"))
-                        {
-                            foreach (NonPlayerCharacter employee in pc.myNPCs)
+                        else {
+                            if (msgIn.Message.Contains("employ"))
                             {
-                                // ensure character is employee
-                                if (!string.IsNullOrWhiteSpace(employee.employer))
+                                foreach (NonPlayerCharacter employee in pc.myNPCs)
                                 {
-                                    listOfChars.Add(new ProtoCharacterOverview(employee));
+                                    // ensure character is employee
+                                    if (!string.IsNullOrWhiteSpace(employee.employer))
+                                    {
+                                       // listOfChars.Add(employee.firstName);
+                                        listOfChars.Add(new ProtoCharacterOverview(employee));
+                                    }
+                                }
+                            }
+                            if (msgIn.Message.Contains("family"))
+                            {
+                                foreach (NonPlayerCharacter family in pc.myNPCs)
+                                {
+                                    // ensure character is employee
+                                    if (!string.IsNullOrWhiteSpace(family.familyID))
+                                    {
+                                     //   listOfChars.Add(family.firstName);
+                                       listOfChars.Add(new ProtoCharacterOverview(family));
+                                    }
                                 }
                             }
                         }
-                        if (msgIn.Message.Contains("family"))
-                        {
-                            foreach (NonPlayerCharacter family in pc.myNPCs)
-                            {
-                                // ensure character is employee
-                                if (!string.IsNullOrWhiteSpace(family.familyID))
-                                {
-                                    listOfChars.Add(new ProtoCharacterOverview(family));
-                                }
-                            }
-                        }
-                        ProtoGenericArray<ProtoCharacterOverview> result = new ProtoGenericArray<ProtoCharacterOverview>(listOfChars.ToArray());
-                        result.Message = msgIn.Message;
+                        
+                        ProtoGenericArray<ProtoCharacterOverview> result = new ProtoGenericArray<ProtoCharacterOverview>();
+                        result.fields = listOfChars.ToArray();
+
+          
                         return result;
                     }
                 // Can travel to fief if are/own character, and have valid fief. Days etc taken into account elsewhere
                 case Actions.TravelTo:
+                    Trace.WriteLine("can write");
                     // Attempt to convert message to ProtoTravelTo
                     ProtoTravelTo travelTo = msgIn as ProtoTravelTo;
                     if (travelTo != null)
                     {
                         // Identify character to move
-                        Character charToMove = Globals_Game.getCharFromID(travelTo.characterID);
+                        Character charToMove = null;
+                        if (travelTo.characterID != null)
+                        {
+                            charToMove = Globals_Game.getCharFromID(travelTo.characterID);
+                        }
+                        // If not character id specified PC is moving self
+                        else {
+                            charToMove=pc;
+                        }
                         if (charToMove == null)
                         {
                             ProtoMessage error = new ProtoMessage();
@@ -1215,11 +1249,13 @@ namespace hist_mmorpg
                                     // If successful send details of fief
                                     if (charToMove.MoveCharacter(fief, travelCost))
                                     {
+                                        Trace.WriteLine("moved character");
                                         return new ProtoFief(fief);
                                     }
                                     else
                                     {
                                         //If charToMove returns false, the relevant error message has already been sent
+                                        Trace.WriteLine("NULL HERE");
                                         return null;
                                     }
                                 }
@@ -1240,6 +1276,7 @@ namespace hist_mmorpg
                             // If unauthorised return error
                             else
                             {
+                                Trace.WriteLine("returning unauthorised");
                                 ProtoMessage unauthorised = new ProtoMessage();
                                 unauthorised.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                                 return unauthorised;
@@ -1869,37 +1906,20 @@ namespace hist_mmorpg
                         charsInPlace.MessageType = DisplayMessages.Characters;
                         return charsInPlace;
                     }
-                // take a specific route using movement instructions
-                case Actions.TakeThisRoute:
-                    {
-                        // validate character
-                        Character c = Globals_Game.getCharFromID(msgIn.Message);
-                        if (c == null)
-                        {
-                            ProtoMessage error = new ProtoMessage();
-                            error.MessageType = DisplayMessages.ErrorGenericCharacterUnidentified;
-                            return error;
-                        }
-                        // Ensure player owns character
-                        if (PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c))
-                        {
-                            // attempt to take route and return resulting character location fief details
-                            c.TakeThisRoute(msgIn.MessageFields);
-                            return new ProtoFief(c.location);
-                        }
-                        // If unauthorised, return error
-                        else
-                        {
-                            ProtoMessage error = new ProtoMessage();
-                            error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
-                            return error;
-                        }
-                    }
                 // Instruct a character to camp where they are for a number of days
                 case Actions.Camp:
                     {
+                        Character c;
                         // Validate character
-                        Character c = Globals_Game.getCharFromID(msgIn.Message);
+                        if (msgIn.Message != null)
+                        {
+                            c = Globals_Game.getCharFromID(msgIn.Message);
+                        }
+                        else
+                        {
+                            c = pc;
+                        }
+                        
                         if(c==null)
                         {
                             ProtoMessage error = new ProtoMessage();
@@ -2548,6 +2568,7 @@ namespace hist_mmorpg
                             return null;
                         }
                     }
+                
                 default:
                     {
 

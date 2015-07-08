@@ -1,0 +1,15 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\FiefManager.cs">
+    <Files>
+      <File FileName="Assets\Scripts\NetworkScript.cs" Line="17" Column="3" />
+      <File FileName="Assets\Scripts\HexGrid_tmp.cs" Line="67" Column="3" />
+      <File FileName="Assets\Scripts\FiefManager.cs" Line="76" Column="8" />
+      <File FileName="Assets\Scripts\ProtoMessage.cs" Line="433" Column="32" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

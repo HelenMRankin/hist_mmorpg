@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Windows.Forms;
 using QuickGraph;
+using System.Diagnostics;
 //TODO Modify to use CSV file
 namespace hist_mmorpg
 {
@@ -618,6 +619,7 @@ namespace hist_mmorpg
                     JournalEntry importErrorEntry = Utility_Methods.CreateSysAdminJentry();
                     if (importErrorEntry != null)
                     {
+                        Trace.WriteLine("Line " + lineNum + ": " + ide.Message);
                         importErrorEntry.description = "Line " + lineNum + ": " + ide.Message;
                         Globals_Game.AddPastEvent(importErrorEntry);
                     }

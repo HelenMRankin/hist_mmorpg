@@ -64,9 +64,14 @@ namespace hist_mmorpg
         {
             return this.MessageFields;
         }
+        public ProtoMessage()
+        {
+            MessageFields = new string[5];
+        }
         /// <summary>
         /// Used for including all subtypes of ProtoMessage
         /// </summary>
+        
         public void initialiseTypes()
         {
             List<Type> subMessages = typeof(ProtoMessage).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ProtoMessage))).ToList();
@@ -82,7 +87,36 @@ namespace hist_mmorpg
 
     /**************** MESSAGES TO CLIENT ***********************/
 
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class Pair
+    {
+        public string key { get; set; }
+        public string value { get; set; }
+        public Pair()
+        {
+        }
+        public Pair(string key, string val)
+        {
+            this.key = key;
+            this.value = val;
+        }
+    }
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class ProtoGenericArray<T> : ProtoMessage
+    {
+        public T[] fields { get; set; }
 
+        public ProtoGenericArray()
+            : base()
+        {
+
+        }
+
+        public ProtoGenericArray(T[] t)
+        {
+            this.fields = t;
+        }
+    }
     /// <summary>
     /// Class for serializing an Ailment
     /// (At present, only minimumEffect is hidden)
@@ -273,9 +307,13 @@ namespace hist_mmorpg
         /// </summary>
         public string familyName { get; set; }
         /// <summary>
-        /// Tuple holding character's year and season of birth
+        /// Character's year of birth
         /// </summary>
-        public Tuple<uint, byte> birthDate { get; set; }
+        public uint birthYear{ get; set; }
+        /// <summary>
+        /// Character's birth season
+        /// </summary>
+        public byte birthSeason {get;set;}
         /// <summary>
         /// Holds if character male
         /// </summary>
@@ -347,7 +385,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds character's traits
         /// </summary>
-        public Tuple<string, int>[] traits { get; set; }
+        public Pair[] traits { get; set; }
         /// <summary>
         /// Bool to indicate whether char is pregnant
         /// </summary>
@@ -363,7 +401,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Character's ailments
         /// </summary>
-        public Tuple<string, string>[] ailments { get; set; }
+        public Pair[] ailments { get; set; }
         /// <summary>
         /// IDs of Fiefs in char's GoTo list
         /// </summary>
@@ -375,10 +413,12 @@ namespace hist_mmorpg
         }
         public ProtoCharacter(Character c)
         {
+           
             this.charID = c.charID;
             this.firstName = c.firstName;
             this.familyName = c.familyName;
-            this.birthDate = c.birthDate;
+            this.birthYear = c.birthDate.Item1;
+            this.birthSeason = c.birthDate.Item2;
             this.nationality = c.nationality.natID;
             this.isAlive = c.isAlive;
             this.inKeep = c.inKeep;
@@ -401,14 +441,14 @@ namespace hist_mmorpg
             this.statureModifier = c.statureModifier;
             this.management = c.management;
             this.combat = c.combat;
-            this.traits = new Tuple<string,int>[c.traits.Length];
+            this.traits = new Pair[c.traits.Length];
             for(int i = 0;i<c.traits.Length;i++) {
                 Tuple<Trait,int> t = c.traits[i];
-                traits[i] = new Tuple<string,int>(t.Item1.id,t.Item2);
+                traits[i] = new Pair(t.Item1.id,t.Item2.ToString());
             }
-            List<Tuple<string,string>> tmpAilments = new List<Tuple<string,string>>();
+            List<Pair> tmpAilments = new List<Pair>();
             foreach(KeyValuePair<string,Ailment> pair in c.ailments) {
-                tmpAilments.Add(new Tuple<string,string>(pair.Key,pair.Value.description));
+                tmpAilments.Add(new Pair(pair.Key,pair.Value.description));
             }
             this.ailments = tmpAilments.ToArray();
             List<string> tmpGoTo = new List<string>();
@@ -519,7 +559,8 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds last wage offer from individual PCs
         /// </summary>
-        public Tuple<string, uint> lastOffer { get; set; }
+        public string lastOfferID { get; set; }
+        public uint lastOfferAmount { get; set; }
         /// <summary>
         /// Denotes if in employer's entourage
         /// </summary>
@@ -542,7 +583,7 @@ namespace hist_mmorpg
         }
         public override void onIncludeAll(Character character, string observerID) {
             NonPlayerCharacter npc = character as NonPlayerCharacter;
-            this.lastOffer = new Tuple<string, uint>(observerID, npc.lastOffer[observerID]);
+            this.lastOfferID = observerID; this.lastOfferAmount = npc.lastOffer[observerID];
         }
     }
     /// <summary>
@@ -733,7 +774,8 @@ namespace hist_mmorpg
             }
             i = 0;
             this.ancestralOwner = new ProtoCharacterOverview(f.ancestralOwner);
-            this.bailiff = new ProtoCharacterOverview(f.bailiff);
+            if (f.bailiff != null) { this.bailiff = new ProtoCharacterOverview(f.bailiff); }
+            
             this.isPillaged = f.isPillaged;
             this.siege = f.siege;
             this.armies = new ProtoArmyOverview[f.armies.Count];
@@ -1046,15 +1088,6 @@ namespace hist_mmorpg
         }
     }
 
-    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-    public class ProtoGenericArray<T> : ProtoMessage
-    {
-        public T[] fields;
-
-        public ProtoGenericArray(T[] t) {
-            this.fields = t;
-        }
-    }
 
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoBattle : ProtoMessage

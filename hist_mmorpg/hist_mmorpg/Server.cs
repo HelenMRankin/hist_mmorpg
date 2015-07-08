@@ -17,6 +17,7 @@ using QuickGraph;
 using RiakClient;
 using Lidgren.Network;
 using ProtoBuf;
+using System.Threading;
 namespace hist_mmorpg
 {
     /// <summary>
@@ -24,6 +25,7 @@ namespace hist_mmorpg
     /// </summary>
     class Server
     {
+        private Dictionary<NetConnection, Client> clientConnections = new Dictionary<NetConnection, Client>();
         static Game game;
         NetServer server;
         bool isListening = true;
@@ -63,8 +65,13 @@ namespace hist_mmorpg
                             MemoryStream ms = new MemoryStream(bytes);
                             ProtoMessage m = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(ms, PrefixStyle.Fixed32);
                             // Magically, a player character appears (login, to do)
-                            PlayerCharacter pc;
-                            readReply(m, pc,im.SenderConnection);
+                            if (clientConnections.ContainsKey(im.SenderConnection))
+                            {
+                                Client client = clientConnections[im.SenderConnection];
+                                PlayerCharacter pc = client.myPlayerCharacter;
+                                readReply(m, pc, im.SenderConnection);
+                            }
+                            
                             break;
                         case NetIncomingMessageType.StatusChanged:
                             // NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
@@ -97,7 +104,7 @@ namespace hist_mmorpg
         {
 
         }
-        
+
 
     }
 }
