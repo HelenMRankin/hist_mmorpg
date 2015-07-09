@@ -1881,8 +1881,9 @@ namespace hist_mmorpg
         /// Enables character to enter keep (if not barred)
         /// </summary>
         /// <returns>bool indicating success</returns>
-        public virtual bool EnterKeep()
+        public virtual bool EnterKeep(out ProtoMessage error)
         {
+            error = null;
             bool proceed = true;
             Army thisArmy = null;
             PlayerCharacter player = null;
@@ -1901,18 +1902,16 @@ namespace hist_mmorpg
                         proceed = false;
                         if (player!=null)
                         {
-                            Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterEnterArmy);
-                        }
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.CharacterEnterArmy;}
                     }
 
                     // only one friendly field army in keep at a time
                     else if (this.location.CheckFieldArmyInKeep())
                     {
                         proceed = false;
-                        if (player!=null)
-                        {
-                            Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterAlreadyArmy);
-                        }
+                        error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.CharacterAlreadyArmy;
                     }
                 }
             }
@@ -1934,7 +1933,9 @@ namespace hist_mmorpg
                         {
                             title = "Mon Seigneur";
                         }
-                        Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterNationalityBarred, new string[]{this.nationality.name, title});
+                        error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.CharacterNationalityBarred;
+                        error.MessageFields =  new string[]{this.nationality.name, title};
                     }
                 }
 
@@ -1944,10 +1945,8 @@ namespace hist_mmorpg
                     if (location.barredCharacters.Contains(this.charID))
                     {
                         proceed = false;
-                        if (player!=null)
-                        {
-                            Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterBarred);
-                        }
+                        error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.CharacterBarred;
                     }
                 }
             }
@@ -2169,8 +2168,9 @@ namespace hist_mmorpg
         /// <param name="type">string identify type of grant</param>
         /// <param name="priorToList">bool indicating if check is prior to listing possible candidates</param>
         /// <param name="armyID">string containing the army ID (if choosing a leader)</param>
-        public bool ChecksBeforeGranting(PlayerCharacter granter, string type, bool priorToList, string armyID = null)
+        public bool ChecksBeforeGranting(PlayerCharacter granter, string type, bool priorToList, out ProtoMessage error, string armyID = null)
         {
+            error = null;
             bool proceed = true;
             // get army if appropriate
             Army armyToLead = null;
@@ -2193,7 +2193,8 @@ namespace hist_mmorpg
                     {
                         if (granter!=null)
                         {
-                            Globals_Game.UpdatePlayer(granter.playerID, DisplayMessages.CharacterRoyalGiftPlayer);
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.CharacterRoyalGiftPlayer;
                         }
                     }
                 }
@@ -2208,7 +2209,8 @@ namespace hist_mmorpg
                         {
                             if (granter!=null)
                             {
-                                Globals_Game.UpdatePlayer(granter.playerID, DisplayMessages.CharacterRoyalGiftPlayer);
+                                error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.CharacterRoyalGiftPlayer;
                             }
                         }
                     }
@@ -2223,7 +2225,8 @@ namespace hist_mmorpg
                             {
                                 if (granter!=null)
                                 {
-                                    Globals_Game.UpdatePlayer(granter.playerID, DisplayMessages.CharacterRoyalGiftSelf);
+                                    error = new ProtoMessage();
+                                    error.MessageType = DisplayMessages.CharacterRoyalGiftSelf;
                                 }
                             }
                         }
@@ -2244,7 +2247,8 @@ namespace hist_mmorpg
                     {
                         if (granter!=null)
                         {
-                            Globals_Game.UpdatePlayer(granter.playerID, DisplayMessages.CharacterNotMale);
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.CharacterNotMale;
                         }
                     }
                 }
@@ -2260,7 +2264,8 @@ namespace hist_mmorpg
                         {
                             if (granter!=null)
                             {
-                                Globals_Game.UpdatePlayer(granter.playerID, DisplayMessages.CharacterNotOfAge);
+                                error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.CharacterNotOfAge;
                             }
                         }
                     }
@@ -2276,7 +2281,8 @@ namespace hist_mmorpg
                             {
                                 if (granter!=null)
                                 {
-                                    Globals_Game.UpdatePlayer(granter.playerID, DisplayMessages.CharacterLeaderLocation);
+                                    error = new ProtoMessage();
+                                    error.MessageType = DisplayMessages.CharacterLeaderLocation;
                                 }
                             }
                         }
@@ -2293,7 +2299,8 @@ namespace hist_mmorpg
                                     {
                                         if (granter!=null)
                                         {
-                                            Globals_Game.UpdatePlayer(granter.playerID, DisplayMessages.CharacterLeadingArmy);
+                                            error = new ProtoMessage();
+                                            error.MessageType = DisplayMessages.CharacterLeadingArmy;
                                         }
                                     }
                                 }
@@ -2312,10 +2319,10 @@ namespace hist_mmorpg
         /// Allows the character to enter or exit the keep
         /// </summary>
         /// <returns>bool indicating success</returns>
-        public bool ExitEnterKeep()
+        public bool ExitEnterKeep(out ProtoMessage result)
         {
             bool success = false;
-
+            result = null;
             // if in keep
             if (this.inKeep)
             {
@@ -2327,7 +2334,7 @@ namespace hist_mmorpg
             else
             {
                 // attempt to enter keep
-                success = this.EnterKeep();
+                success = this.EnterKeep(out result);
             }
 
             return success;
@@ -2341,8 +2348,9 @@ namespace hist_mmorpg
         /// <param name="target">Target fief</param>
         /// <param name="cost">Travel cost (days)</param>
         /// <param name="siegeCheck">bool indicating whether to check whether the move would end a siege</param>
-        public bool ChecksBeforeMove(Fief target, double cost, bool siegeCheck = true)
+        public bool ChecksBeforeMove(Fief target, double cost, out ProtoMessage error, bool siegeCheck = true)
         {
+            error = null;
             bool proceedWithMove = true;
             PlayerCharacter player = null;
             if (this is PlayerCharacter)
@@ -2402,7 +2410,8 @@ namespace hist_mmorpg
 
                         if (player != null)
                         {
-                            Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterDaysJourney);
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.CharacterDaysJourney;
                         }
 
                         proceedWithMove = false;
@@ -2421,9 +2430,9 @@ namespace hist_mmorpg
         /// <param name="target">Target fief</param>
         /// <param name="cost">Travel cost (days)</param>
         /// <param name="siegeCheck">bool indicating whether to check whether the move would end a siege</param>
-        public virtual bool MoveCharacter(Fief target, double cost, bool siegeCheck = true)
+        public virtual bool MoveCharacter(Fief target, double cost, out ProtoMessage error, bool siegeCheck = true)
         {
-            bool success = this.ChecksBeforeMove(target, cost, siegeCheck);
+            bool success = this.ChecksBeforeMove(target, cost, out error, siegeCheck);
             //Holds the playercharacter moving or who initiated NPC move
             PlayerCharacter player = null;
             if (this is PlayerCharacter)
@@ -2545,8 +2554,9 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating success</returns>
         /// <param name="wife">Character's spouse</param>
-        public bool GetSpousePregnant(Character wife)
+        public bool GetSpousePregnant(Character wife,out ProtoMessage error)
         {
+            error = null;
             bool isPlayer = this is PlayerCharacter;
             PlayerCharacter player = null;
             if (isPlayer)
@@ -2663,7 +2673,9 @@ namespace hist_mmorpg
                         // display message of celebration
                         if (player!=null)
                         {
-                            Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterSpousePregnant, new string[] { wife.firstName + " " + wife.familyName });
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.CharacterSpousePregnant;
+                            error.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
                         }
                     }
 
@@ -2680,7 +2692,9 @@ namespace hist_mmorpg
                     // display encouraging message
                     if (player!=null)
                     {
-                        Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterSpouseNotPregnant, new string[] { wife.firstName + " " + wife.familyName });
+                        error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.CharacterSpouseNotPregnant;
+                        error.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
                     }
                 }
 
@@ -2695,7 +2709,9 @@ namespace hist_mmorpg
                 // give the player the bad news
                 if (player!=null)
                 {
-                    Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterSpouseNeverPregnant,new string[] {wife.firstName + " " + wife.familyName});
+                    error = new ProtoMessage();
+                    error.MessageType = DisplayMessages.CharacterSpouseNeverPregnant;
+                    error.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
                 }
             }
 
@@ -3256,13 +3272,14 @@ namespace hist_mmorpg
             return myArmies;
         }
 
-        //TODO who performs this action
+
         /// <summary>
         /// Preforms conditional checks prior to examining armies in a fief
         /// </summary>
         /// <returns>bool indicating whether to proceed with examination</returns>
-        public bool ChecksBefore_ExamineArmies()
+        public bool ChecksBefore_ExamineArmies(out ProtoMessage error)
         {
+            error = null;
             bool proceed = true;
             int reconDays = 0;
             PlayerCharacter player = null;
@@ -3285,7 +3302,8 @@ namespace hist_mmorpg
                 proceed = false;
                 if (player!=null)
                 {
-                    Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.ErrorGenericNotEnoughDays);
+                    error = new ProtoMessage();
+                    error.MessageType = DisplayMessages.ErrorGenericNotEnoughDays;
                 }
             }
 
@@ -3305,7 +3323,8 @@ namespace hist_mmorpg
 
                     if (player!=null)
                     {
-                        Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.ErrorGenericPoorOrganisation);
+                        error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.ErrorGenericPoorOrganisation;
                     }
                 }
                 else
@@ -3713,8 +3732,9 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating whether proposal can proceed</returns>
         /// <param name="bride">The prospective bride</param>
-        public bool ChecksBeforeProposal(Character bride)
+        public bool ChecksBeforeProposal(Character bride,out ProtoMessage error)
         {
+            error = null;
             string field  = "";
             PlayerCharacter player = null;
             if (this is PlayerCharacter)
@@ -3848,10 +3868,9 @@ namespace hist_mmorpg
 
             if (!proceed)
             {
-                if (player!=null)
-                {
-                    Globals_Game.UpdatePlayer(player.playerID, message, new string[]{field});
-                }
+                error = new ProtoMessage();
+                error.MessageType = message;
+                error.MessageFields = new string[] { field };
             }
 
             return proceed;
@@ -3861,8 +3880,9 @@ namespace hist_mmorpg
         /// Moves character one hex in a random direction
         /// </summary>
         /// <returns>bool indicating success</returns>
-        public bool RandomMoveNPC()
+        public bool RandomMoveNPC(out ProtoMessage error)
         {
+            error = null;
             bool success = false;
 
             // generate random int 0-6 to see if moves
@@ -3877,7 +3897,7 @@ namespace hist_mmorpg
                 double travelCost = this.location.getTravelCost(target);
 
                 // perform move
-                success = this.MoveCharacter(target, travelCost);
+                success = this.MoveCharacter(target, travelCost,out error);
             }
 
             return success;
@@ -3887,8 +3907,9 @@ namespace hist_mmorpg
         /// Moves character sequentially through fiefs stored in goTo queue
         /// </summary>
         /// <returns>bool indicating success</returns>
-       public bool CharacterMultiMove()
+       public bool CharacterMultiMove(out ProtoMessage error)
         {
+            error = null;
             bool success = false;
             double travelCost = 0;
             int steps = this.goTo.Count;
@@ -3898,7 +3919,7 @@ namespace hist_mmorpg
                 // get travel cost
                 travelCost = this.location.getTravelCost(this.goTo.Peek(), this.armyID);
                 // attempt to move character
-                success = this.MoveCharacter(this.goTo.Peek(), travelCost);
+                success = this.MoveCharacter(this.goTo.Peek(), travelCost,out error);
                 // if move successfull, remove fief from goTo queue
                 if (success)
                 {
@@ -3932,8 +3953,9 @@ namespace hist_mmorpg
        /// </summary>
        /// <returns>bool indicating success</returns>
        /// <param name="campDays">Number of days to camp</param>
-       public bool CampWaitHere(byte campDays)
+       public bool CampWaitHere(byte campDays, out ProtoMessage campMessage)
        {
+           campMessage = null;
            bool proceed = true;
            // get army
            Army thisArmy = null;
@@ -4008,7 +4030,9 @@ namespace hist_mmorpg
                    // inform player
                    if (player!=null)
                    {
-                       Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterCamp, new string[] {this.firstName + " " + this.familyName,this.location.name,campDays.ToString()});
+                       campMessage = new ProtoMessage();
+                       campMessage.MessageType = DisplayMessages.CharacterCamp;
+                       campMessage.MessageFields=new string[] {this.firstName + " " + this.familyName,this.location.name,campDays.ToString()};
                    }
 
                    // check if character is army leader, if so check for army attrition
@@ -4110,8 +4134,9 @@ namespace hist_mmorpg
        /// Allows the character to be moved along a specific route by using direction codes
        /// </summary>
        /// <param name="directions">string[] containing list of sequential directions to follow</param>
-       public void TakeThisRoute(string[] directions)
+       public void TakeThisRoute(string[] directions,out ProtoMessage error)
        {
+           error = null;
            bool proceed;
            Fief source = null;
            Fief target = null;
@@ -4164,10 +4189,8 @@ namespace hist_mmorpg
                // if no target acquired, display message and break
                else
                {
-                   if (player!=null)
-                   {
-                       Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterInvalidMovement);
-                   }
+                   error = new ProtoMessage();
+                   error.MessageType = DisplayMessages.CharacterInvalidMovement;
                    break;
                }
 
@@ -4178,15 +4201,16 @@ namespace hist_mmorpg
            if (route.Count > 0)
            {
                this.goTo = route;
-               proceed = this.CharacterMultiMove();
+               proceed = this.CharacterMultiMove(out error);
            }
        }
        /// <summary>
        /// Moves the character to a specified fief using the shortest path
        /// </summary>
        /// <param name="fiefID">String containing the ID of the target fief</param>
-       public void MoveTo(string fiefID)
+       public void MoveTo(string fiefID, out ProtoMessage error)
        {
+           error = null;
            PlayerCharacter player = null;
            if (this is PlayerCharacter)
            {
@@ -4219,7 +4243,7 @@ namespace hist_mmorpg
                if (this.goTo.Count > 0)
                {
                    // perform move
-                   this.CharacterMultiMove();
+                   this.CharacterMultiMove(out error);
                }
 
            }
@@ -4227,10 +4251,8 @@ namespace hist_mmorpg
            // if target fief not found
            else
            {
-               if (player!=null)
-               {
-                   Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.ErrorGenericFiefUnidentified);
-               }
+               error = new ProtoMessage();
+               error.MessageType = DisplayMessages.ErrorGenericFiefUnidentified;
            }
 
        }
@@ -4611,7 +4633,7 @@ namespace hist_mmorpg
         /// <returns>bool indicating acceptance of offer</returns>
         /// <param name="npc">NPC receiving offer</param>
         /// <param name="offer">Proposed wage</param>
-        public bool ProcessEmployOffer(NonPlayerCharacter npc, uint offer)
+        public bool ProcessEmployOffer(NonPlayerCharacter npc, uint offer,out ProtoMessage result)
         {
             bool accepted = false;
 
@@ -4672,21 +4694,25 @@ namespace hist_mmorpg
             if (offer > maxAcceptable)
             {
                 accepted = true;
-                Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterOfferHigh);
+                result = new ProtoMessage();
+                result.MessageType = DisplayMessages.CharacterOfferHigh;
             }
 
             // automatically reject if offer < 10% below potential salary
             else if (offer < minAcceptable)
             {
                 accepted = false;
-                Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterOfferLow);
+                result = new ProtoMessage();
+                result.MessageType = DisplayMessages.CharacterOfferLow;
             }
 
             // automatically reject if offer < previous offer
             else if (offerLess)
             {
                 accepted = false;
-                Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterOfferHaggle,new string[]{npc.lastOffer[this.charID].ToString()});
+                result = new ProtoMessage();
+                result.MessageType = DisplayMessages.CharacterOfferHaggle;
+                result.MessageFields = new string[] { npc.lastOffer[this.charID].ToString() };
             }
 
             else
@@ -4697,11 +4723,13 @@ namespace hist_mmorpg
                 if (chance <= offerPercentage)
                 {
                     accepted = true;
-                    Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterOfferOk);
+                    result = new ProtoMessage();
+                    result.MessageType = DisplayMessages.CharacterOfferOk;
                 }
                 else
                 {
-                    Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterOfferAlmost);
+                    result = new ProtoMessage();
+                    result.MessageType = DisplayMessages.CharacterOfferAlmost;
                 }
             }
 
@@ -4918,10 +4946,11 @@ namespace hist_mmorpg
         /// for entourage if PlayerCharacter allowed to enter
         /// </summary>
         /// <returns>bool indicating success</returns>
-        public override bool EnterKeep()
+        public override bool EnterKeep(out ProtoMessage error)
         {
+            error = null;
             // invoke base method for PlayerCharacter
-            bool success = base.EnterKeep();
+            bool success = base.EnterKeep(out error);
 
             // if PlayerCharacter enters keep
             if (success)
@@ -4935,7 +4964,8 @@ namespace hist_mmorpg
                         if (location.barredCharacters.Contains(this.myNPCs[i].charID))
                         {
                             this.myNPCs[i].inKeep = false;
-                            Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterBarredKeep);
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.CharacterBarredKeep;
                         }
                         else
                         {
@@ -5000,11 +5030,11 @@ namespace hist_mmorpg
         /// <param name="target">Target fief</param>
         /// <param name="cost">Travel cost (days)</param>
         /// <param name="siegeCheck">bool indicating whether to check whether the move would end a siege</param>
-        public override bool MoveCharacter(Fief target, double cost, bool siegeCheck = true)
+        public override bool MoveCharacter(Fief target, double cost, out ProtoMessage error, bool siegeCheck = true)
         {
 
             // use base method to move PlayerCharacter
-            bool success = base.MoveCharacter(target, cost);
+            bool success = base.MoveCharacter(target, cost, out error,siegeCheck);
 
             // if PlayerCharacter move successfull
             if (success)
@@ -5045,11 +5075,11 @@ namespace hist_mmorpg
         /// Carries out conditional checks prior to recruitment
         /// </summary>
         /// <returns>bool indicating whether recruitment can proceed</returns>
-        public bool ChecksBeforeRecruitment()
+        public bool ChecksBeforeRecruitment(out ProtoMessage error)
         {
+            error = null;
             bool proceed = true;
             int indivTroopCost = 0;
-            string toDisplay = "";
 
             // get home fief
             Fief homeFief = this.GetHomeFief();
@@ -5068,8 +5098,8 @@ namespace hist_mmorpg
             if (this.location.owner != this)
             {
                 proceed = false;
-                toDisplay = "";
-                Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterRecruitOwn);
+                error = new ProtoMessage();
+                error.MessageType = DisplayMessages.CharacterRecruitOwn;
             }
             else
             {
@@ -5077,7 +5107,9 @@ namespace hist_mmorpg
                 if (this.location.hasRecruited)
                 {
                     proceed = false;
-                    Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterRecruitAlready);
+
+                    error = new ProtoMessage();
+                    error.MessageType = DisplayMessages.CharacterRecruitAlready;
                 }
                 else
                 {
@@ -5086,7 +5118,8 @@ namespace hist_mmorpg
                         && (this.location.loyalty < 7))
                     {
                         proceed = false;
-                        Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterLoyaltyLanguage);
+                        error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.CharacterLoyaltyLanguage;
                     }
                     else
                     {
@@ -5094,7 +5127,8 @@ namespace hist_mmorpg
                         if (!(homeFief.GetAvailableTreasury() > indivTroopCost))
                         {
                             proceed = false;
-                            Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.ArmyMaintainInsufficientFunds);
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.ArmyMaintainInsufficientFunds;
                         }
                         else
                         {
@@ -5102,7 +5136,8 @@ namespace hist_mmorpg
                             if (this.days < 1)
                             {
                                 proceed = false;
-                                Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.ErrorGenericNotEnoughDays );
+                                error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericNotEnoughDays;
                             }
                             else
                             {
@@ -5110,7 +5145,8 @@ namespace hist_mmorpg
                                 if (!String.IsNullOrWhiteSpace(this.location.siege))
                                 {
                                     proceed = false;
-                                    Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterRecruitSiege );
+                                    error = new ProtoMessage();
+                                    error.MessageType = DisplayMessages.CharacterRecruitSiege;
                                 }
                                 else
                                 {
@@ -5118,7 +5154,8 @@ namespace hist_mmorpg
                                     if (this.location.status.Equals('R'))
                                     {
                                         proceed = false;
-                                        Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.CharacterRecruitRebellion);
+                                        error = new ProtoMessage();
+                                        error.MessageType = DisplayMessages.CharacterRecruitRebellion;
                                     }
                                 }
                             }
@@ -5137,7 +5174,7 @@ namespace hist_mmorpg
         /// <returns>uint containing number of troops recruited</returns>
         /// <param name="number">How many troops to recruit</param>
         /// <param name="armyExists">bool indicating whether the army already exists</param>
-        public ProtoRecruit RecruitTroops(uint number, Army thisArmy, bool isConfirm)
+        public ProtoMessage RecruitTroops(uint number, Army thisArmy, bool isConfirm)
         {
             bool armyExists = (thisArmy != null);
             // used to record outcome of various checks
@@ -5164,12 +5201,13 @@ namespace hist_mmorpg
 
 
             // various checks to see whether to proceed
-            proceed = this.ChecksBeforeRecruitment();
+            ProtoMessage error = null;
+            proceed = this.ChecksBeforeRecruitment(out error);
 
             // if have not passed all of checks above, return
             if (!proceed)
             {
-                return null;
+                return error;
             }
 
             // actual days taken
@@ -5179,7 +5217,8 @@ namespace hist_mmorpg
             if (this.days < daysUsed)
             {
                 proceed = false;
-                Globals_Game.UpdatePlayer(this.playerID, DisplayMessages.ErrorGenericPoorOrganisation);
+                error = new ProtoMessage();
+                error.MessageType = DisplayMessages.ErrorGenericPoorOrganisation;
             }
 
             //TODO move troop calculatioms + confirmation to client
@@ -5550,8 +5589,9 @@ namespace hist_mmorpg
         /// <returns>bool indicating success</returns>
         /// <param name="newHolder">The character receiving the title</param>
         /// <param name="titlePlace">The place to which the title refers</param>
-        public bool GrantTitle(Character newHolder, Place titlePlace)
+        public bool GrantTitle(Character newHolder, Place titlePlace, out ProtoMessage result)
         {
+            result = null;
             bool proceed = true;
             DisplayMessages toDisplay = DisplayMessages.None;
 
@@ -5616,7 +5656,8 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    Globals_Game.UpdatePlayer(this.playerID, toDisplay);
+                    result = new ProtoMessage();
+                    result.MessageType = toDisplay;
                 }
             }
 
@@ -5902,26 +5943,15 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating NonPlayerCharacter's suitability as heir</returns>
         /// <param name="pc">The PlayerCharacter who is choosing the heir</param>
-        public bool ChecksForHeir(PlayerCharacter pc)
+        public bool ChecksForHeir(PlayerCharacter pc, out ProtoMessage error)
         {
             bool suitableHeir = true;
-
-            if (String.IsNullOrWhiteSpace(this.familyID))
+            error = null;
+            if (String.IsNullOrWhiteSpace(this.familyID) || this.familyID != pc.familyID || !this.isMale)
             {
                 suitableHeir = false;
-                Globals_Game.UpdatePlayer(pc.playerID, DisplayMessages.CharacterHeir);
-            }
-
-            else if (this.familyID != pc.familyID)
-            {
-                suitableHeir = false;
-                Globals_Game.UpdatePlayer(pc.playerID, DisplayMessages.CharacterHeir);
-            }
-
-            else if (!this.isMale)
-            {
-                suitableHeir = false; 
-                Globals_Game.UpdatePlayer(pc.playerID, DisplayMessages.CharacterHeir);
+                error = new ProtoMessage();
+                error.MessageType = DisplayMessages.CharacterHeir;
             }
 
             return suitableHeir;

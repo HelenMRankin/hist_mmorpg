@@ -209,6 +209,10 @@ namespace hist_mmorpg
         /// </summary>
         public bool isMaintained { get; set; }
         /// <summary>
+        /// Indicates the army maintenance cost
+        /// </summary>
+        public uint maintCost { get; set; }
+        /// <summary>
         /// Indicates army's aggression level (automated response to combat)
         /// </summary>
         public byte aggression { get; set; }
@@ -283,6 +287,7 @@ namespace hist_mmorpg
             this.days = a.days;
             this.isMaintained = a.isMaintained;
             this.nationality = a.GetOwner().nationality.name;
+            this.maintCost = a.getMaintenanceCost();
         }
     }
     /// <summary>

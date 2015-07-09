@@ -18,3 +18,10 @@ E:\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.xml
 E:\Git\Testing\TestLidgren\TestLidgren\bin\Debug\TestLidgren.exe.config
 E:\Git\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.exe
 E:\Git\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.pdb
+E:\Git\Testing\TestLidgren\TestLidgren\bin\Debug\TestLidgren.exe
+E:\Git\Testing\TestLidgren\TestLidgren\bin\Debug\TestLidgren.pdb
+E:\Git\Testing\TestLidgren\TestLidgren\bin\Debug\Lidgren.Network.dll
+E:\Git\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.dll
+E:\Git\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.pdb
+E:\Git\Testing\TestLidgren\TestLidgren\bin\Debug\protobuf-net.xml
+E:\Git\Testing\TestLidgren\TestLidgren\obj\Debug\TestLidgren.csprojResolveAssemblyReference.cache

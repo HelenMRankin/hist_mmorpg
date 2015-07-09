@@ -272,8 +272,9 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="a">The pillaging army</param>
         /// <param name="f">The fief being pillaged</param>
-        public static void PillageFief(Army a, Fief f)
+        public static ProtoMessage PillageFief(Army a, Fief f)
         {
+            ProtoMessage result = new ProtoMessage();
             bool pillageCancelled = false;
             bool bailiffPresent = false;
             Army fiefArmy = null;
@@ -304,8 +305,10 @@ namespace hist_mmorpg
                 if (pillageCancelled)
                 {
                     string toDisplay = "The pillaging force has been forced to retreat by the fief's defenders!";
+                    result.MessageType = DisplayMessages.PillageRetreat;
+                    // Let owner know that pillage attempt has been thwarted
                     Globals_Game.UpdatePlayer(f.owner.playerID, DisplayMessages.PillageRetreat);
-                    Globals_Game.UpdatePlayer(a.owner, DisplayMessages.PillageRetreat);
+                    return result;
                 }
 
                 else
@@ -313,10 +316,11 @@ namespace hist_mmorpg
                     // check still have enough days left
                     if (a.days < 7)
                     {
+                        // Inform fief owner pillage attempt thwarted
                         Globals_Game.UpdatePlayer(f.owner.playerID, DisplayMessages.PillageDays);
-                        Globals_Game.UpdatePlayer(a.owner, DisplayMessages.PillageDays);
-                        
+                        result.MessageType = DisplayMessages.PillageDays;
                         pillageCancelled = true;
+                        return result;
                     }
                 }
 
@@ -327,7 +331,9 @@ namespace hist_mmorpg
                 // process pillage
                 Pillage_Siege.ProcessPillage(f, a);
             }
-
+            result.MessageType = DisplayMessages.Success;
+            result.Message = "The pillage was successful";
+            return result;
         }
 
 
@@ -338,8 +344,9 @@ namespace hist_mmorpg
         /// <param name="f">The fief being pillaged/besieged</param>
         /// <param name="a">The pillaging/besieging army</param>
         /// <param name="circumstance">The circumstance - pillage or siege</param>
-        public static bool ChecksBeforePillageSiege(Army a, Fief f, string circumstance = "pillage")
+        public static bool ChecksBeforePillageSiege(Army a, Fief f, out ProtoMessage result, string circumstance = "pillage")
         {
+            result = null;
             bool proceed = true;
             string operation = "";
 
@@ -352,11 +359,15 @@ namespace hist_mmorpg
                     proceed = false;
                     if (circumstance.Equals("pillage"))
                     {
-                        Globals_Game.UpdatePlayer(a.owner, DisplayMessages.PillageOwnFief,new string[] {"pillage"});
+                        result = new ProtoMessage();
+                        result.MessageType = DisplayMessages.PillageOwnFief;
+                        result.MessageFields = new string[] { "pillage" };
                     }
                     else if (circumstance.Equals("siege"))
                     {
-                        Globals_Game.UpdatePlayer(a.owner, DisplayMessages.PillageOwnFief,new string[] {"siege"});
+                        result = new ProtoMessage();
+                        result.MessageType = DisplayMessages.PillageOwnFief;
+                        result.MessageFields = new string[] { "siege" };
                     }
                 }
             }
@@ -370,11 +381,13 @@ namespace hist_mmorpg
                     proceed = false;
                     if (circumstance.Equals("pillage"))
                     {
-                        Globals_Game.UpdatePlayer(a.owner, DisplayMessages.PillageUnderSiege);
+                        result = new ProtoMessage();
+                        result.MessageType = DisplayMessages.PillageUnderSiege;
                     }
                     else if (circumstance.Equals("siege"))
                     {
-                        Globals_Game.UpdatePlayer(a.owner, DisplayMessages.PillageSiegeAlready);
+                        result = new ProtoMessage();
+                        result.MessageType = DisplayMessages.PillageSiegeAlready;
                     }
                 }
             }
@@ -389,7 +402,8 @@ namespace hist_mmorpg
                     if ((f.isPillaged) && (proceed))
                     {
                         proceed = false;
-                        Globals_Game.UpdatePlayer(a.owner, DisplayMessages.PillageAlready);
+                        result = new ProtoMessage();
+                        result.MessageType = DisplayMessages.PillageAlready;
                     }
                 }
             }
@@ -411,7 +425,8 @@ namespace hist_mmorpg
                 {
                     operation = "Siege";
                 }
-                Globals_Game.UpdatePlayer(a.owner, DisplayMessages.ArmyNoLeader);
+                result = new ProtoMessage();
+                result.MessageType = DisplayMessages.ArmyNoLeader;
             }
 
             // check has min days required
@@ -429,7 +444,8 @@ namespace hist_mmorpg
                     {
                         operation = "Pillage";
                     }
-                    Globals_Game.UpdatePlayer(a.owner, DisplayMessages.ErrorGenericNotEnoughDays);
+                    result = new ProtoMessage();
+                    result.MessageType = DisplayMessages.ErrorGenericNotEnoughDays;
                 }
             }
             else if (circumstance.Equals("siege"))
@@ -438,7 +454,8 @@ namespace hist_mmorpg
                 if ((a.days < 1) && (proceed))
                 {
                     proceed = false;
-                    Globals_Game.UpdatePlayer(a.owner, DisplayMessages.ErrorGenericNotEnoughDays);
+                    result = new ProtoMessage();
+                    result.MessageType = DisplayMessages.ErrorGenericNotEnoughDays;
                 }
             }
 
@@ -473,8 +490,9 @@ namespace hist_mmorpg
                                 {
                                     operation = "Quell rebellion";
                                 }
-                                Globals_Game.UpdatePlayer(a.owner, DisplayMessages.PillageArmyDefeat,new string[]{ armyInFief.armyID });
-
+                                result = new ProtoMessage();
+                                result.MessageType = DisplayMessages.PillageArmyDefeat;
+                                result.MessageFields = new string[] { armyInFief.armyID };
                                 break;
                             }
                         }
@@ -487,7 +505,8 @@ namespace hist_mmorpg
                     if (f.status.Equals('R'))
                     {
                         proceed = false;
-                        Globals_Game.UpdatePlayer(a.owner,DisplayMessages.PillageSiegeRebellion);
+                        result = new ProtoMessage();
+                        result.MessageType = DisplayMessages.PillageSiegeRebellion;
                     }
                 }
             }

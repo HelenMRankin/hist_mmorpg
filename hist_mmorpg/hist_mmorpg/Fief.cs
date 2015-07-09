@@ -515,8 +515,9 @@ namespace hist_mmorpg
         /// <param name="garr">Proposed garrison expenditure</param>
         /// <param name="infr">Proposed infrastructure expenditure</param>
         /// <param name="kp">Proposed keep expenditure</param>
-        public void AdjustExpenditures(double tx, uint off, uint garr, uint infr, uint kp)
+        public ProtoMessage AdjustExpenditures(double tx, uint off, uint garr, uint infr, uint kp)
         {
+            ProtoMessage error = null;
             // keep track of whether any spends ahve changed
             bool spendChanged = false;
 
@@ -538,10 +539,11 @@ namespace hist_mmorpg
             if (this.CheckExpenditureOK(totalSpend))
             {
                 int difference = Convert.ToInt32(totalSpend - this.GetAvailableTreasury());
-                string user = this.owner.playerID;
-                if(!string.IsNullOrEmpty(user)) {
-                    Globals_Game.UpdatePlayer(user, DisplayMessages.FiefExpenditureAdjustment,new string[] {this.name,difference.ToString()});
-                }
+                error = new ProtoMessage();
+                error.MessageType = DisplayMessages.FiefExpenditureAdjustment;
+                error.MessageFields = new string[] { this.name, difference.ToString() };
+                return error;
+                
             }
             // if treasury funds are sufficient to cover expenditure, do the commit
             else
@@ -601,11 +603,10 @@ namespace hist_mmorpg
                 {
                     toDisplay += "unchanged";
                 }
-                string user = this.owner.playerID;
-                if (user != null)
-                {
-                    Globals_Game.UpdatePlayer(user, DisplayMessages.FiefExpenditureAdjusted,new string[]{toDisplay});
-                }
+                ProtoMessage success = new ProtoMessage();
+                success.MessageType = DisplayMessages.FiefExpenditureAdjusted;
+                success.MessageFields = new string[] { toDisplay };
+                return success;
             }
         }
 
@@ -2309,8 +2310,9 @@ namespace hist_mmorpg
         /// <returns>bool indicating success</returns>
         /// <param name="newOwner">The new owner</param>
         /// <param name="circumstance">The circumstance under which the change of ownership is taking place</param>
-        public bool ChangeOwnership(PlayerCharacter newOwner, string circumstance = "hostile")
+        public bool ChangeOwnership(PlayerCharacter newOwner, out ProtoMessage error, string circumstance = "hostile")
         {
+            error = null;
             string user = this.owner.playerID;
             bool success = true;
 
@@ -2323,11 +2325,9 @@ namespace hist_mmorpg
                 // cannot voluntarily give away home fief
                 if (!circumstance.Equals("hostile"))
                 {
-                    success = false; 
-                    if (!string.IsNullOrEmpty(user))
-                    {
-                        Globals_Game.UpdatePlayer(user, DisplayMessages.FiefOwnershipHome);
-                    }
+                    success = false;
+                    error = new ProtoMessage();
+                    error.MessageType = DisplayMessages.FiefOwnershipHome;
                 }
 
                 else
@@ -2400,20 +2400,18 @@ namespace hist_mmorpg
 
                         else
                         {
-                            if (!string.IsNullOrEmpty(user))
-                            {
-                                Globals_Game.UpdatePlayer(user, DisplayMessages.FiefOwnershipNewHome, new string[] {oldOwner.firstName + " " + oldOwner.familyName});
-                            }
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.FiefOwnershipNewHome;
+                            error.MessageFields = new string[] { oldOwner.firstName + " " + oldOwner.familyName };
                         }
                     }
 
                     // old owner has no more fiefs
                     else
                     {
-                        if (!string.IsNullOrEmpty(user))
-                        {
-                            Globals_Game.UpdatePlayer(user, DisplayMessages.FiefOwnershipNoFiefs,new string[]{oldOwner.firstName + " " + oldOwner.familyName});
-                        }
+                        error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.FiefOwnershipNoFiefs;
+                        error.MessageFields = new string[] { oldOwner.firstName + " " + oldOwner.familyName };
                     }
                 }
             }
@@ -2599,8 +2597,9 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating quell success or failure</returns>
         /// <param name="a">The army trying to quell the rebellion</param>
-        public bool QuellRebellion(Army a)
+        public bool QuellRebellion(Army a,out ProtoMessage message)
         {
+            message = null;
             // check to see if quell attempt was successful
             bool quellSuccessful = this.Quell_checkSuccess(a);
 
@@ -2610,7 +2609,7 @@ namespace hist_mmorpg
                 // process change of ownership, if appropriate
                 if (this.owner != a.GetOwner())
                 {
-                    this.ChangeOwnership(a.GetOwner());
+                    this.ChangeOwnership(a.GetOwner(),out message);
                 }
 
                 // set status
@@ -2836,14 +2835,16 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="to">The Fief to which funds are to be transferred</param>
         /// <param name="amount">How much to be transferred</param>
-        public bool TreasuryTransfer(Fief to, int amount)
+        public bool TreasuryTransfer(Fief to, int amount, out ProtoMessage error)
         {
+            error = null;
             // ensure number is positive
             amount = Math.Abs(amount);
             // check enough for transfer
             if (this.treasury < amount)
             {
-                Globals_Game.UpdatePlayer(this.owner.playerID, DisplayMessages.ErrorGenericInsufficientFunds);
+                error = new ProtoMessage();
+                error.MessageType = DisplayMessages.ErrorGenericInsufficientFunds;
                 return false;
             }
             else
@@ -2981,10 +2982,22 @@ namespace hist_mmorpg
             if ((toBeBarred.inKeep) && (toBeBarred.location == this))
             {
                 toBeBarred.inKeep = false;
-
+                // update place owner
                 if (!string.IsNullOrEmpty(user))
                 {
                     Globals_Game.UpdatePlayer(user, DisplayMessages.FiefEjectCharacter, new string[] {toBeBarred.firstName + " " + toBeBarred.familyName,this.name});
+                }
+                // Get and notify owner of barred character that they have been ejected
+                PlayerCharacter barredOwner = null;
+                barredOwner = toBeBarred.GetHeadOfFamily();
+                if (barredOwner == null)
+                {
+                    barredOwner = (toBeBarred as NonPlayerCharacter).GetEmployer();
+                }
+                if (barredOwner != null)
+                {
+                    if (barredOwner == toBeBarred) Globals_Game.UpdatePlayer(barredOwner.playerID, DisplayMessages.FiefEjectCharacter, new string[] { "You", this.name });
+                    else Globals_Game.UpdatePlayer(barredOwner.playerID, DisplayMessages.FiefEjectCharacter, new string[] { toBeBarred.firstName + " " + toBeBarred.familyName, this.name });
                 }
             }
 

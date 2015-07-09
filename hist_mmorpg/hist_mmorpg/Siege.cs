@@ -802,8 +802,9 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating whether siege operation can proceed</returns>
         /// <param name="operation">The operation - round or end</param>
-        public bool ChecksBeforeSiegeOperation(string operation = "round")
+        public bool ChecksBeforeSiegeOperation(out ProtoMessage error, string operation = "round")
         {
+            error = null;
             bool proceed = true;
             int daysRequired = 0;
 
@@ -820,7 +821,8 @@ namespace hist_mmorpg
             if (this.days < daysRequired)
             {
                 proceed = false;
-                Globals_Game.UpdatePlayer(GetBesiegingPlayer().playerID, DisplayMessages.SiegeErrorDays);
+                error = new ProtoMessage();
+                error.MessageType = DisplayMessages.SiegeErrorDays;
             }
 
             return proceed;
@@ -1059,8 +1061,9 @@ namespace hist_mmorpg
                    // end the siege
                 this.SiegeEnd(true, messageType,fields);
 
-                // change fief ownership
-                besiegedFief.ChangeOwnership(attackingPlayer);
+                // change fief ownership (ignore errors)
+                ProtoMessage ignore;
+                besiegedFief.ChangeOwnership(attackingPlayer,out ignore);
             }
 
             // storm unsuccessful
@@ -1179,8 +1182,9 @@ namespace hist_mmorpg
                 // end the siege
                 this.SiegeEnd(true, messageType,fields);
 
-                // change fief ownership
-                this.GetFief().ChangeOwnership(this.GetBesiegingPlayer());
+                // change fief ownership (ignore errors)
+                ProtoMessage ignore;
+                this.GetFief().ChangeOwnership(this.GetBesiegingPlayer(),out ignore);
 
             }
 

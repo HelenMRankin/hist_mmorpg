@@ -199,8 +199,9 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating whether or not to proceed with pregnancy attempt</returns>
         /// <param name="husband">The husband</param>
-        public static bool ChecksBeforePregnancyAttempt(Character husband)
+        public static bool ChecksBeforePregnancyAttempt(Character husband, out ProtoMessage error)
         {
+            error = null;
             bool proceed = true;
             bool isPlayer = husband is PlayerCharacter;
             bool isSonOfPlayer = (husband.GetFather()) is PlayerCharacter;
@@ -219,9 +220,10 @@ namespace hist_mmorpg
                 if (!(wife.location == husband.location))
                 {
                     if (isPlayer)
-                    {  
+                    {
+                        error = new ProtoMessage();
+                        error.MessageType = DisplayMessages.ErrorGenericNotInSameFief;
                         string message = "You have to be in the same fief to do that!";
-                        Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID,DisplayMessages.ErrorGenericNotInSameFief);
                     }
                     proceed = false;
                 }
@@ -233,7 +235,9 @@ namespace hist_mmorpg
                     {
                         if (isPlayer)
                         {
-                            Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID,DisplayMessages.BirthAlreadyPregnant,new string[]{wife.firstName + " " + wife.familyName});
+                            error = new ProtoMessage();
+                            error.MessageType = DisplayMessages.BirthAlreadyPregnant;
+                            error.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
                         }
                         proceed = false;
                     }
@@ -245,8 +249,8 @@ namespace hist_mmorpg
                         {
                             if (isPlayer)
                             {
-                                string message = "error:birth:I'm afraid the husband and wife are being separated by the ongoing siege.";
-                                Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, DisplayMessages.BirthSiegeSeparation);
+                                error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.BirthSiegeSeparation;
                             }
                             proceed = false;
                         }
@@ -258,10 +262,8 @@ namespace hist_mmorpg
 
                             if (minDays < 1)
                             {
-                                if (isPlayer)
-                                {
-                                    Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, DisplayMessages.ErrorGenericNotEnoughDays);
-                                }
+                                error = new ProtoMessage();
+                                error.MessageType = DisplayMessages.ErrorGenericNotEnoughDays;
                                 proceed = false;
                             }
                             else
@@ -303,11 +305,9 @@ namespace hist_mmorpg
                 {
                     whoThisIs = "This man is ";
                 }
-                if(isPlayer) Globals_Game.UpdatePlayer(((PlayerCharacter)husband).playerID, DisplayMessages.BirthNotMarried, new string[]{whoThisIs});
-                else
-                {
-                    Globals_Game.UpdatePlayer(((PlayerCharacter)husband.GetFather()).playerID, DisplayMessages.BirthNotMarried,new string[]{whoThisIs});
-                }
+                error = new ProtoMessage();
+                error.MessageType = DisplayMessages.BirthNotMarried;
+                error.MessageFields=new string[]{whoThisIs};
                 proceed = false;
             }
 

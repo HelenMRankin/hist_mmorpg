@@ -380,16 +380,9 @@ namespace hist_mmorpg
 
                         if (!battleHasCommenced)
                         {
-                            Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringFail,new string[]{"You have","the defending army"});
-                            Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringFail,new string[] {"An enemy army has","you"});
                             defender.ProcessRetreat(1);
+                            
                         }
-                        else
-                        {
-                            Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringSuccess, new string[] { "You have", "the defending army" });
-                            Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringSuccess, new string[] { "An enemy army has", "you" });
-                        }
-
                     }
                 }
 
@@ -406,14 +399,7 @@ namespace hist_mmorpg
 
                 if (!battleHasCommenced)
                 {
-                    Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringFail, new string[] { "You have", "the defending army" });
-                    Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringFail, new string[] { "An enemy army has", "you" });
                     defender.ProcessRetreat(1);
-                }
-                else
-                {
-                    Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringSuccess, new string[] { "You have", "the defending army" });
-                    Globals_Game.UpdatePlayer(attacker.GetOwner().playerID, DisplayMessages.BattleBringSuccess, new string[] { "An enemy army has", "you" });
                 }
             }
 

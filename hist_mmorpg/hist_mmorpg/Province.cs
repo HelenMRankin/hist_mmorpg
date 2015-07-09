@@ -64,22 +64,23 @@ namespace hist_mmorpg
         /// Processes functions involved in lodging a new ownership challenge
         /// </summary>
         /// <param name="challenger">PlayerCharacter challenging for ownership</param>
-        public void LodgeOwnershipChallenge(PlayerCharacter challenger)
+        public ProtoMessage LodgeOwnershipChallenge(PlayerCharacter challenger)
         {
+            ProtoMessage result = new ProtoMessage();
             bool proceed = true;
 
             // ensure aren't current owner
             if (challenger == this.owner)
             {
                 proceed = false;
-                Globals_Game.UpdatePlayer(challenger.playerID, DisplayMessages.ProvinceAlreadyOwn);
+                result.MessageType = DisplayMessages.ProvinceAlreadyOwn;
             }
 
             else
             {
                 // create and send new OwnershipChallenge
                 OwnershipChallenge newChallenge = new OwnershipChallenge(Globals_Game.GetNextOwnChallengeID(), challenger.charID, "province", this.id);
-                proceed = Globals_Game.AddOwnershipChallenge(newChallenge);
+                proceed = Globals_Game.AddOwnershipChallenge(newChallenge,out result);
             }
 
             if (proceed)
@@ -118,6 +119,7 @@ namespace hist_mmorpg
                 JournalEntry myEntry = new JournalEntry(entryID, year, season, entryPersonae, entryType,fields, messageIdentifier: DisplayMessages.ProvinceOwnershipChallenge, loc: entryLoc);
                 Globals_Game.AddPastEvent(myEntry);
             }
+            return result;
         }
 
         /// <summary>

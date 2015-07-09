@@ -22,7 +22,7 @@ namespace hist_mmorpg
     /// </summary>
     public enum DisplayMessages
     {
-        None = 0, Success, Error, Armies, Fiefs, Characters, JournalEntries, ArmyMaintainInsufficientFunds, ArmyMaintainCost, ArmyMaintainConfirm, JournalProposal, JournalProposalReply, JournalMarriage, ChallengeKingSuccess, ChallengeKingFail, ChallengeProvinceSuccess, ChallengeProvinceFail, newEvent,
+        None = 0, Success, Error, Armies, Fiefs, Characters, JournalEntries, ArmyMaintainInsufficientFunds, ArmyMaintainCost, ArmyMaintainConfirm, ArmyMaintainedAlready, JournalProposal, JournalProposalReply, JournalMarriage, ChallengeKingSuccess, ChallengeKingFail, ChallengeProvinceSuccess, ChallengeProvinceFail, newEvent,
         SwitchPlayerErrorNoID, SwitchPlayerErrorIDInvalid, ChallengeErrorExists, SiegeNegotiateSuccess, SiegeNegotiateFail, SiegeStormSuccess, SiegeStormFail, SiegeEndDefault, SiegeErrorDays, SiegeRaised, SiegeReduction, ArmyMove,
         ArmyAttritionDebug, ArmyDetachmentArrayWrongLength, ArmyDetachmentNotEnoughTroops, ArmyDetachmentNotSelected, ErrorGenericNotEnoughDays, ErrorGenericPoorOrganisation, ErrorGenericUnidentifiedRecipient, ArmyNoLeader, ArmyBesieged,
         ArmyAttackSelf, ArmyPickupsDenied, ArmyPickupsNotEnoughDays, BattleBringSuccess, BattleBringFail, BattleResults, ErrorGenericNotInSameFief, BirthAlreadyPregnant, BirthSiegeSeparation, BirthNotMarried, CharacterMarriageDeath, CharacterDeath, CharacterEnterArmy,
@@ -540,7 +540,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating success</returns>
         /// <param name="challenge">OwnershipChallenge to be added</param>
-        public static bool AddOwnershipChallenge(OwnershipChallenge challenge)
+        public static bool AddOwnershipChallenge(OwnershipChallenge challenge,out ProtoMessage error)
         {
             bool success = true;
             string toDisplay = "";
@@ -548,19 +548,26 @@ namespace hist_mmorpg
             if (Globals_Game.CheckForExistingChallenge(challenge.placeID))
             {
                 success = false;
+                error = new ProtoMessage();
+                error.MessageType = DisplayMessages.ChallengeErrorExists;
+                error.MessageFields = new String[] { challenge.GetPlace().name };
+                //LEGACY
+                /*
                 PlayerCharacter player = challenge.GetChallenger();
                 if (player != null)
                 {
+                    
                     toDisplay = "There is already a challenge for the ownership of " + challenge.GetPlace().name + ". Only one challenge is permissable at a time.";
                     UpdatePlayer(player.playerID, DisplayMessages.ChallengeErrorExists, new String[] {challenge.GetPlace().name});
                 }
+                 */
             }
 
             else
             {
                 Globals_Game.ownershipChallenges.Add(challenge.id, challenge);
+                error = null;
             }
-
             return success;
         }
 
@@ -1150,6 +1157,7 @@ namespace hist_mmorpg
             return forRemoval;
 
         }
+        
         /// <summary>
         /// Sends an update to a particular user
         /// </summary>

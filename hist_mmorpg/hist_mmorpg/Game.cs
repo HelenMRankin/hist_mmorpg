@@ -2185,9 +2185,9 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                             return error;
                         }
-                        // messages sent from within maintain army
-                        army.MaintainArmy();
-                        return null;
+                        ProtoMessage result;
+                        army.MaintainArmy(out result);
+                        return result ;
                     }
                 // Appoint a new army leader
                 case Actions.AppointLeader:
@@ -2257,7 +2257,8 @@ namespace hist_mmorpg
                             return error;
                         }
                         // Create a detachment
-                        if (army.CreateDetachment(detachmentDetails.troops, detachmentDetails.leftFor))
+                        ProtoMessage detachmentResult;
+                        if (army.CreateDetachment(detachmentDetails.troops, detachmentDetails.leftFor,out detachmentResult))
                         {
                             ProtoMessage success = new ProtoMessage();
                             success.MessageType = DisplayMessages.Success;
@@ -2265,8 +2266,7 @@ namespace hist_mmorpg
                         }
                         else
                         {
-                            // CreateDetachment sends its own error messages- return null
-                            return null;
+                            return detachmentResult;
                         }
                     }
                 // List detachments in fief
@@ -2318,7 +2318,20 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                             return error;
                         }
-                        army.ProcessPickups(msgIn.MessageFields);
+                        ProtoMessage pickupMessage = army.ProcessPickups(msgIn.MessageFields);
+                        if (pickupMessage != null)
+                        {
+                            if ((DisplayMessages)pickupMessage.MessageType == DisplayMessages.ArmyPickupsNotEnoughDays)
+                            {
+                                ProtoArmy armyDetails = new ProtoArmy(army, pc);
+                                armyDetails.MessageType = pickupMessage.MessageType;
+                                return armyDetails;
+                            }
+                            else
+                            {
+                                return pickupMessage;
+                            }
+                        }
                         return new ProtoArmy(army,pc);
                     }
                 // Pillage a fief
@@ -2532,12 +2545,30 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericArmyUnidentified;
                             return error;
                         }
-                        if (armyAttacker.ChecksBeforeAttack(armyDefender))
+                        ProtoMessage attackResult=null;
+                        if (armyAttacker.ChecksBeforeAttack(armyDefender,out attackResult))
                         {
                             // GiveBattle returns necessary messages
-                            Battle.GiveBattle(armyAttacker, armyDefender);
+                            bool battleStarted = Battle.GiveBattle(armyAttacker, armyDefender);
+                            if (battleStarted)
+                            {
+                                attackResult = new ProtoMessage();
+                                attackResult.MessageType=DisplayMessages.BattleBringSuccess;
+                                attackResult.MessageFields = new string[] { "You", "the defending army" };
+                                return attackResult;
+                            }
+                            else
+                            {
+                                attackResult = new ProtoMessage();
+                                attackResult.MessageType = DisplayMessages.BattleBringFail;
+                                attackResult.MessageFields = new string[] { "You", "the defending army" };
+                                return attackResult;
+                            }
                         }
-                        return null;
+                        else
+                        {
+                            return attackResult;
+                        }
                     }
                 // View journal entries
                 case Actions.ViewJournalEntries:

@@ -22,6 +22,8 @@ namespace TestLidgren
             Console.WriteLine(config.MaximumConnections);
             config.MaximumConnections = 2000;
             config.Port = 8000;
+
+            config.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
             server = new NetServer(config);
             server.Start();
             Console.WriteLine("Server has started.");
@@ -51,13 +53,17 @@ namespace TestLidgren
                             Console.WriteLine("Name: "+m.getName()+", age: "+m.getAge());
                             break;
                         case NetIncomingMessageType.StatusChanged:
-                           // NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
-                         //   string reason = im.ReadString();
-                       //     Console.WriteLine(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " " + status + ": " + reason);
+                            NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
+                            string reason = im.ReadString();
+                            Console.WriteLine(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " " + status + ": " + reason);
                             if (im.SenderConnection.RemoteHailMessage != null && (NetConnectionStatus)im.ReadByte()==NetConnectionStatus.Connected)
                             {
                                 Console.WriteLine(im.SenderConnection.RemoteHailMessage.ReadString());
                             }
+                            break;
+                        case NetIncomingMessageType.ConnectionApproval:
+                            im.SenderConnection.Deny();
+                            Console.WriteLine("Disapproved connection");
                             break;
                         default: Console.WriteLine("not recognised"); break;
                     }

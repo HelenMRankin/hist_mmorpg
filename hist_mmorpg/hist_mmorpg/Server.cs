@@ -39,6 +39,7 @@ namespace hist_mmorpg
             Console.WriteLine(config.MaximumConnections);
             config.MaximumConnections = 2000;
             config.Port = 8000;
+            config.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
             server = new NetServer(config);
             server.Start();
             Console.WriteLine("Server has started.");
@@ -67,9 +68,7 @@ namespace hist_mmorpg
                             // Magically, a player character appears (login, to do)
                             if (clientConnections.ContainsKey(im.SenderConnection))
                             {
-                                Client client = clientConnections[im.SenderConnection];
-                                PlayerCharacter pc = client.myPlayerCharacter;
-                                readReply(m, pc, im.SenderConnection);
+                                readReply(m,im.SenderConnection);
                             }
                             
                             break;
@@ -89,11 +88,43 @@ namespace hist_mmorpg
                 Thread.Sleep(1);
             }
         }
-        public void readReply(ProtoMessage m, PlayerCharacter pc,NetConnection connection)
+
+        public bool acceptConnection(NetIncomingMessage message)
         {
-            ProtoMessage reply = Game.ActionController(m, pc);
-            //TODO send
+            // TODO authentication
+            string senderID = message.ReadString();
+            return true;
         }
+
+        public void readReply(ProtoMessage m, NetConnection connection)
+        {
+            Client client;
+            PlayerCharacter pc;
+            clientConnections.TryGetValue(connection, out client);
+            if (client == null)
+            {
+                //TODO error
+            }
+            pc = client.myPlayerCharacter;
+            if (pc == null)
+            {
+                //TODO error
+            }
+            ProtoMessage reply = Game.ActionController(m, pc);
+            if (reply == null)
+            {
+                //TEMP- refactor to ensure always reply
+                return;
+            }
+            NetOutgoingMessage message = server.CreateMessage();
+            MemoryStream ms = new MemoryStream();
+            Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, reply,PrefixStyle.Fixed32);
+            message.Write(ms.GetBuffer().Length);
+            message.Write(ms.GetBuffer());
+            server.SendMessage(message,connection,NetDeliveryMethod.ReliableOrdered);
+            server.FlushSendQueue();
+        }
+
         public Server()
         {
             initialise();
