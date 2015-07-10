@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-
+using System.Runtime.Serialization;
 namespace hist_mmorpg
 {
     /// <summary>
     /// Class storing data on terrain
     /// </summary>
-    public class Terrain
+    [Serializable()]
+    public class Terrain : ISerializable
     {
         /// <summary>
         /// Holds terrain ID
@@ -70,5 +71,19 @@ namespace hist_mmorpg
         public Terrain()
 		{
 		}
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("id", this.id, typeof(string));
+            info.AddValue("des", this.description, typeof(string));
+            info.AddValue("cost", this.travelCost, typeof(double));
+        }
+
+        public Terrain(SerializationInfo info, StreamingContext context)
+        {
+            this.id = info.GetString("id");
+            this.description = info.GetString("des");
+            this.travelCost = info.GetDouble("cost");
+        }
     }
 }

@@ -18,22 +18,23 @@ using RiakClient;
 using Lidgren.Network;
 using ProtoBuf;
 using System.Threading;
+using System.Diagnostics;
 namespace hist_mmorpg
 {
     /// <summary>
     /// Initialises all server details
     /// </summary>
-    class Server
+    public class Server
     {
         private Dictionary<NetConnection, Client> clientConnections = new Dictionary<NetConnection, Client>();
-        static Game game;
         NetServer server;
         bool isListening = true;
         //TODO initialise server IP address, port etc
         void initialise()
         {
-            Globals_Server.rCluster = (RiakCluster)RiakCluster.FromConfig("riakConfig");
-            Globals_Server.rClient = (RiakClient.RiakClient)Globals_Server.rCluster.CreateClient();
+         //   Globals_Server.rCluster = (RiakCluster)RiakCluster.FromConfig("riakConfig");
+          //  Globals_Server.rClient = (RiakClient.RiakClient)Globals_Server.rCluster.CreateClient();
+            Trace.WriteLine("Initialising server");
             NetPeerConfiguration config = new NetPeerConfiguration("test");
             config.LocalAddress = NetUtility.Resolve("localhost");
             Console.WriteLine(config.MaximumConnections);
@@ -42,16 +43,20 @@ namespace hist_mmorpg
             config.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
             server = new NetServer(config);
             server.Start();
-            Console.WriteLine("Server has started.");
+            Trace.WriteLine("Server has started.");
+            Client client = new Client("helen", "Char_158");
+            Globals_Server.clients.Add("helen", client);
         }
         //TODO listen to incoming connections
-        void listen()
+        public void listen()
         {
-            while (isListening)
+            Trace.WriteLine("Listening");
+            while (isListening) 
             {
                 NetIncomingMessage im;
                 while ((im = server.ReadMessage()) != null)
                 {
+                    Trace.WriteLine("Got Message");
                     switch (im.MessageType)
                     {
                         case NetIncomingMessageType.DebugMessage:
@@ -59,7 +64,8 @@ namespace hist_mmorpg
                         case NetIncomingMessageType.WarningMessage:
                         case NetIncomingMessageType.VerboseDebugMessage:
                         case NetIncomingMessageType.Data:
-                            System.Diagnostics.Trace.WriteLine("recieved data message");
+                            isListening = false;
+                            Trace.WriteLine("recieved data message");
                             int numBytes = im.ReadInt32();
                             byte[] bytes = new byte[numBytes];
                             im.ReadBytes(bytes, 0, numBytes);
@@ -73,27 +79,43 @@ namespace hist_mmorpg
                             
                             break;
                         case NetIncomingMessageType.StatusChanged:
-                            // NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
-                            //   string reason = im.ReadString();
-                            //     Console.WriteLine(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " " + status + ": " + reason);
+                             NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
+                             string reason = im.ReadString();
+                             Trace.WriteLine(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " " + status + ": " + reason);
                             if (im.SenderConnection.RemoteHailMessage != null && (NetConnectionStatus)im.ReadByte() == NetConnectionStatus.Connected)
                             {
-                                Console.WriteLine(im.SenderConnection.RemoteHailMessage.ReadString());
+                                Trace.WriteLine(im.SenderConnection.RemoteHailMessage.ReadString());
+                                
                             }
                             break;
-                        default: Console.WriteLine("not recognised"); break;
+                        case NetIncomingMessageType.ConnectionApproval:
+                            acceptDenyConnection(im);
+                            isListening = false;
+                            return;
+                        default: Trace.WriteLine("not recognised"); break;
                     }
                     server.Recycle(im);
                 }
-                Thread.Sleep(1);
             }
         }
 
-        public bool acceptConnection(NetIncomingMessage message)
+        public void acceptDenyConnection(NetIncomingMessage message)
         {
             // TODO authentication
             string senderID = message.ReadString();
-            return true;
+            Client client;
+            Globals_Server.clients.TryGetValue(senderID, out client);
+            if (client != null)
+            {
+                clientConnections.Add(message.SenderConnection, client);
+                message.SenderConnection.Approve();
+                Trace.WriteLine("accepted");
+            }
+            else
+            {
+                message.SenderConnection.Deny("unrecognised");
+                Trace.Write("denied");
+            }
         }
 
         public void readReply(ProtoMessage m, NetConnection connection)

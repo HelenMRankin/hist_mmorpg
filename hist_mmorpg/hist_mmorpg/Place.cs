@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-
+using System.Runtime.Serialization;
 namespace hist_mmorpg
 {
     public abstract class Place
@@ -144,6 +144,24 @@ namespace hist_mmorpg
             }
 
             return myTitleHolder;
+        }
+
+        // Serialise Place for client
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+
+            // Use the AddValue method to specify serialized values.
+            info.AddValue("id", this.id, typeof(string));
+            info.AddValue("nam", this.name, typeof(string));
+            info.AddValue("rank", this.rank.id, typeof(byte));
+        }
+
+        public Place(SerializationInfo info, StreamingContext context)
+        {
+            this.id = info.GetString("id");
+            this.name = info.GetString("nam");
+            var tmpRank = info.GetByte("rank");
+            this.rank = Globals_Game.rankMasterList[tmpRank];
         }
 
     }

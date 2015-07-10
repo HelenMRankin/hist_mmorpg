@@ -4,13 +4,14 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
-
+using System.Runtime.Serialization;
 namespace hist_mmorpg
 {
     /// <summary>
     /// Class storing data on fief
     /// </summary>
-    public class Fief : Place
+    [Serializable()]
+    public class Fief : Place, ISerializable
     {
         /// <summary>
         /// Holds fief's Province object
@@ -3138,7 +3139,28 @@ namespace hist_mmorpg
             return charsToView.ToArray();
         }
 
+        //temp for serializing to Client side Fief object
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+            // Use the AddValue method to specify serialized values.
+            info.AddValue("ter", this.terrain.id, typeof(string));
+            info.AddValue("prov", this.province.id, typeof(string));
+            info.AddValue("lang", this.language.id, typeof(string));
+        }
+
+        public Fief(SerializationInfo info, StreamingContext context) : base(info,context)
+        {
+            var tmpTerr = info.GetString("ter");
+            var tmpProv = info.GetString("prov");
+            var tmpLang = info.GetString("lang");
+            this.terrain = Globals_Game.terrainMasterList[tmpTerr];
+            this.province = Globals_Game.provinceMasterList[tmpProv];
+            this.language = Globals_Game.languageMasterList[tmpLang];
+        }
     }
+
+    
 
 	/// <summary>
     /// Class used to convert Fief to/from serialised format (JSON)

@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-
+using System.Runtime.Serialization;
 namespace hist_mmorpg
 {
     /// <summary>
     /// Class storing data on nationality
     /// </summary>
-    public class Nationality
+    [Serializable()]
+    public class Nationality : ISerializable
     {
         /// <summary>
         /// Holds nationality ID
@@ -46,6 +47,18 @@ namespace hist_mmorpg
         /// </summary>
         public Nationality()
         {
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("natID", this.natID, typeof(string));
+            info.AddValue("natName", this.name, typeof(string));
+        }
+
+        public Nationality(SerializationInfo info, StreamingContext context)
+        {
+            this.natID = info.GetString("natID");
+            this.name = info.GetString("natName");
         }
     }
 }

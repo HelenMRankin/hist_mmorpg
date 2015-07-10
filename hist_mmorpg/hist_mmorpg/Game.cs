@@ -871,13 +871,15 @@ namespace hist_mmorpg
                         // random move if has no boss and is not family member
                         if ((String.IsNullOrWhiteSpace(npcEntry.Value.employer)) && (String.IsNullOrWhiteSpace(npcEntry.Value.familyID)))
                         {
-                            npcEntry.Value.RandomMoveNPC();
+                            ProtoMessage ignore;
+                            npcEntry.Value.RandomMoveNPC(out ignore);
                         }
 
                         // finish previously started multi-hex move if necessary
                         if (npcEntry.Value.goTo.Count > 0)
                         {
-                            npcEntry.Value.CharacterMultiMove();
+                            ProtoMessage ignore;
+                            npcEntry.Value.CharacterMultiMove(out ignore);
                         }
                     }
                 }
@@ -901,7 +903,8 @@ namespace hist_mmorpg
                         // finish previously started multi-hex move if necessary
                         if (pcEntry.Value.goTo.Count > 0)
                         {
-                            pcEntry.Value.CharacterMultiMove();
+                            ProtoMessage ignore;
+                            pcEntry.Value.CharacterMultiMove(out ignore);
                         }
                     }
                 }
@@ -1247,22 +1250,27 @@ namespace hist_mmorpg
                                 {
                                     double travelCost = charToMove.location.getTravelCost(fief, charToMove.armyID);
                                     // If successful send details of fief
-                                    if (charToMove.MoveCharacter(fief, travelCost))
+                                    ProtoMessage error;
+                                    if (charToMove.MoveCharacter(fief, travelCost,out error))
                                     {
                                         Trace.WriteLine("moved character");
                                         return new ProtoFief(fief);
                                     }
                                     else
                                     {
-                                        //If charToMove returns false, the relevant error message has already been sent
-                                        Trace.WriteLine("NULL HERE");
-                                        return null;
+                                        //Return error message obtained from MoveCharacter
+                                        return error;
                                     }
                                 }
                                 // If specifying a route, attempt to move character and return final location
                                 else if (travelTo.travelVia != null)
                                 {
-                                    charToMove.TakeThisRoute(travelTo.travelVia);
+                                    ProtoMessage error;
+                                    charToMove.TakeThisRoute(travelTo.travelVia,out error);
+                                    if (error != null)
+                                    {
+                                        Globals_Game.UpdatePlayer(pc.playerID, error);
+                                    }
                                     return new ProtoFief(charToMove.location);
                                 }
                                 // If fief unidentified return error
@@ -1338,7 +1346,8 @@ namespace hist_mmorpg
                             if (PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c) && PermissionManager.isAuthorized(PermissionManager.ownsFiefOrAdmin, pc, f))
                             {
                                 // Check character can become bailiff
-                                if (c.ChecksBeforeGranting(pc, "bailiff", false))
+                                ProtoMessage error = null;
+                                if (c.ChecksBeforeGranting(pc, "bailiff", false,out error))
                                 {
                                     // set bailiff, return fief
                                     f.bailiff = c;
@@ -1349,7 +1358,7 @@ namespace hist_mmorpg
                                 else
                                 {
                                     // error message returned from ChecksBeforeGranting
-                                    return null;
+                                    return error;
                                 }
                             }
                             // User unauthorised
@@ -1662,10 +1671,11 @@ namespace hist_mmorpg
                             Character charToGrant = Globals_Game.getCharFromID(msgIn.MessageFields[0]);
                             if (charToGrant != null)
                             {
-                                bool canGrant = charToGrant.ChecksBeforeGranting(pc, "title", false);
+                                ProtoMessage error;
+                                bool canGrant = charToGrant.ChecksBeforeGranting(pc, "title", false,out error);
                                 if (canGrant)
                                 {
-                                    bool granted = pc.GrantTitle(charToGrant, fief);
+                                    bool granted = pc.GrantTitle(charToGrant, fief,out error);
                                     if (granted)
                                     {
                                         ProtoFief f = new ProtoFief(fief);
@@ -1676,14 +1686,12 @@ namespace hist_mmorpg
                                     // If granting fails message is returned from GrantTitle
                                     else
                                     {
-                                        return null;
+                                        return error;
                                     }
                                 }
                                 //Permission denied
                                 else
                                 {
-                                    ProtoMessage error = new ProtoMessage();
-                                    error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                                     return error;
                                 }
                             }
@@ -1786,7 +1794,8 @@ namespace hist_mmorpg
                         else
                         {
                             // return success
-                            if (fiefFrom.TreasuryTransfer(fiefTo, amount))
+                            ProtoMessage error;
+                            if (fiefFrom.TreasuryTransfer(fiefTo, amount, out error))
                             {
                                 ProtoMessage success = new ProtoMessage();
                                 success.Message = "transferfunds";
@@ -1796,7 +1805,7 @@ namespace hist_mmorpg
                             // an error message will be sent from within TreasuryTransfer
                             else
                             {
-                                return null;
+                                return error;
                             }
 
                         }
@@ -1830,7 +1839,8 @@ namespace hist_mmorpg
                             return error;
                         }
                         // Perform treasury transfer, update
-                        bool success = pc.GetHomeFief().TreasuryTransfer(transferTo.GetHomeFief(),transferDetails.amount);
+                        ProtoMessage TransferError;
+                        bool success = pc.GetHomeFief().TreasuryTransfer(transferTo.GetHomeFief(),transferDetails.amount,out TransferError);
                         if(success) {
                             Globals_Game.UpdatePlayer(transferTo.playerID, DisplayMessages.GenericReceivedFunds, new string[] { transferDetails.amount.ToString(), pc.firstName + " " + pc.familyName });
                             ProtoMessage result = new ProtoMessage();
@@ -1840,9 +1850,7 @@ namespace hist_mmorpg
                         }
                         else
                         {
-                            ProtoMessage error = new ProtoMessage();
-                            error.MessageType = DisplayMessages.ErrorGenericInsufficientFunds;
-                            return error;
+                            return TransferError;
                         }
                     }
                 // Instruct a character to enter or exit keep
@@ -1863,7 +1871,8 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                             return error;
                         }
-                        bool success = c.ExitEnterKeep();
+                        ProtoMessage EnterError;
+                        bool success = c.ExitEnterKeep(out EnterError);
                         if (success)
                         {
                             ProtoMessage m = new ProtoMessage();
@@ -1873,7 +1882,7 @@ namespace hist_mmorpg
                         else
                         {
                             // Error messages handled within enter/exit keep
-                            return null;
+                            return EnterError;
                         }
                     }
                 // List chars in court, tavern or outside fief
@@ -1891,7 +1900,12 @@ namespace hist_mmorpg
                         if (msgIn.Message.Equals("court"))
                         {
                             if (!pc.inKeep) {
-                                pc.EnterKeep();
+                                ProtoMessage error;
+                                pc.EnterKeep(out error);
+                                if (error != null)
+                                {
+                                    return error;
+                                }
                             }
                         }
                         else
@@ -1932,7 +1946,9 @@ namespace hist_mmorpg
                             // Attempt to camp
                             try
                             {
-                                c.CampWaitHere(Convert.ToByte(msgIn.MessageFields[0]));
+                                ProtoMessage campMessage;
+                                c.CampWaitHere(Convert.ToByte(msgIn.MessageFields[0]),out campMessage);
+                                
                                 ProtoMessage msg = new ProtoMessage();
                                 msg.MessageType = DisplayMessages.Success;
                                 return msg;
@@ -2014,16 +2030,14 @@ namespace hist_mmorpg
                         return error;
                     }
                     bool madeProposal = false;
-                    if (charFromProposer.ChecksBeforeProposal(charProposeTo))
+                    ProtoMessage proposalError;
+                    if (charFromProposer.ChecksBeforeProposal(charProposeTo,out proposalError))
                     {
                         madeProposal = charFromProposer.ProposeMarriage(charProposeTo);
                     }
                     if (!madeProposal)
                     {
-                        ProtoMessage error = new ProtoMessage();
-                        error.MessageType = DisplayMessages.Error;
-                        error.Message = "Proposal failed";
-                        return error;
+                        return proposalError;
                     }
                     else
                     {
@@ -2089,7 +2103,8 @@ namespace hist_mmorpg
                             return error;
                         }
                         NonPlayerCharacter heir = (heirTemp as NonPlayerCharacter);
-                        if (heir==null || !heir.ChecksForHeir(pc))
+                        ProtoMessage heirError;
+                        if (heir==null || !heir.ChecksForHeir(pc,out heirError))
                         {
                             ProtoMessage error = new ProtoMessage();
                             error.MessageType = DisplayMessages.CharacterHeir;
@@ -2129,19 +2144,17 @@ namespace hist_mmorpg
                             return error;
                         }
                         // Confirm can get pregnant
-                        if (!Birth.ChecksBeforePregnancyAttempt(father))
+                        ProtoMessage birthError;
+                        if (!Birth.ChecksBeforePregnancyAttempt(father,out birthError))
                         {
-                            ProtoMessage error = new ProtoMessage();
-                            error.MessageType = DisplayMessages.Error;
-                            return error;
+                            return birthError;
                         }
                         // Move so that both husband and wife are in/out of keep
                         father.GetSpouse().inKeep = father.inKeep;
-                        bool pregnant = father.GetSpousePregnant(father.GetSpouse());
+                        ProtoMessage birthMessage;
+                        bool pregnant = father.GetSpousePregnant(father.GetSpouse(),out birthMessage);
                         // At this point the rest is handled by the GetSpousePregnant method
-                        ProtoMessage result = new ProtoMessage();
-                        result.MessageType = DisplayMessages.Success;
-                        return result;
+                        return birthMessage;
                     }
                 // Recruit troops from fief
                 case Actions.RecruitTroops:
@@ -2217,7 +2230,8 @@ namespace hist_mmorpg
                             return error;
                         }
                         // Check char can be leader, grant
-                        bool canBeLeader = newLeader.ChecksBeforeGranting(pc, "leader", false, army.armyID);
+                        ProtoMessage grantError;
+                        bool canBeLeader = newLeader.ChecksBeforeGranting(pc, "leader", false, out grantError, army.armyID);
                         if (canBeLeader)
                         {
                             army.AssignNewLeader(newLeader);
@@ -2226,7 +2240,7 @@ namespace hist_mmorpg
                         // Checks before granting will return own error messages
                         else
                         {
-                            return null;
+                            return grantError;
                         }
                     }
                 // Drop off troops in fief 
@@ -2352,7 +2366,8 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                             return error;
                         }
-                        bool canPillage = Pillage_Siege.ChecksBeforePillageSiege(army, army.GetLocation());
+                        ProtoMessage pillageError;
+                        bool canPillage = Pillage_Siege.ChecksBeforePillageSiege(army, army.GetLocation(),out pillageError);
                         if (canPillage)
                         {
                             Pillage_Siege.PillageFief(army, army.GetLocation());
@@ -2362,7 +2377,7 @@ namespace hist_mmorpg
                             return result;
                         }
                         // CheckBeforePillage returns own error messages
-                        return null;
+                        return pillageError;
                     }
                 // Besiege a fief
                 case Actions.BesiegeFief:
@@ -2382,7 +2397,8 @@ namespace hist_mmorpg
                             error.MessageType = DisplayMessages.ErrorGenericUnauthorised;
                             return error;
                         }
-                        bool canSiege = Pillage_Siege.ChecksBeforePillageSiege(army, army.GetLocation(),"siege");
+                        ProtoMessage pillageError;
+                        bool canSiege = Pillage_Siege.ChecksBeforePillageSiege(army, army.GetLocation(),out pillageError,"siege");
                         if (canSiege)
                         {
                             Siege newSiege = Pillage_Siege.SiegeStart(army, army.GetLocation());
@@ -2391,7 +2407,10 @@ namespace hist_mmorpg
                             result.Message = "siege";
                             return result;
                         }
-                        return null;
+                        else
+                        {
+                            return pillageError;
+                        }
                     }
                 // Perform siege negotiation round
                 case Actions.SiegeRoundNegotiate:

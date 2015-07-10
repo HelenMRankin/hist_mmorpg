@@ -2554,9 +2554,10 @@ namespace hist_mmorpg
         /// </summary>
         /// <returns>bool indicating success</returns>
         /// <param name="wife">Character's spouse</param>
-        public bool GetSpousePregnant(Character wife,out ProtoMessage error)
+        public bool GetSpousePregnant(Character wife,out ProtoMessage birthMessage)
         {
-            error = null;
+           
+            birthMessage = null;
             bool isPlayer = this is PlayerCharacter;
             PlayerCharacter player = null;
             if (isPlayer)
@@ -2673,9 +2674,9 @@ namespace hist_mmorpg
                         // display message of celebration
                         if (player!=null)
                         {
-                            error = new ProtoMessage();
-                            error.MessageType = DisplayMessages.CharacterSpousePregnant;
-                            error.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
+                            birthMessage = new ProtoMessage();
+                            birthMessage.MessageType = DisplayMessages.CharacterSpousePregnant;
+                            birthMessage.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
                         }
                     }
 
@@ -2692,9 +2693,9 @@ namespace hist_mmorpg
                     // display encouraging message
                     if (player!=null)
                     {
-                        error = new ProtoMessage();
-                        error.MessageType = DisplayMessages.CharacterSpouseNotPregnant;
-                        error.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
+                        birthMessage = new ProtoMessage();
+                        birthMessage.MessageType = DisplayMessages.CharacterSpouseNotPregnant;
+                        birthMessage.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
                     }
                 }
 
@@ -2709,9 +2710,9 @@ namespace hist_mmorpg
                 // give the player the bad news
                 if (player!=null)
                 {
-                    error = new ProtoMessage();
-                    error.MessageType = DisplayMessages.CharacterSpouseNeverPregnant;
-                    error.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
+                    birthMessage = new ProtoMessage();
+                    birthMessage.MessageType = DisplayMessages.CharacterSpouseNeverPregnant;
+                    birthMessage.MessageFields = new string[] { wife.firstName + " " + wife.familyName };
                 }
             }
 

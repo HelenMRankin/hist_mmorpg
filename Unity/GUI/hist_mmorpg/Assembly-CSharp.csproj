@@ -46,23 +46,21 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Fief.cs" />
      <Compile Include="Assets\Scripts\FiefManager.cs" />
      <Compile Include="Assets\Scripts\HexGrid_tmp.cs" />
-     <Compile Include="Assets\Scripts\Kingdom.cs" />
-     <Compile Include="Assets\Scripts\Language.cs" />
-     <Compile Include="Assets\Scripts\Nationality.cs" />
+     <Compile Include="Assets\Scripts\HexMap.cs" />
      <Compile Include="Assets\Scripts\NetworkScript.cs" />
-     <Compile Include="Assets\Scripts\Place.cs" />
-     <Compile Include="Assets\Scripts\ProtoMessage.cs" />
-     <Compile Include="Assets\Scripts\Province.cs" />
-     <Compile Include="Assets\Scripts\Rank.cs" />
-     <Compile Include="Assets\Scripts\Terrain.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>F:/Games/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
  <Reference Include="protobuf-net">
  <HintPath>E:/Git/Unity/GUI/hist_mmorpg/Assets/protobuf-net.dll</HintPath>
+ </Reference>
+ <Reference Include="QuickGraph">
+ <HintPath>E:/Git/Unity/GUI/hist_mmorpg/Assets/QuickGraph.dll</HintPath>
+ </Reference>
+ <Reference Include="QuickGraph.Data">
+ <HintPath>E:/Git/Unity/GUI/hist_mmorpg/Assets/QuickGraph.Data.dll</HintPath>
  </Reference>
  <Reference Include="UnityEditor.iOS.Extensions.Xcode">
  <HintPath>F:/Games/Unity/Editor/Data/PlaybackEngines/iossupport/UnityEditor.iOS.Extensions.Xcode.dll</HintPath>

@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-
+using System.Runtime.Serialization;
 namespace hist_mmorpg
 {
     /// <summary>
     /// Class storing data on language
     /// </summary>
-    public class Language
+    [Serializable()]
+    public class Language : ISerializable
     {
         /// <summary>
         /// Holds language ID
@@ -72,12 +73,27 @@ namespace hist_mmorpg
         {
             return this.baseLanguage.name + " (dialect " + this.dialect + ")";
         }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("LangID", this.id, typeof(string));
+            this.baseLanguage.GetObjectData(info, context);
+            info.AddValue("dia", this.dialect, typeof(int));
+        }
+
+        public Language(SerializationInfo info, StreamingContext context)
+        {
+            this.id = info.GetString("LangID");
+            this.baseLanguage = new BaseLanguage(info, context);
+            this.dialect = info.GetInt32("dia");
+        }
     }
 
     /// <summary>
     /// Class storing base langauge data
     /// </summary>
-    public class BaseLanguage
+    [Serializable()]
+    public class BaseLanguage : ISerializable 
     {
         /// <summary>
         /// Holds base langauge ID
@@ -125,6 +141,18 @@ namespace hist_mmorpg
         /// </summary>
         public BaseLanguage()
         {
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("baseID", this.id, typeof(string));
+            info.AddValue("baseNam", this.name, typeof(string));
+        }
+
+        public BaseLanguage(SerializationInfo info, StreamingContext context)
+        {
+            this.id = info.GetString("baseID");
+            this.name = info.GetString("baseNam");
         }
     }
 

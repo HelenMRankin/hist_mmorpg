@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 public class FiefManager : MonoBehaviour {
 	private Dictionary<string,string> movementInstructions = new Dictionary<string, string>(); 
+	public static Dictionary<string,Fief> fiefMasterList = new Dictionary<string, Fief>();
+
+
 	// Use this for initialization
 	void Start () {
 	

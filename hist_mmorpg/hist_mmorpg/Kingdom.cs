@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-
+using System.Runtime.Serialization;
 namespace hist_mmorpg
 {
     /// <summary>
     /// Class storing data on kingdom
     /// </summary>
-    public class Kingdom : Place
+    [Serializable()]
+    public class Kingdom : Place, ISerializable
     {
         /// <summary>
         /// Holds Kingdom nationality
@@ -136,6 +137,18 @@ namespace hist_mmorpg
 
             // update kingdom owner property
             this.owner = newOwner;
+        }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+            info.AddValue("nat", this.nationality.natID, typeof(string));
+        }
+
+        public Kingdom(SerializationInfo info, StreamingContext context):base(info,context)
+        {
+            var tmpNat = info.GetString("nat");
+            this.nationality = Globals_Game.nationalityMasterList[tmpNat];
         }
     }
 

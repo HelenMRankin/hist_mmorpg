@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-
+using System.Runtime.Serialization;
 namespace hist_mmorpg
 {
     /// <summary>
     /// Class storing data on rank and title
     /// </summary>
-    public class Rank
+    [Serializable()]
+    public class Rank : ISerializable
     {
         /// <summary>
         /// Holds rank ID
@@ -116,12 +117,30 @@ namespace hist_mmorpg
             return rankName;
         }
 
+        //temp for serializing to Client side Fief object
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+
+            // Use the AddValue method to specify serialized values.
+            info.AddValue("id", this.id, typeof(byte));
+            info.AddValue("titles", this.title, typeof(TitleName[]));
+            info.AddValue("stat", this.stature, typeof(byte));
+        }
+
+        public Rank(SerializationInfo info, StreamingContext context)
+        {
+            this.id = info.GetByte("id");
+            this.title = (TitleName[])info.GetValue("titles", typeof(TitleName[]));
+            this.stature = info.GetByte("stat");
+        }
+
     }
 
     /// <summary>
     /// Class storing data on positions of power
     /// </summary>
-    public class Position : Rank
+    [Serializable()]
+    public class Position : Rank, ISerializable
     {
         /// <summary>
         /// Holds ID of the office holder
@@ -293,6 +312,18 @@ namespace hist_mmorpg
 
             return holder;
         }
+
+       
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+            info.AddValue("PosNat", this.nationality.natID, typeof(string));
+        }
+        public Position(SerializationInfo info, StreamingContext context) :base(info,context)
+        {
+            var tmpNat = info.GetString("PosNat");
+            this.nationality = Globals_Game.nationalityMasterList[tmpNat];
+        }
     }
 
     /// <summary>
@@ -397,7 +428,8 @@ namespace hist_mmorpg
     /// <summary>
     /// Struct storing data on title name
     /// </summary>
-    public struct TitleName
+    [Serializable()]
+    public struct TitleName : ISerializable
     {
         /// <summary>
         /// Holds Language ID or "generic"
@@ -437,6 +469,18 @@ namespace hist_mmorpg
 
             this.langID = lang;
             this.name = nam;
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("TiLang", this.langID, typeof(string));
+            info.AddValue("TiName", this.name, typeof(string));
+        }
+
+        public TitleName(SerializationInfo info, StreamingContext context)
+        {
+            this.langID = info.GetString("TiLang");
+            this.name = info.GetString("TiName");
         }
     }
 }
