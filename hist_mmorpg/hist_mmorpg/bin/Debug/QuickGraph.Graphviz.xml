@@ -9,6 +9,13 @@
             Edge formatter
             </summary>
         </member>
+        <member name="M:QuickGraph.Graphviz.SvgHtmlWrapper.WrapSvg(System.String)">
+            <summary>
+            Creates a HTML file that wraps the SVG and returns the file name
+            </summary>
+            <param name="svgFileName"></param>
+            <returns></returns>
+        </member>
         <member name="T:QuickGraph.Graphviz.GraphvizAlgorithm`2">
             <summary>
             An algorithm that renders a graph to the Graphviz DOT format.
@@ -24,86 +31,6 @@
         <member name="P:QuickGraph.Graphviz.GraphvizAlgorithm`2.ImageType">
             <summary>
             Current image output type
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Cmap">
-            <summary>
-            Client-side imagemaps
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Hpgl">
-            <summary>
-            HP-GL/2 format
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Imap">
-            <summary>
-            Server-side imagemaps
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Mif">
-            <summary>
-            FrameMaker MIF format
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Mp">
-            <summary>
-            MetaPost
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Pcl">
-            <summary>
-            PCL format
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Pic">
-            <summary>
-            PIC format
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.PlainText">
-            <summary>
-            plain text format
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Png">
-            <summary>
-            Portable Network Graphics format
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Ps">
-            <summary>
-            Postscript
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Ps2">
-            <summary>
-            PostScript for PDF
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Svg">
-            <summary>
-            Scalable Vector Graphics
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Svgz">
-            <summary>
-            Scalable Vector Graphics, gzipped
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Vrml">
-            <summary>
-            VRML
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Vtx">
-            <summary>
-            Visual Thought format
-            </summary>
-        </member>
-        <member name="F:QuickGraph.Graphviz.Dot.GraphvizImageType.Wbmp">
-            <summary>
-            Wireless BitMap format
             </summary>
         </member>
         <member name="T:QuickGraph.Graphviz.GraphvizExtensions">
@@ -129,6 +56,11 @@
             <param name="graph"></param>
             <param name="initialization">delegate that initializes the algorithm</param>
             <returns></returns>
+        </member>
+        <member name="T:QuickGraph.Graphviz.FileDotEngine">
+            <summary>
+            Default dot engine implementation, writes dot code to disk
+            </summary>
         </member>
     </members>
 </doc>

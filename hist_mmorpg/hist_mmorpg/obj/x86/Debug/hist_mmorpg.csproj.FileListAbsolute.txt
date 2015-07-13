@@ -40,13 +40,11 @@ E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\protobuf-net.dll
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\QuickGraph.Data.dll
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\QuickGraph.dll
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\QuickGraph.Graphviz.dll
-E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\QuickGraph.Serialization.dll
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\RiakClient.dll
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\Newtonsoft.Json.xml
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\QuickGraph.xml
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\QuickGraph.Data.xml
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\QuickGraph.Graphviz.xml
-E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\QuickGraph.Serialization.xml
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\RiakClient.xml
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\CorrugatedIron.xml
 E:\Git\hist_mmorpg\hist_mmorpg\bin\Debug\protobuf-net.pdb

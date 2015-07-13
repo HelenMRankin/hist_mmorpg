@@ -76,15 +76,15 @@ namespace hist_mmo_TestSet
             
             // id of Character owned by pc
             ProtoMessage validAuthorised = new ProtoMessage();
-            validAuthorised.MessageType = hist_mmorpg.Actions.ViewChar;
+            validAuthorised.ActionType = hist_mmorpg.Actions.ViewChar;
             validAuthorised.Message = ownedNPC.charID;
 
             hist_mmorpg.ProtoMessage validUnauthorised = new hist_mmorpg.ProtoMessage();
-            validUnauthorised.MessageType = hist_mmorpg.Actions.ViewChar;
+            validUnauthorised.ActionType = hist_mmorpg.Actions.ViewChar;
             validUnauthorised.Message = notOwnedNPC.charID;
 
             ProtoMessage invalidChar = new ProtoMessage();
-            invalidChar.MessageType=Actions.ViewChar;
+            invalidChar.ActionType=Actions.ViewChar;
             invalidChar.Message = "SPADERSH";
 
             ProtoMessage result1 = Game.ActionController(validAuthorised, player);
@@ -93,7 +93,7 @@ namespace hist_mmo_TestSet
             Trace.WriteLine((result1 as ProtoCharacter).management);
 
             ProtoMessage result2 = Game.ActionController(invalidChar, player);
-            Assert.AreEqual(DisplayMessages.ErrorGenericCharacterUnidentified, result2.MessageType);
+            Assert.AreEqual(DisplayMessages.ErrorGenericCharacterUnidentified, result2.ResponseType);
         }
 
         [TestMethod]
@@ -106,7 +106,7 @@ namespace hist_mmo_TestSet
             string all = "entouragefamilyemploy";
             string none = "";
             ProtoMessage messageIn = new ProtoMessage();
-            messageIn.MessageType = Actions.GetNPCList;
+            messageIn.ActionType = Actions.GetNPCList;
             messageIn.Message = all;
 
             ProtoMessage result = Game.ActionController(messageIn, player);
@@ -144,17 +144,17 @@ namespace hist_mmo_TestSet
 
             instructions.travelTo = invalidFief;
             result = Game.ActionController(instructions, player);
-            Assert.AreEqual(DisplayMessages.ErrorGenericFiefUnidentified, result.MessageType);
+            Assert.AreEqual(DisplayMessages.ErrorGenericFiefUnidentified, result.ResponseType);
 
             instructions.travelTo = validFief;
             instructions.characterID = invalidChar;
             result = Game.ActionController(instructions, player);
-            Assert.AreEqual(DisplayMessages.ErrorGenericCharacterUnidentified, result.MessageType);
+            Assert.AreEqual(DisplayMessages.ErrorGenericCharacterUnidentified, result.ResponseType);
 
             instructions.characterID = notOwnedNPC.charID;
             result = Game.ActionController(instructions, player);
             Trace.WriteLine(result.GetType());
-            Assert.AreEqual(result.MessageType, DisplayMessages.ErrorGenericUnauthorised);
+            Assert.AreEqual(result.ResponseType, DisplayMessages.ErrorGenericUnauthorised);
 
         }
 
@@ -163,7 +163,7 @@ namespace hist_mmo_TestSet
         {
             string fiefIn = player.location.id;
             ProtoMessage viewFief = new ProtoMessage();
-            viewFief.MessageType = Actions.ViewFief;
+            viewFief.ActionType = Actions.ViewFief;
             viewFief.Message = fiefIn;
 
             ProtoMessage result = Game.ActionController(viewFief, player);
@@ -183,14 +183,14 @@ namespace hist_mmo_TestSet
 
             viewFief.Message = notOwnedFief.id;
             result = Game.ActionController(viewFief, player);
-            Assert.AreEqual(DisplayMessages.ErrorGenericTooFarFromFief, result.MessageType);
+            Assert.AreEqual(DisplayMessages.ErrorGenericTooFarFromFief, result.ResponseType);
         }
 
         [TestMethod]
         public void TestAppointBailiff()
         {
             ProtoMessage appointBailiff = new ProtoMessage();
-            appointBailiff.MessageType = Actions.AppointBailiff;
+            appointBailiff.ActionType = Actions.AppointBailiff;
             appointBailiff.Message = ownedFief.id;
             appointBailiff.MessageFields[0] = ownedNPC.charID;
             int age = ownedNPC.CalcAge();
@@ -203,11 +203,11 @@ namespace hist_mmo_TestSet
             Assert.AreEqual(typeof(ProtoFief),result.GetType());
             appointBailiff.Message = notOwnedFief.id;
             result = Game.ActionController(appointBailiff, player);
-            Assert.AreEqual(DisplayMessages.ErrorGenericUnauthorised, result.MessageType);
+            Assert.AreEqual(DisplayMessages.ErrorGenericUnauthorised, result.ResponseType);
             appointBailiff.Message = ownedFief.id;
             appointBailiff.MessageFields[0] = notOwnedNPC.charID;
 
-            Assert.AreEqual(DisplayMessages.ErrorGenericUnauthorised, result.MessageType);
+            Assert.AreEqual(DisplayMessages.ErrorGenericUnauthorised, result.ResponseType);
         }
         
     }

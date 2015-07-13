@@ -42,7 +42,6 @@ namespace TestLidgren
             NetOutgoingMessage msg = client.CreateMessage();
             MemoryStream ms = new MemoryStream();
             Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, m,PrefixStyle.Fixed32);
-            msg.Write(ms.GetBuffer().Length);
             msg.Write(ms.GetBuffer());
             client.SendMessage(msg,NetDeliveryMethod.ReliableOrdered);
             client.FlushSendQueue();

@@ -45,10 +45,7 @@ namespace TestLidgren
                         case NetIncomingMessageType.VerboseDebugMessage:
                         case NetIncomingMessageType.Data:
                             Console.WriteLine("recieved data message");
-                            int numBytes = im.ReadInt32();
-                            byte[] bytes = new byte[numBytes];
-                            im.ReadBytes(bytes, 0, numBytes);
-                            MemoryStream ms = new MemoryStream(bytes);
+                            MemoryStream ms = new MemoryStream(im.Data);
                             ProtoMessage m = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(ms,PrefixStyle.Fixed32);
                             Console.WriteLine("Name: "+m.getName()+", age: "+m.getAge());
                             break;
@@ -62,7 +59,7 @@ namespace TestLidgren
                             }
                             break;
                         case NetIncomingMessageType.ConnectionApproval:
-                            im.SenderConnection.Deny();
+                            im.SenderConnection.Approve();
                             Console.WriteLine("Disapproved connection");
                             break;
                         default: Console.WriteLine("not recognised"); break;
