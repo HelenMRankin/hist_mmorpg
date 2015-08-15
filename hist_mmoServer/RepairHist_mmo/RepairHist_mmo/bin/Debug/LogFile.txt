@@ -1,0 +1,9 @@
+Server start
+Server started- host: localhost, port: 8000, appID: test, max connections: 2000
+Total approximate memory: 1997316
+helen logs in from 127.0.0.1:62479
+From hist_mmorpg.Client: request = Camp, reply = CharacterCamp
+From hist_mmorpg.Client: request = ExamineArmiesInFief, reply = Armies
+From hist_mmorpg.Client: request = ViewArmy, reply = Success
+From hist_mmorpg.Client: request = ViewArmy, reply = Success
+From hist_mmorpg.Client: request = ListArmies, reply = None

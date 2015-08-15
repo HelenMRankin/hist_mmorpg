@@ -1,0 +1,28 @@
+Initialize engine version: 5.0.2f1 (0b02744d4013)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: AMD Radeon HD 5670 (ID=0x68d8)
+    Vendor:   ATI
+    VRAM:     1014 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\System.Drawing.dll (this message is harmless)
+Loading G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\System.Drawing.dll into Unity Child Domain
+Platform assembly: G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\Lidgren.Network.dll (this message is harmless)
+Loading G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\Lidgren.Network.dll into Unity Child Domain
+Platform assembly: G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\protobuf-net.dll (this message is harmless)
+Loading G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\protobuf-net.dll into Unity Child Domain
+Platform assembly: G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\QuickGraph.dll (this message is harmless)
+Loading G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\QuickGraph.dll into Unity Child Domain
+Platform assembly: G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading G:\Unity\hist_mmoUI\GUI\hist_mmo_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+- Completed reload, in  0.282 seconds
+desktop: 1280x1024 60Hz; virtual: 1280x1024 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.

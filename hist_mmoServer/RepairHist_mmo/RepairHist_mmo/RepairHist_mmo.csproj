@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{D3E56395-592B-417F-8FC6-9B84AA9A7052}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>hist_mmorpg</RootNamespace>
+    <AssemblyName>hist_mmorpg</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Lidgren.Network, Version=2012.1.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\DLLS\Windows\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\DLLS\Windows\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickGraph">
+      <HintPath>..\..\..\DLLS\Windows\QuickGraph.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickGraph.Data">
+      <HintPath>..\..\..\DLLS\Windows\QuickGraph.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickGraph.Serialization">
+      <HintPath>..\..\..\DLLS\Windows\QuickGraph.Serialization.dll</HintPath>
+    </Reference>
+    <Reference Include="RiakClient">
+      <HintPath>..\..\..\DLLS\Linux\RiakClient.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\..\home\cs3\hr80\RiakTest\RiakTest\bin\Debug\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Ailment.cs" />
+    <Compile Include="Army.cs" />
+    <Compile Include="Battle.cs" />
+    <Compile Include="Birth.cs" />
+    <Compile Include="Character.cs" />
+    <Compile Include="Client.cs" />
+    <Compile Include="ClientSerializer.cs" />
+    <Compile Include="CSVimport.cs" />
+    <Compile Include="DatabaseRead.cs" />
+    <Compile Include="DatabaseWrite.cs" />
+    <Compile Include="Fief.cs" />
+    <Compile Include="Game.cs" />
+    <Compile Include="GameClock.cs" />
+    <Compile Include="Globals_Game.cs" />
+    <Compile Include="Globals_Server.cs" />
+    <Compile Include="HexMapGraph.cs" />
+    <Compile Include="Interfaces.cs" />
+    <Compile Include="Journal.cs" />
+    <Compile Include="Kingdom.cs" />
+    <Compile Include="Language.cs" />
+    <Compile Include="Nationality.cs" />
+    <Compile Include="PermissionManager.cs" />
+    <Compile Include="Pillage_Siege.cs" />
+    <Compile Include="Place.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="ProtoMessage.cs" />
+    <Compile Include="Province.cs" />
+    <Compile Include="Rank.cs" />
+    <Compile Include="Server.cs" />
+    <Compile Include="Siege.cs" />
+    <Compile Include="Terrain.cs" />
+    <Compile Include="Trait.cs" />
+    <Compile Include="Utility_Methods.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CSVs\gameObjects.csv" />
+    <None Include="CSVs\map.csv" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
