@@ -86,6 +86,7 @@ FiefEjectCharacter~{0} has been ejected from the keep in {1}
 FiefNoBailiff~There is no appointed bailiff for this fief, my lord.
 FiefCouldNotBar~Apologies my Lord, the following could not be barred :
 FiefCouldNotUnbar~Apologies my Lord, but the following could not be unbarred :
+FiefNoCaptives~You have no captives.
 JournalProposal~On this day of Our Lord a proposal has been made by {0} to {1} that {2} be betrothed to {3}
 JournalProposalReply~On this day of Our Lord the proposed marriage between {0} and {1} has been {2} by {3}. 
 JournalMarriage~On this day of Our Lord there took place a marriage between {0} and {1} (nee {2}). Let the bells ring out in celebration!

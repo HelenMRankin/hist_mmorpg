@@ -39,10 +39,10 @@
 	<Reference Include="System.Core" />
 	<Reference Include="System.Xml.Linq" />
 	<Reference Include="UnityEngine">
-	  <HintPath>F:/Games/Unity/Editor/Data/Managed/UnityEngine.dll</HintPath>
+	  <HintPath>E:/Unity/Unity/Editor/Data/Managed/UnityEngine.dll</HintPath>
 	</Reference>
 	<Reference Include="UnityEditor">
-	  <HintPath>F:/Games/Unity/Editor/Data/Managed/UnityEditor.dll</HintPath>
+	  <HintPath>E:/Unity/Unity/Editor/Data/Managed/UnityEditor.dll</HintPath>
 	</Reference>
   </ItemGroup>
   <ItemGroup>
@@ -60,6 +60,7 @@
      <Compile Include="Assets\GameObjects\Province.cs" />
      <Compile Include="Assets\GameObjects\Rank.cs" />
      <Compile Include="Assets\Scripts\ArmyManager.cs" />
+     <Compile Include="Assets\Scripts\CharacterController.cs" />
      <Compile Include="Assets\Scripts\FamilyControlScript.cs" />
      <Compile Include="Assets\Scripts\FiefController.cs" />
      <Compile Include="Assets\Scripts\GameStateManager.cs" />
@@ -79,22 +80,22 @@
      <Compile Include="Assets\Scripts\UpdateSlider.cs" />
      <None Include="Assets\DataFiles\strings.txt" />
  <Reference Include="UnityEngine.UI">
- <HintPath>F:/Games/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
+ <HintPath>E:/Unity/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
  <Reference Include="System.Drawing">
- <HintPath>G:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/System.Drawing.dll</HintPath>
+ <HintPath>E:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/System.Drawing.dll</HintPath>
  </Reference>
  <Reference Include="Lidgren.Network">
- <HintPath>G:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/Lidgren.Network.dll</HintPath>
+ <HintPath>E:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/Lidgren.Network.dll</HintPath>
  </Reference>
  <Reference Include="protobuf-net">
- <HintPath>G:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/protobuf-net.dll</HintPath>
+ <HintPath>E:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/protobuf-net.dll</HintPath>
  </Reference>
  <Reference Include="QuickGraph">
- <HintPath>G:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/QuickGraph.dll</HintPath>
+ <HintPath>E:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/QuickGraph.dll</HintPath>
  </Reference>
  <Reference Include="UnityEditor.iOS.Extensions.Xcode">
- <HintPath>F:/Games/Unity/Editor/Data/PlaybackEngines/iossupport/UnityEditor.iOS.Extensions.Xcode.dll</HintPath>
+ <HintPath>E:/Unity/Unity/Editor/Data/PlaybackEngines/iossupport/UnityEditor.iOS.Extensions.Xcode.dll</HintPath>
  </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -35,7 +35,7 @@ public class ListDisplay : MonoBehaviour {
 		if(!rows.ContainsKey(details.charID)) {
 			rows.Add (details.charID,item);
 		}
-		item.transform.SetParent(itemList.transform);
+
 		item.name=details.charID;
 		var name= item.transform.Find("charName");
 		name.GetComponent<Text>().text=details.charName;
@@ -48,6 +48,10 @@ public class ListDisplay : MonoBehaviour {
 		else {
 			gender.GetComponent<Text>().text="Female";
 		}
+		item.transform.SetParent(itemList.transform,false);
+		item.GetComponent<RectTransform>().sizeDelta=new Vector2(item.transform.parent.parent.GetComponent<RectTransform>().rect.width,item.GetComponent<RectTransform>().sizeDelta.y);
+		item.GetComponent<LayoutElement>().preferredWidth=item.transform.parent.parent.GetComponent<RectTransform>().rect.width;
+		item.GetComponent<BoxCollider2D>().size=new Vector2(item.GetComponent<LayoutElement>().preferredWidth,item.GetComponent<RectTransform>().sizeDelta.y);
 	}
 
 	public void RemoveItem(string rowID) {
@@ -207,7 +211,7 @@ public class ListDisplay : MonoBehaviour {
 	}
 	public void AddArmy(ProtoArmyOverview army) {
 		var item = Instantiate (row);
-		item.transform.SetParent(itemList.transform);
+		item.transform.SetParent(itemList.transform,false);
 		item.name = army.armyID;
 		var id= item.transform.Find("ArmyID");
 		id.GetComponent<Text>().text = army.armyID;
@@ -215,12 +219,14 @@ public class ListDisplay : MonoBehaviour {
 		owner.GetComponent<Text>().text = army.ownerName;
 		var leader = item.transform.Find("ArmyLead");
 		leader.GetComponent<Text>().text = army.leaderName;
+		item.GetComponent<RectTransform>().sizeDelta=new Vector2(item.transform.parent.parent.GetComponent<RectTransform>().rect.width,item.GetComponent<RectTransform>().sizeDelta.y);
+		item.GetComponent<LayoutElement>().preferredWidth=item.transform.parent.parent.GetComponent<RectTransform>().rect.width;
+		item.GetComponent<BoxCollider2D>().size=new Vector2(item.GetComponent<LayoutElement>().preferredWidth,item.GetComponent<RectTransform>().sizeDelta.y);
 	}
 
 	public void AddEntry(ProtoJournalEntry entry) {
 		Debug.Log ("adding entry: type = "+ entry.type);
 		var item = Instantiate (row);
-		item.transform.SetParent(itemList.transform);
 		item.name = entry.jEntryID.ToString ();
 		var type = item.transform.Find ("type");
 		type.GetComponent<Text>().text= entry.type;
@@ -233,6 +239,10 @@ public class ListDisplay : MonoBehaviour {
 		else if(season==2)seasonText="Autumn";
 		else seasonText="Winter";
 		date.GetComponent<Text>().text = seasonText+" "+year.ToString ();
+		item.transform.SetParent(itemList.transform,false);
+		item.GetComponent<RectTransform>().sizeDelta=new Vector2(item.transform.parent.parent.GetComponent<RectTransform>().rect.width,item.GetComponent<RectTransform>().sizeDelta.y);
+		item.GetComponent<LayoutElement>().preferredWidth=item.transform.parent.parent.GetComponent<RectTransform>().rect.width;
+		item.GetComponent<BoxCollider2D>().size=new Vector2(item.GetComponent<LayoutElement>().preferredWidth,item.GetComponent<RectTransform>().sizeDelta.y);
 	}
 
 
@@ -398,46 +408,7 @@ public class ListDisplay : MonoBehaviour {
 		}
 
 		else{
-			string display = "Character ID: "+character.charID;
-			display+= "\nName: " + character.firstName + " " + character.familyName; 
-			if(character.isMale) {
-				display += "\nMale";
-			}
-			else {
-				display+="\nFemale";
-			}
-			display+="\nBorn: ";
-			if(character.birthSeason==(byte)0) {
-				display+="Spring";
-			}
-			else if (character.birthSeason==(byte)1) {
-				display+="Summer";
-			}
-			else if (character.birthSeason==(byte)2) {
-				display+="Autumn";
-			}
-			else {
-				display+="Winter";
-			}
-			display+=character.birthYear.ToString ();
-			display+="\nMother: "+character.mother;
-			display+="\nFather: "+character.father;
-			if(character.isAlive) {
-				display+="\nHealth: "+character.health.ToString ()+ "/"+character.maxHealth.ToString ();
-			}
-			else {
-				display+="\nThis character is DEAD";
-			}
-
-			if(!String.IsNullOrEmpty (character.captor)) {
-				display+="\nThis character is being held CAPTIVE";
-			}
-			if(character.traits!=null) {
-				display+="\nTraits: ";
-				foreach(Pair trait in character.traits) {
-					display+="\n"+trait.key + " " +trait.value;
-				}
-			}
+			string display = HouseholdManager.CharacterText(character);
 			charText.text = display;
 			// If is family member, display family controls
 			if(character.familyID.Equals (Globals_Client.pcID)) {
@@ -487,7 +458,7 @@ public class ListDisplay : MonoBehaviour {
 					Button spy = unemployedControls.transform.Find ("Spy").GetComponent<Button>();
 					spy.onClick.AddListener (()=>Spy(npc.charID,Actions.SpyCharacter));
 				}
-				else if(npc.employer.Equals (Globals_Client.pcID)) {
+				else if(npc.employer.charID. Equals (Globals_Client.pcID)) {
 					Debug.Log ("Creating employee controls");
 					if(displayControls) {
 						var prefab = (GameObject)Resources.Load ("EmployeeControls");
@@ -569,6 +540,17 @@ public class ListDisplay : MonoBehaviour {
 					}
 				}
 			}
+			else if(entry.type.Equals("ransom")) {
+				message = "Ransom demands for the release of "+m.MessageFields[0] + " have been recieved. The safe return of this person requries payment of £"+m.MessageFields[1];
+				if(entry.replied==false&&!entry.personae[0].charID.Equals (Globals_Client.pcID)) {
+					var proposalControls = Resources.Load ("ProposalControls");
+					GameObject propControls = (GameObject)Instantiate(proposalControls,new Vector2(183,-94), Quaternion.identity);
+					propControls.transform.parent= (this.gameObject.transform);
+					propControls.transform.localPosition= new Vector2(182,-94);
+					GameObject.Find ("Accept").GetComponent<Button>().onClick.AddListener (()=>JournalController.acceptRansom(selectedItemID));
+					GameObject.Find ("Reject").GetComponent<Button>().onClick.AddListener (()=>JournalController.rejectRansom(selectedItemID));
+				}
+			}
 			else if(m.GetType()==typeof(ProtoPillageResult)) {
 				message = JournalController.PillageMessage( m as ProtoPillageResult);
 			}
@@ -585,8 +567,6 @@ public class ListDisplay : MonoBehaviour {
 				}
 				else {
 					if(m.MessageFields!=null) {
-						Debug.Log ("Message: "+message);
-						Debug.Log ("Fields : "+m.MessageFields.Length);
 						foreach(string field in m.MessageFields) {
 							Debug.Log (field);
 						}

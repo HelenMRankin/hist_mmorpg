@@ -65,7 +65,7 @@ public class LogInRegisterScript : MonoBehaviour {
 
 	public void LogIn() {
 
-		networkScript.Connect (emailField.textComponent.text,passwordField.textComponent.text);
+		networkScript.Connect (emailField.textComponent.text,passwordField.GetComponent<InputField>().text);
 
 	}
 

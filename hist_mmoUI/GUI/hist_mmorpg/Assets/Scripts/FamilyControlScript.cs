@@ -8,8 +8,8 @@ public class FamilyControlScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		listDisplay = FindObjectOfType<ListDisplay>();
-		var DaysLeft = GameObject.Find ("DaysLeft");
-		GameStateManager.gameState.DaysLeft=DaysLeft;
+		//var DaysLeft = GameObject.Find ("DaysLeft");
+		//GameStateManager.gameState.DaysLeft=DaysLeft;
 	}
 	
 	// Update is called once per frame

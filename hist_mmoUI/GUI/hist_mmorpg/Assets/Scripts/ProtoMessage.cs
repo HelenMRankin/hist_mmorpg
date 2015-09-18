@@ -29,6 +29,7 @@ namespace hist_mmorpg
     /// Class for translating objects to ProtoBuf constructs
     /// Object fields can be hidden from clients by setting the desired field to null
     /// </summary>
+	[ProtoInclude(5, typeof(ProtoLogIn))]
 	[ProtoInclude(6,typeof(ProtoPlayer))]
 	[ProtoInclude(7,typeof(ProtoClient))]
 	[ProtoInclude(8, typeof(ProtoGenericArray<ProtoPlayer>))]
@@ -133,6 +134,23 @@ namespace hist_mmorpg
             this.value = val;
         }
     }
+
+	/// <summary>
+	/// Contains various keys and salts for logging in
+	/// </summary>
+	[ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+	public class ProtoLogIn : ProtoMessage
+	{
+		public byte[] sessionSalt {get;set;}
+		public byte[] userSalt { get; set; }
+		public byte[] publicKey { get; set; }
+		
+		public ProtoLogIn()
+			: base()
+		{
+		}
+	}
+
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoGenericArray<T> : ProtoMessage
     {
@@ -574,15 +592,15 @@ namespace hist_mmorpg
 		/// 12 = overlord tax rate,
 		/// 13 = bottom line
 		/// </summary>
-		public double[] keyStatsCurrent = new double[14];
+		public double[] keyStatsCurrent ;
 		/// <summary>
 		/// Holds key data for previous season
 		/// </summary>
-		public double[] keyStatsPrevious = new double[14];
+		public double[] keyStatsPrevious;
 		/// <summary>
 		/// Holds key data for next season
 		/// </summary>
-		public double[] keyStatsNext = new double[14];
+		public double[] keyStatsNext;
 		/// <summary>
 		/// Holds fief keep level
 		/// </summary>

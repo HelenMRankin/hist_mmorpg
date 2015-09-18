@@ -17,39 +17,21 @@ public class TravelManager : MonoBehaviour {
 	public Text enterExitText;
 	// The current cell in the hex map
 	public GameObject currentCell;
-	// Game object which displays the current char, for use when moving owned characters
-	public GameObject currentChar;
 	private Slider days;
 	// Message containing travel instructions, for use when the player has to confirm whether they wish to travel
 	private ProtoMessage travelMessage;
 	void Awake() {
 		GameStateManager.gameState.travelManager=this;
-		GameStateManager.gameState.DaysLeft = GameObject.Find("DaysLeft");
+		//GameStateManager.gameState.DaysLeft = GameObject.Find("DaysLeft");
 	}
 	// Use this for initialization
 	void Start () {
-		if(!Globals_Client.activeChar.Equals(Globals_Client.pcID)) {
-			currentChar.SetActive(true);
-			currentChar.GetComponent<Text>().text= "Currently moving: "+Globals_Client.activeCharName;
-		}
-		else {
-			currentChar.SetActive (false);
-		}
 		UpdateEnterExitText();
 		TravelState();
-		GameStateManager.gameState.menuBar= GameObject.Find ("MenuBar");
-		DontDestroyOnLoad(GameStateManager.gameState.menuBar);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if(!Globals_Client.activeChar.Equals(Globals_Client.pcID)) {
-			currentChar.SetActive(true);
-			currentChar.GetComponent<Text>().text= "Currently moving: "+Globals_Client.activeCharName;
-		}
-		else {
-			currentChar.SetActive (false);
-		}
 	}
 
 	// Enter the travel state (show hex map and movement controls)
@@ -203,7 +185,8 @@ public class TravelManager : MonoBehaviour {
 			GameStateManager.gameState.DisplayMessage("You chose to remain in the current fief.");
 		}
 	}
-	//TODO
+
+
 	public void ExamineArmies() {
 		ProtoMessage message = new ProtoMessage();
 		message.Message = Globals_Client.currentLocation.id;

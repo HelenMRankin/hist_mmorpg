@@ -16,6 +16,7 @@ public class FiefController : MonoBehaviour {
 	public GameObject BarredItems;
 	public GameObject playerTransfer;
 	public GameObject gaol;
+	public GameObject armyDisplay;
 	public Slider taxSlider;
 	public Text garrisonSpend;
 	public Text officialSpend;
@@ -26,6 +27,7 @@ public class FiefController : MonoBehaviour {
 	public ProtoFief currentFiefDetails;
 	private static ProtoCharacterOverview selectedBarredCharacter = null;
 	private string selectedPlayer;
+	private string selectedFief;
 	private ProtoCharacter selectedCaptive;
 	// TODO rewrite to use pr-load queue
 	// Use this for initialization
@@ -39,8 +41,8 @@ public class FiefController : MonoBehaviour {
 			m.ActionType=Actions.ViewFief;
 			m.Message = GameStateManager.gameState.preLoadState;
 		}
-		var DaysLeft = GameObject.Find ("DaysLeft");
-		GameStateManager.gameState.DaysLeft=DaysLeft;
+		//var DaysLeft = GameObject.Find ("DaysLeft");
+		//GameStateManager.gameState.DaysLeft=DaysLeft;
 		NetworkScript.Send (m);
 	}
 	
@@ -56,6 +58,8 @@ public class FiefController : MonoBehaviour {
 		fiefList.SetActive (true);
 		itemDetails.SetActive (false);
 		BarredItems.SetActive (false);
+		armyDisplay.SetActive (false);
+		controls.SetActive (false);
 	}
 
 	public void ShowFiefDetails() {
@@ -65,6 +69,7 @@ public class FiefController : MonoBehaviour {
 		controls.SetActive (true);
 		fiefList.SetActive (false);
 		BarredItems.SetActive (false);
+		armyDisplay.SetActive (false);
 	}
 
 	public void ShowBailiffList() {
@@ -74,8 +79,18 @@ public class FiefController : MonoBehaviour {
 		controls.SetActive (false);
 		fiefList.SetActive(false);
 		BarredItems.SetActive (false);
+		armyDisplay.SetActive (false);
 	}
 
+	public void ShowArmyList() {
+		list.SetActive (false);
+		gaol.SetActive (false);
+		itemDetails.SetActive (false);
+		controls.SetActive (false);
+		fiefList.SetActive(false);
+		BarredItems.SetActive (false);
+		armyDisplay.SetActive(true);
+	}
 	public void ShowBarredDetails() {
 		list.SetActive (false);
 		gaol.SetActive (false);
@@ -83,6 +98,7 @@ public class FiefController : MonoBehaviour {
 		controls.SetActive (false);
 		fiefList.SetActive(false);
 		BarredItems.SetActive (true);
+		armyDisplay.SetActive (false);
 	}
 
 	public void ShowPlayerTransfer(bool show) {
@@ -95,8 +111,13 @@ public class FiefController : MonoBehaviour {
 		controls.SetActive (false);
 		fiefList.SetActive(false);
 		BarredItems.SetActive (false);
+		armyDisplay.SetActive (false);
 	}
 	public void GetFief(string fiefID) {
+		if(string.IsNullOrEmpty (this.selectedFief)) {
+			GameStateManager.gameState.DisplayMessage ("You must select a fief");
+			return;
+		}
 		ProtoMessage requestFief = new ProtoMessage();
 		requestFief.ActionType = Actions.ViewFief;
 		requestFief.Message=fiefID;
@@ -138,7 +159,7 @@ public class FiefController : MonoBehaviour {
 		else if(fief.status=='U') fiefText.text+="Unrest";
 		else fiefText.text+="Rebellion";
 		fiefText.text+="\nLanguage: "+basicFief.language.GetName() + "(dialect "+basicFief.language.dialect.ToString ()+")";
-		fiefText.text+="\nTerrain: "+basicFief.terrain.ToString ();
+		fiefText.text+="\nTerrain: "+basicFief.terrain.description;
 		fiefText.text+="\nBarred Characters: ";
 		if(fief.barredCharacters!=null) {
 			foreach(ProtoCharacterOverview character in fief.barredCharacters) {
@@ -350,6 +371,7 @@ public class FiefController : MonoBehaviour {
 		// if NOT under siege
 		else
 		{
+			Debug.Log("Next tax rate: "+fief.keyStatsNext[2]);
 			// loyalty
 			fiefText += "Loyalty: " + fief.keyStatsNext[0] + "\r\n";
 			
@@ -510,7 +532,8 @@ public class FiefController : MonoBehaviour {
 		foreach(ProtoCharacterOverview captive in captives) {
 			var row = Instantiate (captiveOverview);
 			row.name=captive.charID;
-			row.transform.SetParent (this.gameObject.transform.Find ("Gaol").Find("ScrollPanel").Find ("PanelContents"));
+			row.transform.SetParent (this.gameObject.transform.Find ("Gaol").Find("ScrollPanel").Find ("PanelContents"),false);
+
 			row.transform.Find ("charName").GetComponent<Text>().text = captive.charName;
 			if(captive.isMale) {
 				row.transform.Find ("charGender").GetComponent<Text>().text = "Male";
@@ -520,6 +543,9 @@ public class FiefController : MonoBehaviour {
 			}
 			row.transform.Find ("charOwner").GetComponent<Text>().text = captive.owner;
 			row.GetComponent<Button>().onClick.AddListener (()=>GetCaptive(row.name));
+			row.GetComponent<RectTransform>().sizeDelta=new Vector2(row.transform.parent.parent.GetComponent<RectTransform>().rect.width,row.GetComponent<RectTransform>().sizeDelta.y);
+			row.GetComponent<LayoutElement>().preferredWidth=row.transform.parent.parent.GetComponent<RectTransform>().rect.width;
+			row.GetComponent<BoxCollider2D>().size=new Vector2(row.GetComponent<LayoutElement>().preferredWidth,row.GetComponent<RectTransform>().sizeDelta.y);
 		}
 	}
 
@@ -551,7 +577,7 @@ public class FiefController : MonoBehaviour {
 	public void ShowCaptive(ProtoCharacter captive) {
 		Debug.Log ("Showing captive controls");
 		this.selectedCaptive=captive;
-		itemDetails.transform.Find ("ItemDetails").GetComponent<Text>().text= "Captive details:"+captive.charID;
+		itemDetails.transform.Find ("ItemDetails").GetComponent<Text>().text= HouseholdManager.CharacterText (captive);
 		ShowCaptiveControls();
 	}
 	public void TransferToPlayer() {
@@ -608,18 +634,27 @@ public class FiefController : MonoBehaviour {
 		var row = Resources.Load <GameObject>("FiefDetails");
 		foreach(ProtoFief fief in fiefs) {
 			var fiefDisplay = Instantiate(row);
+
 			fiefDisplay.name = fief.fiefID;
 			try {
 				Fief localFief = Globals_Game.fiefMasterList[fief.fiefID];
 				fiefDisplay.transform.Find ("Fief").GetComponent<Text>().text=localFief.name;
 				fiefDisplay.transform.Find ("Province").GetComponent<Text>().text=localFief.province.name;
-				fiefDisplay.GetComponent<Button>().onClick.AddListener(()=>GetFief(fiefDisplay.name));
-				fiefDisplay.transform.SetParent (fiefList.transform.Find ("ScrollPanel").Find ("PanelContents"));
+				fiefDisplay.GetComponent<Button>().onClick.AddListener(()=>{this.selectedFief=fiefDisplay.name;});
+				fiefDisplay.transform.SetParent (fiefList.transform.Find ("ScrollPanel").Find ("PanelContents"),false);
+				/*
+				fiefDisplay.GetComponent<RectTransform>().sizeDelta=new Vector2(fiefDisplay.transform.parent.parent.GetComponent<RectTransform>().rect.width,20);
+				fiefDisplay.GetComponent<LayoutElement>().preferredWidth=fiefDisplay.transform.parent.parent.GetComponent<RectTransform>().rect.width;
+				fiefDisplay.GetComponent<BoxCollider2D>().size=new Vector2(fiefDisplay.GetComponent<LayoutElement>().preferredWidth,20);*/
+				fiefDisplay.GetComponent<RectTransform>().sizeDelta=new Vector2(fiefDisplay.transform.parent.parent.GetComponent<RectTransform>().rect.width,fiefDisplay.GetComponent<RectTransform>().sizeDelta.y);
+				fiefDisplay.GetComponent<LayoutElement>().preferredWidth=fiefDisplay.transform.parent.parent.GetComponent<RectTransform>().rect.width;
+				fiefDisplay.GetComponent<BoxCollider2D>().size=new Vector2(fiefDisplay.GetComponent<LayoutElement>().preferredWidth,fiefDisplay.GetComponent<RectTransform>().sizeDelta.y);
 			}
 			catch(Exception e) {
 				Debug.LogError ("Could not recognise fief: "+fief.fiefID);
 			}
 		}
+		GameObject.Find ("ViewFief").GetComponent<Button>().onClick.AddListener (()=>GetFief (selectedFief));
 
 
 	}
@@ -665,7 +700,10 @@ public class FiefController : MonoBehaviour {
 			}
 			Debug.Log ("Item set to nationality "+nat.name);
 			barredToggle.onValueChanged.AddListener ((value)=> {BarUnbarNationality(nationality.name, value);});
-			nationality.transform.SetParent (BarredItems.transform.Find ("Nationalities").Find ("PanelContents"));
+			nationality.transform.SetParent (BarredItems.transform.Find ("Nationalities").Find ("PanelContents"),false);
+			nationality.GetComponent<RectTransform>().sizeDelta=new Vector2(nationality.transform.parent.parent.GetComponent<RectTransform>().rect.width,nationality.GetComponent<RectTransform>().sizeDelta.y);
+			nationality.GetComponent<LayoutElement>().preferredWidth=nationality.transform.parent.parent.GetComponent<RectTransform>().rect.width;
+
 		}
 	}
 
@@ -688,7 +726,9 @@ public class FiefController : MonoBehaviour {
 			charDetails.transform.Find ("Name").GetComponent<Text>().text= character.charName;
 			charDetails.transform.Find ("Nationality").GetComponent<Text>().text = Globals_Game.nationalityMasterList[character.natID].name;
 			charDetails.GetComponent<Button>().onClick.AddListener (()=>  {selectedBarredCharacter=character;});
-			charDetails.transform.SetParent (BarredItems.transform.Find ("Characters").Find ("PanelContents"));
+			charDetails.transform.SetParent (BarredItems.transform.Find ("Characters").Find ("PanelContents"),false);
+			charDetails.GetComponent<RectTransform>().sizeDelta=new Vector2(charDetails.transform.parent.parent.GetComponent<RectTransform>().rect.width,charDetails.GetComponent<RectTransform>().sizeDelta.y);
+			charDetails.GetComponent<BoxCollider2D>().size=new Vector2(charDetails.GetComponent<RectTransform>().sizeDelta.x,charDetails.GetComponent<RectTransform>().sizeDelta.y);
 		}
 	}
 
@@ -773,5 +813,12 @@ public class FiefController : MonoBehaviour {
 		GameStateManager.gameState.SceneLoadQueue.Enqueue(()=>ArmyManager.Besiege(Globals_Client.activeCharacter.armyID));
 		GameStateManager.gameState.SceneLoadQueue.Enqueue (()=>ArmyManager.RequestSieges());
 		Application.LoadLevel ("Combat");
+	}
+
+	public void ExamineArmies() {
+		ProtoMessage message = new ProtoMessage();
+		message.Message = Globals_Client.currentLocation.id;
+		message.ActionType=Actions.ExamineArmiesInFief;
+		NetworkScript.Send (message);
 	}
 }

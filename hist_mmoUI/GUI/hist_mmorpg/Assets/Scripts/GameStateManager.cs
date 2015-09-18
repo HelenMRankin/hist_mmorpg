@@ -12,7 +12,7 @@ public enum Actions
 {
 	Update=0, LogIn, UseChar, GetPlayers, ViewChar,ViewArmy, GetNPCList, HireNPC, FireNPC, TravelTo, MoveCharacter, ViewFief,ViewMyFiefs, AppointBailiff, RemoveBailiff, BarCharacters, BarNationalities, UnbarCharacters, UnbarNationalities, GrantFiefTitle, AdjustExpenditure, TransferFunds,
 	TransferFundsToPlayer, EnterExitKeep, ListCharsInMeetingPlace, TakeThisRoute, Camp, AddRemoveEntourage, ProposeMarriage, AcceptRejectProposal, RejectProposal, AppointHeir, TryForChild, RecruitTroops, MaintainArmy, AppointLeader, DropOffTroops,
-	ListDetachments,ListArmies, PickUpTroops, PillageFief, BesiegeFief, AdjustCombatValues, ExamineArmiesInFief, Attack, ViewJournalEntries, ViewJournalEntry, SiegeRoundReduction, SiegeRoundStorm, SiegeRoundNegotiate, SiegeList, ViewSiege, EndSiege, DisbandArmy, SpyFief, SpyCharacter, SpyArmy, Kidnap, ViewCaptives, ViewCaptive, RansomCaptive, ReleaseCaptive, ExecuteCaptive, RespondRansom
+	ListDetachments,ListArmies, PickUpTroops, PillageFief, BesiegeFief, AdjustCombatValues, ExamineArmiesInFief, Attack, ViewJournalEntries, ViewJournalEntry, SiegeRoundReduction, SiegeRoundStorm, SiegeRoundNegotiate, SiegeList, ViewSiege, EndSiege, DisbandArmy, SpyFief, SpyCharacter, SpyArmy, Kidnap, ViewCaptives, ViewCaptive, RansomCaptive, ReleaseCaptive, ExecuteCaptive, RespondRansom, SeasonUpdate
 }
 /// <summary>
 /// enum representing all strings that may be sent to a client,
@@ -25,11 +25,11 @@ public enum DisplayMessages
 	ArmyAttritionDebug, ArmyDetachmentArrayWrongLength, ArmyDetachmentNotEnoughTroops, ArmyDetachmentNotSelected, ArmyRetreat, ArmyDisband, ErrorGenericNotEnoughDays, ErrorGenericPoorOrganisation, ErrorGenericUnidentifiedRecipient, ArmyNoLeader, ArmyBesieged,
 	ArmyAttackSelf, ArmyPickupsDenied, ArmyPickupsNotEnoughDays, BattleBringSuccess, BattleBringFail, BattleResults, ErrorGenericNotInSameFief, BirthAlreadyPregnant, BirthSiegeSeparation, BirthNotMarried, CharacterMarriageDeath, CharacterDeath, CharacterDeathNoHeir, CharacterEnterArmy,
 	CharacterAlreadyArmy, CharacterNationalityBarred, CharacterBarred, CharacterRoyalGiftPlayer, CharacterRoyalGiftSelf, CharacterNotMale, CharacterNotOfAge, CharacterLeaderLocation, CharacterLeadingArmy, CharacterDaysJourney, CharacterSpousePregnant, CharacterSpouseNotPregnant, CharacterSpouseNeverPregnant,
-	CharacterBirthOK, CharacterBirthChildDead, CharacterBirthMumDead, CharacterBirthAllDead, RankTitleTransfer, CharacterCombatInjury, CharacterProposalMan, CharacterProposalUnderage, CharacterProposalEngaged, CharacterProposalMarried, CharacterProposalFamily, CharacterProposalIncest,CharacterProposalAlready,CharacterRemovedFromEntourage, CharacterCamp,
+	CharacterBirthOK, CharacterBirthChildDead, CharacterBirthMumDead, CharacterBirthAllDead, RankTitleTransfer, CharacterCombatInjury, CharacterProposalMan, CharacterProposalUnderage, CharacterProposalEngaged, CharacterProposalMarried, CharacterProposalFamily, CharacterProposalIncest, CharacterProposalAlready, CharacterRemovedFromEntourage, CharacterCamp,
 	CharacterCampAttrition, CharacterBailiffDuty, CharacterInvalidMovement, ErrorGenericFiefUnidentified, CharacterHireNotEmployable, CharacterFireNotEmployee, CharacterOfferLow, CharacterOfferHigh, CharacterOfferOk, CharacterOfferAlmost, CharacterOfferHaggle, CharacterBarredKeep, CharacterRecruitOwn, CharacterRecruitAlready, CharacterLoyaltyLanguage, ErrorGenericInsufficientFunds, CharacterRecruitSiege, CharacterRecruitRebellion,
 	CharacterTransferTitle, CharacterTitleOwner, CharacterTitleHighest, CharacterTitleKing, CharacterTitleAncestral, CharacterHeir, PillageInitiateSiege, PillageRetreat, PillageDays, PillageOwnFief, PillageUnderSiege, PillageSiegeAlready, PillageAlready, PillageArmyDefeat, PillageSiegeRebellion, FiefExpenditureAdjustment, FiefExpenditureAdjusted, FiefStatus, FiefOwnershipHome,
-	FiefOwnershipNewHome, FiefOwnershipNoFiefs, FiefChangeOwnership, FiefQuellRebellionFail, FiefEjectCharacter, ProvinceAlreadyOwn, KingdomAlreadyKing, KingdomOwnershipChallenge, ProvinceOwnershipChallenge, ErrorGenericCharacterUnidentified, ErrorGenericUnauthorised, ErrorGenericMessageInvalid, ErrorGenericTooFarFromFief, FiefNoBailiff, FiefCouldNotBar, FiefCouldNotUnbar,
-	ErrorGenericBarOwnNationality, ErrorGenericPositiveInteger, GenericReceivedFunds, ErrorGenericNoHomeFief, CharacterRecruitInsufficientFunds, CharacterRecruitOk, SiegeNotBesieger, JournalEntryUnrecognised, JournalEntryNotProposal, ErrorGenericArmyUnidentified, ErrorGenericSiegeUnidentified, ErrorSpyDead,ErrorSpyCaptive,ErrorSpyOwn, SpySuccess, SpyFail, SpySuccessDetected, SpyFailDetected, SpyFailDead, EnemySpySuccess, EnemySpyFail,EnemySpyKilled, CharacterHeldCaptive, RansomReceived, RansomPaid, RansonDenied, RansomRepliedAlready, RansomCaptiveDead, RansomAlready,NotCaptive, EntryNotRansom,KidnapOwnCharacter,KidnapDead,KidnapNoPlayer,KidnapSuccess,KidnapSuccessDetected,KidnapFailDetected,KidnapFailDead,KidnapFail,EnemyKidnapSuccess,EnemyKidnapSuccessDetected,EnemyKidnapFail,EnemyKidnapKilled, CharacterExecuted, CharacterReleased, LogInSuccess, LogInFail, YouDied, YouDiedNoHeir
+	FiefOwnershipNewHome, FiefOwnershipNoFiefs, FiefChangeOwnership, FiefQuellRebellionFail, FiefEjectCharacter, FiefNoCaptives, ProvinceAlreadyOwn, KingdomAlreadyKing, KingdomOwnershipChallenge, ProvinceOwnershipChallenge, ErrorGenericCharacterUnidentified, ErrorGenericUnauthorised, ErrorGenericMessageInvalid, ErrorGenericTooFarFromFief, FiefNoBailiff, FiefCouldNotBar, FiefCouldNotUnbar,
+	ErrorGenericBarOwnNationality, ErrorGenericPositiveInteger, GenericReceivedFunds, ErrorGenericNoHomeFief, CharacterRecruitInsufficientFunds, CharacterRecruitOk, SiegeNotBesieger, JournalEntryUnrecognised, JournalEntryNotProposal, ErrorGenericArmyUnidentified, ErrorGenericSiegeUnidentified,ErrorSpyDead,ErrorSpyCaptive, ErrorSpyOwn, SpySuccess, SpyFail, SpySuccessDetected, SpyFailDetected, SpyFailDead, EnemySpySuccess, EnemySpyFail, EnemySpyKilled, CharacterHeldCaptive, RansomReceived, RansomPaid, RansonDenied, RansomRepliedAlready, RansomCaptiveDead, RansomAlready, NotCaptive, EntryNotRansom, KidnapOwnCharacter, KidnapDead, KidnapNoPlayer, KidnapSuccess, KidnapSuccessDetected, KidnapFailDetected, KidnapFailDead, KidnapFail, EnemyKidnapSuccess, EnemyKidnapSuccessDetected, EnemyKidnapFail, EnemyKidnapKilled, CharacterExecuted, CharacterReleased, LogInSuccess, LogInFail, YouDied, YouDiedNoHeir
 }
 	public class GameStateManager : MonoBehaviour {
 		// Field for enforcing singleton pattern
@@ -41,6 +41,10 @@ public enum DisplayMessages
 	public GameObject menuBar;
 	// The Object showing remaining days
 	public GameObject DaysLeft;
+	// Text to show current treasury amount
+	public GameObject Treasury;
+	// Text to show current character
+	public GameObject CurrentChar;
 	// Holds the TravelManager for when in Travel Scene
 	public TravelManager travelManager {get;set;}
 	// REPLACE WITH QUEUE
@@ -59,6 +63,7 @@ public enum DisplayMessages
 			mapgraph.deserialize ();
 			Globals_Game.gameMap = mapgraph;
 			Globals_Game.LoadStrings ();
+
 			//initialiseTypes();
 			DummyStart ();
 		}
@@ -66,9 +71,11 @@ public enum DisplayMessages
 			if(this!=gameState)
 			Destroy(this.gameObject);
 		}
+
 	}
 	// Use this for initialization
-	void Start () {		
+	void Start () {	
+
 	}
 	// Enter Login State
 	// Update is called once per frame
@@ -79,7 +86,10 @@ public enum DisplayMessages
 		}
 		if(DaysLeft) {
 			DaysLeft.GetComponentInChildren<Text>().text = "Days left: "+Globals_Client.activeCharacter.days;
+			CurrentChar.GetComponent<Text>().text = Globals_Client.activeCharacter.firstName + " " + Globals_Client.activeCharacter.familyName;
+			Treasury.GetComponent<Text>().text = "Treasury: £"+Globals_Client.homeTreasury;
 		}
+
 	}
 	// Test method for initializing data
 	void DummyStart() {
@@ -502,11 +512,15 @@ public enum DisplayMessages
 				return;
 			}
 			else {
+				if(Application.loadedLevelName.Equals ("Fief")) {
+					FindObjectOfType <FiefController>().ShowArmyList ();
+				}
 				if(travelManager) {
 					travelManager.ListState ();
 				}
 				ListDisplay armyDisplay =FindObjectOfType<ListDisplay>();
 				armyDisplay.initializeContentsArmies(armies);
+
 			}
 		}
 			break;
@@ -552,6 +566,17 @@ public enum DisplayMessages
 				return;
 			}
 			else {
+				if(Application.loadedLevelName.Equals ("Character")) {
+					CharacterController charController = FindObjectOfType<CharacterController>();
+					ProtoPlayerCharacter pc = m as ProtoPlayerCharacter;
+					if(pc==null) {
+						Debug.LogError ("Error converting to ProtoPlayerCharacter in ViewChar");
+					}
+					else {
+						charController.DisplayPlayerCharacter (pc);
+					}
+					return;
+				}
 				ListDisplay charDisplay =FindObjectOfType<ListDisplay>();
 				charDisplay.selectedItemID = character.charID;
 				// Don't display family controls for fief and combat levels
@@ -687,6 +712,23 @@ public enum DisplayMessages
 			Debug.Log ("Got maintain army");
 			// Display maintain message
 			DisplayMessage(m);
+
+			// If is successful, update army details
+			if(m.ResponseType==DisplayMessages.ArmyMaintainConfirm) {
+				ProtoArmy army = m as ProtoArmy;
+				if(army==null) {
+					Debug.LogError("Error converting to ProtoArmy in MaintainArmy");
+				}
+				else {
+					ListDisplay armyList = FindObjectOfType<ListDisplay>();
+					if(armyList==null) {
+						Debug.LogError ("Error finding ArmyManager in MaintainArmy");
+					}
+					else {
+						armyList.DisplayDetails (army);
+					}
+				}
+			}
 		}
 			break;
 		
@@ -1002,14 +1044,17 @@ public enum DisplayMessages
 			break;
 		case Actions.SpyCharacter: 
 		{
+			Debug.Log ("Got SpyCharacter");
 			if(m.ResponseType==DisplayMessages.Success) {
 				ProtoCharacter characterDetails= m as ProtoCharacter;
 				if(characterDetails==null) {
+					Debug.Log ("No new information");
 					return;
 				}
 				else {
 					ListDisplay display = FindObjectOfType<ListDisplay>();
 					if(display!=null) {
+						Debug.Log ("Got list, displaying details");
 						display.DisplayDetails(characterDetails);
 					}
 				}
@@ -1079,6 +1124,10 @@ public enum DisplayMessages
 						FiefController controller = FindObjectOfType<FiefController>();
 						controller.ShowCaptives(captives.fields);
 					}
+					else if(Application.loadedLevelName.Equals ("Character")) {
+						CharacterController charController = FindObjectOfType<CharacterController>();
+						charController.DisplayCaptives(captives.fields);
+					}
 				}
 			}
 			else {
@@ -1099,6 +1148,10 @@ public enum DisplayMessages
 						FiefController controller = FindObjectOfType<FiefController>();
 						controller.ShowCaptive(character);
 					}
+					else if(Application.loadedLevelName.Equals ("Character")) {
+						CharacterController charController = FindObjectOfType<CharacterController>();
+						charController.ShowCaptive(character);
+					}
 				}
 				else {
 					Debug.LogError("error converting to ProtoCharacter in ViewCaptive");
@@ -1106,6 +1159,12 @@ public enum DisplayMessages
 			}
 		}
 			break;
+		case Actions.SeasonUpdate: {
+			if(m.ResponseType==DisplayMessages.Success) {
+				DisplayMessage ("Game has been updated!");
+			}
+			break;
+		}
 		default: Debug.LogError ("Unrecognised message"); break;
 		}
 	}
@@ -1183,68 +1242,9 @@ public enum DisplayMessages
 		popup.ShowPopUpDialog (message,confirm,deny,clickEvent);
 	}
 
-	public static void MainMenuClick(String option) {
-		if(option.Equals ("Travel")){
-		   Application.LoadLevel ("Travel");
-		}
-		else if(option.Contains ("Household")) {
-			gameState.SceneLoadQueue.Enqueue (()=>HouseholdManager.RequestHouseholdList("FamilyEmploy"));
-			gameState.preLoadState="FamilyEmploy";
-			// load household
-			if(option.Contains ("Family")) {
-				// restrict to family
-				gameState.SceneLoadQueue.Enqueue (()=>HouseholdManager.RequestHouseholdList("Family"));
-				gameState.preLoadState = "Family";
-			}
-			else if (option.Contains ("Employ")) {
-				gameState.SceneLoadQueue.Enqueue (()=>HouseholdManager.RequestHouseholdList("Employ"));
-				gameState.preLoadState = "Employ";
-			}
-			else if(option.Contains ("Entourage")) {
-				gameState.SceneLoadQueue.Enqueue (()=>HouseholdManager.RequestHouseholdList("Entourage"));
-				gameState.preLoadState = "Entourage";
-			}
-			Application.LoadLevel ("Household");
-		}
-		else if(option.Contains ("Journal")) {
-			gameState.preLoadState="all";
-			if(option.Contains ("year")) {
-				gameState.SceneLoadQueue.Enqueue(()=>JournalController.RequestEntries("year"));
-				gameState.preLoadState = "year";
-			}
-			else if (option.Contains ("season")) {
-				gameState.SceneLoadQueue.Enqueue(()=>JournalController.RequestEntries("season"));
-				gameState.preLoadState = "season";
-			}
-			else if (option.Contains ("unread")) {
-				gameState.SceneLoadQueue.Enqueue(()=>JournalController.RequestEntries("unread"));
-				gameState.preLoadState = "unread";
-			}
-			else {
-				gameState.SceneLoadQueue.Enqueue(()=>JournalController.RequestEntries("all"));
-			}
-			Application.LoadLevel ("Journal");
-		}
-		else if(option.Contains ("Fief")) {
-			gameState.preLoadState = "home";
-			if(option.Contains ("current")) {
-				gameState.preLoadState=Globals_Client.currentLocation.id;
-			}
-			if(option.Contains("all")) {
-				gameState.preLoadState="all";
-			}
-			Application.LoadLevel ("Fief");
-		}
-		else if(option.Contains("Combat")) {
-			// Choose armies or sieges-defaults to armies
-			Application.LoadLevel ("Combat");
-		}
-	}
-
-	public void testRansom() {
-		ProtoMessage ransom = new ProtoMessage();
-		ransom.ActionType=Actions.RansomCaptive;
-		ransom.Message="Char_626";
-		NetworkScript.Send (ransom);
+	public static void SeasonUpdate() {
+		ProtoMessage updateRequest = new ProtoMessage();
+		updateRequest.ActionType=Actions.SeasonUpdate;
+		NetworkScript.Send (updateRequest);
 	}
 }

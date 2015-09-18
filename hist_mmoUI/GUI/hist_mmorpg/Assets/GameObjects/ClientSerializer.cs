@@ -12,7 +12,7 @@ using UnityEngine;
 /// </summary>
 public class ClientSerializer
 {
-	String path = "G:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/DataFiles/";
+	String path = "Assets/DataFiles/";
 	
 	public void SerializeRanks()
 	{

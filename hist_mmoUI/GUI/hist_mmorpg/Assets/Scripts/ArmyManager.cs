@@ -220,15 +220,58 @@ public class ArmyManager : MonoBehaviour {
 		var sBowObject = GameObject.Find ("CBow");
 		var footObject = GameObject.Find ("Foot");
 		var rabbleObject = GameObject.Find ("Rab");
+
 		try {
 			string leaveFor = leaveForObject.GetComponent<InputField>().textComponent.text;
-			UInt32 knights = Convert.ToUInt32(knightsObject.GetComponent<InputField>().textComponent.text);
-			UInt32 MAA = Convert.ToUInt32(MAAObject.GetComponent<InputField>().textComponent.text);
-			UInt32 lCav = Convert.ToUInt32(lCavObject.GetComponent<InputField>().textComponent.text);
-			UInt32 lBow = Convert.ToUInt32(lBowObject.GetComponent<InputField>().textComponent.text);
-			UInt32 sBow = Convert.ToUInt32(sBowObject.GetComponent<InputField>().textComponent.text);
-			UInt32 foot = Convert.ToUInt32(footObject.GetComponent<InputField>().textComponent.text);
-			UInt32 rabble = Convert.ToUInt32(rabbleObject.GetComponent<InputField>().textComponent.text);
+			UInt32 knights;
+			if(string.IsNullOrEmpty(knightsObject.GetComponent<InputField>().textComponent.text)) {
+				knights=0;
+			}
+			else {
+				knights = Convert.ToUInt32(knightsObject.GetComponent<InputField>().textComponent.text);
+			}
+			UInt32 MAA;
+			if(string.IsNullOrEmpty(MAAObject.GetComponent<InputField>().textComponent.text)) {
+				MAA=0;
+			}
+			else {
+				MAA = Convert.ToUInt32(MAAObject.GetComponent<InputField>().textComponent.text);
+			}
+			UInt32 lCav;
+			if(string.IsNullOrEmpty(lCavObject.GetComponent<InputField>().textComponent.text)) {
+				lCav=0;
+			}
+			else {
+				lCav = Convert.ToUInt32(lCavObject.GetComponent<InputField>().textComponent.text);
+			}
+			UInt32 lBow;
+			if(string.IsNullOrEmpty(lBowObject.GetComponent<InputField>().textComponent.text)) {
+				lBow=0;
+			}
+			else {
+				lBow = Convert.ToUInt32(lBowObject.GetComponent<InputField>().textComponent.text);
+			}
+			UInt32 sBow;
+			if(string.IsNullOrEmpty(sBowObject.GetComponent<InputField>().textComponent.text)) {
+				sBow=0;
+			}
+			else {
+				sBow = Convert.ToUInt32(sBowObject.GetComponent<InputField>().textComponent.text);
+			}
+			UInt32 foot;
+			if(string.IsNullOrEmpty(footObject.GetComponent<InputField>().textComponent.text)) {
+				foot=0;
+			}
+			else {
+				foot = Convert.ToUInt32(footObject.GetComponent<InputField>().textComponent.text);
+			}
+			UInt32 rabble;
+			if(string.IsNullOrEmpty(rabbleObject.GetComponent<InputField>().textComponent.text)) {
+				rabble=0;
+			}
+			else {
+				rabble = Convert.ToUInt32(rabbleObject.GetComponent<InputField>().textComponent.text);
+			}
 			ProtoDetachment detachment = new ProtoDetachment();
 			detachment.armyID=army.armyID;
 			detachment.leftFor=leaveFor;
@@ -402,8 +445,31 @@ public class ArmyManager : MonoBehaviour {
 		text+="\nKeep Level: "+currentSiege.keepLevel+"/"+currentSiege.startKeepLevel;
 		text+="\nDefender troops killed: "+currentSiege.totalCasualtiesDefender;
 		text+="\nAttacker troops killed: "+currentSiege.totalCasualtiesDefender;
-		siegeText.text= text;
+
 		//TODO finish display
+		if(!string.IsNullOrEmpty (currentSiege.endDate)) {
+			text+="\n\nOn "+currentSiege.endDate;
+			if(currentSiege.besiegerWon) {
+				text+=currentSiege.besiegingPlayer +" won the siege, ";
+				text+="taking "+currentSiege.lootLost +" as spoils.";
+				if(currentSiege.captivesTaken!=null) {
+					text+="\nAdditionally, several members of "+currentSiege.defendingPlayer+" were taken hostage:";
+					foreach(string charName in currentSiege.captivesTaken) {
+						text+=charName+ ", ";
+					}
+					text+="have all been captured.";
+				}
+			}
+			else {
+				text+=currentSiege.defendingPlayer+ " repelled the forces of "+currentSiege.besiegingPlayer+ " to end the siege of "+Globals_Game.fiefMasterList[currentSiege.besiegedFief];
+
+			}
+				text+="\nOver the course of "+currentSiege.totalDays+", "+currentSiege.defendingPlayer+" lost "+currentSiege.totalCasualtiesDefender +" troops";
+				text+=", and "+currentSiege.besiegingPlayer+ " lost "+currentSiege.totalCasualtiesAttacker+ "troops.";
+				text+="\nThe ownership of "+Globals_Game.fiefMasterList[currentSiege.besiegedFief]+" has changed hands to "+currentSiege.besiegingPlayer;
+			
+		}
+		siegeText.text= text;
 
 	}
 	

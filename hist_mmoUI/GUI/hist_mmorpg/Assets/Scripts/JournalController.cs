@@ -46,6 +46,23 @@ public class JournalController : MonoBehaviour {
 		NetworkScript.Send (accept);
 	}
 
+	public static void acceptRansom(string jId) {
+		ProtoMessage accept = new ProtoMessage();
+		accept.ActionType=Actions.RespondRansom;
+		accept.Message=jId;
+		accept.MessageFields=new string[]{"True"};
+		NetworkScript.Send (accept);
+	}
+	
+	public static void rejectRansom(string jId) {
+		ProtoMessage accept = new ProtoMessage();
+		accept.ActionType=Actions.RespondRansom;
+		accept.Message=jId;
+		accept.MessageFields=new string[]{"False"};
+		NetworkScript.Send (accept);
+	}
+
+
 	public static string PillageMessage(ProtoPillageResult details) {
 		string message = "On this the day of Our Lord the fief of "+details.fiefName + " owned by "+details.fiefOwner;
 		message+=" and defended by "+details.defenderLeader + " was pillaged by the forces of "+ details.armyOwner;
