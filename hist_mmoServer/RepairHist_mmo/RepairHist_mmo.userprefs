@@ -1,25 +1,26 @@
 ﻿<Properties StartupItem="RepairHist_mmo/RepairHist_mmo.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="RepairHist_mmo/DatabaseRead.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="RepairHist_mmo/Program.cs">
     <Files>
-      <File FileName="RepairHist_mmo/Game.cs" Line="200" Column="34" />
-      <File FileName="RepairHist_mmo/UnityTests.cs" Line="35" Column="4" />
-      <File FileName="RepairHist_mmo/Program.cs" Line="23" Column="1" />
+      <File FileName="RepairHist_mmo/Game.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/Program.cs" Line="1" Column="1" />
       <File FileName="RepairHist_mmo/Server.cs" Line="1" Column="1" />
-      <File FileName="RepairHist_mmo/Globals_Server.cs" Line="72" Column="38" />
-      <File FileName="RepairHist_mmo/DatabaseRead.cs" Line="69" Column="26" />
-      <File FileName="RepairHist_mmo/DatabaseWrite.cs" Line="830" Column="1" />
-      <File FileName="RepairHist_mmo/Globals_Game.cs" Line="341" Column="37" />
-      <File FileName="RepairHist_mmo/Language.cs" Line="130" Column="4" />
-      <File FileName="RepairHist_mmo/Nationality.cs" Line="50" Column="4" />
+      <File FileName="RepairHist_mmo/Globals_Server.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/DatabaseRead.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/DatabaseWrite.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/Globals_Game.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/Language.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/Nationality.cs" Line="1" Column="1" />
       <File FileName="RepairHist_mmo/Place.cs" Line="1" Column="1" />
-      <File FileName="RepairHist_mmo/Kingdom.cs" Line="142" Column="10" />
-      <File FileName="RepairHist_mmo/Rank.cs" Line="448" Column="4" />
+      <File FileName="RepairHist_mmo/Kingdom.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/Rank.cs" Line="1" Column="1" />
       <File FileName="RepairHist_mmo/Fief.cs" Line="1" Column="1" />
       <File FileName="RepairHist_mmo/Trait.cs" Line="1" Column="1" />
-      <File FileName="RepairHist_mmo/Terrain.cs" Line="72" Column="4" />
+      <File FileName="RepairHist_mmo/Terrain.cs" Line="1" Column="1" />
       <File FileName="RepairHist_mmo/HexMapGraph.cs" Line="1" Column="1" />
-      <File FileName="RepairHist_mmo/Character.cs" Line="6535" Column="1" />
+      <File FileName="RepairHist_mmo/Character.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/GameClock.cs" Line="1" Column="1" />
+      <File FileName="RepairHist_mmo/CSVimport.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

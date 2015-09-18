@@ -522,6 +522,7 @@ namespace hist_mmorpg
         /// <param name="kp">Proposed keep expenditure</param>
         public ProtoMessage AdjustExpenditures(double tx, uint off, uint garr, uint infr, uint kp)
         {
+            Console.WriteLine("Tax: " + tx);
             ProtoMessage error = null;
             // keep track of whether any spends ahve changed
             bool spendChanged = false;
@@ -3130,7 +3131,7 @@ namespace hist_mmorpg
                 if (this.charactersInFief[i].inKeep == ifInKeep)
                 {
                     // don't show the player
-                    if (this.charactersInFief[i] != pc)
+                    if (this.charactersInFief[i] != pc&&string.IsNullOrWhiteSpace(charactersInFief[i].captorID))
                     {
                         switch (place)
                         {

@@ -52,7 +52,6 @@ E:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\QuickGraph.Graphviz.xm
 E:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmo.csprojResolveAssemblyReference.cache
 G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\Lidgren.Network.dll
 G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\Newtonsoft.Json.dll
-G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\protobuf-net.dll
 G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\QuickGraph.Data.dll
 G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\QuickGraph.dll
 G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\QuickGraph.Serialization.dll

@@ -30,6 +30,7 @@ namespace hist_mmorpg
     /// Object fields can be hidden from clients by setting the desired field to null
     /// </summary>
     // Subtypes need to be declared in order for serialization to work
+    [ProtoInclude(5, typeof(ProtoLogIn))]
     [ProtoInclude(6,typeof(ProtoPlayer))]
     [ProtoInclude(7,typeof(ProtoClient))]
     [ProtoInclude(8, typeof(ProtoGenericArray<ProtoPlayer>))]
@@ -119,6 +120,21 @@ namespace hist_mmorpg
         }
     }
     /// <summary>
+    /// Contains various keys and salts for logging in
+    /// </summary>
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class ProtoLogIn : ProtoMessage
+    {
+        public byte[] sessionSalt {get;set;}
+        public byte[] userSalt { get; set; }
+        public byte[] publicKey { get; set; }
+
+        public ProtoLogIn()
+            : base()
+        {
+        }
+    }
+    /// <summary>
     /// A generic array, used to store things like detachment details or expenses
     /// A tricky one to serialize and deserialize, as each type used with the array must be included in the type model
     /// If any more types are added, be sure to include them
@@ -160,7 +176,7 @@ namespace hist_mmorpg
         {
             this.purse = c.myPlayerCharacter.purse;
             travelModifier = Globals_Game.clock.CalcSeasonTravMod();
-            if (c.activeChar.armyID != null)
+            if (c.activeChar.GetArmy()!=null)
             {
                 travelModifier = travelModifier * c.activeChar.GetArmy().CalcMovementModifier();
             }
@@ -520,9 +536,9 @@ namespace hist_mmorpg
             this.familyName = c.familyName;
             this.birthYear = c.birthDate.Item1;
             this.birthSeason = c.birthDate.Item2;
+            this.isMale = c.isMale;
             this.nationality = c.nationality.natID;
             this.isAlive = c.isAlive;
-            this.inKeep = c.inKeep;
             this.language = c.language.id;
             this.familyID = c.familyID;
             this.spouse = c.spouse;
@@ -532,7 +548,7 @@ namespace hist_mmorpg
             this.isPregnant = c.isPregnant;
             this.titles = c.myTitles.ToArray();
             this.armyID = c.armyID;
-            if (c.armyID != null)
+            if (c.GetArmy()!=null)
             {
                 if (c.GetArmy().CheckIfBesieger() != null)
                 {
@@ -551,9 +567,11 @@ namespace hist_mmorpg
                     siegeRole = SiegeRole.None;
                 }
             }
+            this.captor = c.captorID;
         }
 
         public void includeAll(Character c) {
+            this.inKeep = c.inKeep;
             this.virility = c.virility;
             this.maxHealth = c.maxHealth;
             this.health = c.CalculateHealth();
@@ -566,7 +584,7 @@ namespace hist_mmorpg
             this.traits = new Pair[c.traits.Length];
             for(int i = 0;i<c.traits.Length;i++) {
                 Tuple<Trait,int> t = c.traits[i];
-                traits[i] = new Pair(t.Item1.id,t.Item2.ToString());
+                traits[i] = new Pair(t.Item1.name,t.Item2.ToString());
             }
             List<Pair> tmpAilments = new List<Pair>();
             foreach(KeyValuePair<string,Ailment> pair in c.ailments) {
@@ -605,7 +623,7 @@ namespace hist_mmorpg
             for (int i = 0; i < c.traits.Length; i++)
             {
                 Tuple<Trait, int> t = c.traits[i];
-                traits[i] = new Pair(t.Item1.id, t.Item2.ToString());
+                traits[i] = new Pair(t.Item1.name, t.Item2.ToString());
             }
             List<Pair> tmpAilments = new List<Pair>();
             foreach (KeyValuePair<string, Ailment> pair in c.ailments)
@@ -614,7 +632,11 @@ namespace hist_mmorpg
             }
             onIncludeSpy(c);
         }
-
+        public void includeLocation(Character c)
+        {
+            this.location = c.location.id ;
+            this.inKeep = c.inKeep;
+        }
         
         /// <summary>
         /// Method to ensure message incudes all information from inheriting classes
@@ -898,15 +920,15 @@ namespace hist_mmorpg
         /// 12 = overlord tax rate,
         /// 13 = bottom line
         /// </summary>
-        public double[] keyStatsCurrent = new double[14];
+        public double[] keyStatsCurrent;
         /// <summary>
         /// Holds key data for previous season
         /// </summary>
-        public double[] keyStatsPrevious = new double[14];
+        public double[] keyStatsPrevious;
         /// <summary>
         /// Holds key data for next season
         /// </summary>
-        public double[] keyStatsNext = new double[14];
+        public double[] keyStatsNext;
         /// <summary>
         /// Holds fief keep level
         /// </summary>
@@ -1047,6 +1069,9 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="f"></param>
         public void includeAll(Fief f) {
+            this.keyStatsCurrent=new double[14];
+            this.keyStatsNext = new double[14]; ;
+            this.keyStatsPrevious = new double[14];
             this.fields = f.fields;
             this.industry = f.industry;
             this.troops = f.troops;
@@ -1055,6 +1080,7 @@ namespace hist_mmorpg
             this.keyStatsNext[0] = f.CalcNewLoyalty();
             this.keyStatsNext[1] = f.CalcNewGDP();
             this.keyStatsNext[2] = f.taxRateNext;
+            Console.WriteLine("Tax rate next: " + f.taxRateNext);
             this.keyStatsNext[3] = f.officialsSpendNext;
             this.keyStatsNext[4] = f.garrisonSpendNext;
             this.keyStatsNext[5] = f.infrastructureSpendNext;

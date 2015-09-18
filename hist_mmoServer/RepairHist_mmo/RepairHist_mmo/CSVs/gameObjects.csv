@@ -2,7 +2,7 @@ trait,trait_1,Command,effStart,battle,0.4,siege,0.4,npcHire,0.2,effEnd
 trait,trait_2,Chivalry,effStart,famExpense,0.2,fiefExpense,0.1,fiefLoy,0.1,npcHire,0.1,siege,0.1,effEnd
 trait,trait_3,Abrasiveness,effStart,battle,0.15,death,0.05,fiefExpense,-0.05,famExpense,0.05,time,0.05,siege,-0.1,effEnd
 trait,trait_4,Accountancy,effStart,time,0.1,fiefExpense,-0.2,famExpense,-0.02,fiefLoy,-0.05,effEnd
-trait,trait_5,Stupidity,effStart,battle,-0.4,death,0.05,fiefExpense,0.02,famExpense,0.2,fiefLoy,-0.1,npcHire,-0.1,time,-0.1,siege,-0.4,effEnd
+trait,trait_5,Stupidity,effStart,battle,-0.4,death,0.05,fiefExpense,0.02,famExpense,0.2,fiefLoy,-0.1,npcHire,-0.1,time,-0.1,siege,-0.4,stealth,-0.4,effEnd
 trait,trait_6,Robust,effStart,virility,0.2,npcHire,0.05,fiefLoy,0.05,death,-0.2,effEnd
 trait,trait_7,Pious,effStart,virility,-0.2,npcHire,0.01,fiefLoy,0.01,time,-0.1,effEnd
 trait,trait_8,Paranoia,effStart,virility,-0.3,perception,0.4,fiefLoy,-0.05,effEnd

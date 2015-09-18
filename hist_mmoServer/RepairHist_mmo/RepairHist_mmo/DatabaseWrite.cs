@@ -6,6 +6,7 @@ using QuickGraph;
 using RiakClient;
 using RiakClient.Models;
 using ProtoBuf;
+using Newtonsoft.Json.Serialization;
 namespace hist_mmorpg
 {
     public static class DatabaseWrite
@@ -16,7 +17,7 @@ namespace hist_mmorpg
         /// Writes all game objects to the database
         /// </summary>
         /// <param name="gameID">ID of game (used for database bucket)</param>
-        public static void DatabaseWriteAll(string gameID, Client c = null)
+        public static void DatabaseWriteAll(string gameID)
         {
 			// ========= test
 			DatabaseWrite.DatabaseWrite_Test(gameID);
@@ -458,49 +459,41 @@ namespace hist_mmorpg
 			if (!Globals_Server.rClient.Ping ().IsSuccess) {
 				Console.WriteLine ("NOW PING FAILS");
 			}
+			Console.WriteLine ("Writing test to : " + gameID);
 			var o = new RiakObject (gameID, "test",new TestObject("hello","world"));
 			RiakResult result = Globals_Server.rClient.Put (o);
 			if (!result.IsSuccess) {
 				Console.WriteLine (result.ErrorMessage);
-			}
-			var test = Globals_Server.rClient.Get (gameID, "test");
-			if (test.IsSuccess) {
-				Console.WriteLine ("Is success.");
-				RiakObject value = test.Value;
-				Console.WriteLine ("Bucket: " + value.Bucket);
-				var val = test.Value.GetObject<TestObject> ();
-				Console.WriteLine ("Write-read success: " + val.a+ " " +val.b);
-			} else {
-				Console.WriteLine ("Write-read test failed: "+test.ErrorMessage	);
 				Environment.Exit (1);
+			} else {
+				Console.WriteLine ("apparent success: " + result.ResultCode.ToString ());
 			}
-
 			return true;
 
 
 		}
 
-        /// <summary>
-        /// Writes a key list (List object) to the database
-        /// </summary>
-        /// <returns>bool indicating success</returns>
-        /// <param name="gameID">Game (bucket) to write to</param>
-        /// <par	am name="k">key of key list</param>
-        /// <param name="kl">key list to write</param>
-        public static bool DatabaseWrite_KeyList<T>(string gameID, string k, List<T> kl)
-        {
+		/// <summary>
+		/// Writes a key list (List object) to the database
+		/// </summary>
+		/// <returns>bool indicating success</returns>
+		/// <param name="gameID">Game (bucket) to write to</param>
+		/// <par	am name="k">key of key list</param>
+		/// <param name="kl">key list to write</param>
+		public static bool DatabaseWrite_KeyList<T>(string gameID, string k, List<T> kl)
+		{
+			Console.WriteLine ("Writing key list " + k + " to bucket " + gameID);
+			RiakObject rList = new RiakObject(gameID, k);
+			var putListResult = Globals_Server.rClient.Put(rList);
 
-            RiakClient.Models.RiakObject rList = new RiakObject(gameID, k, kl);
-            var putListResult = Globals_Server.rClient.Put(rList);
+			if (!putListResult.IsSuccess)
+			{
+				Globals_Server.logError("Write failed: Key list " + rList.Key + " to bucket " + rList.Bucket);
+			}
 
-            if (!putListResult.IsSuccess)
-            {
-                Globals_Server.logError("Write failed: Key list " + rList.Key + " to bucket " + rList.Bucket);
-            }
-
-            return putListResult.IsSuccess;
-        }
-
+			return putListResult.IsSuccess;
+		}
+		
         /// <summary>
         /// Writes a GameClock object to the database
         /// </summary>

@@ -56,7 +56,7 @@ namespace hist_mmorpg
             String gameObjects = Path.Combine(path, "gameObjects.csv");
             String mapData = Path.Combine(path, "map.csv");
 			this.InitGameObjects(gameID: "testBucket", objectDataFile: gameObjects, mapDataFile: mapData,
-            start: 1194, king1: "Char_47", king2: "Char_40", herald1: "Char_1", sysAdmin: "Char_158");
+            start: 1194, king1: "Char_47", king2: "Char_40", herald1: "Char_1", sysAdmin: null);
            // initialiseTypes();
             // this.ImportFromCSV("gameObjects.csv", bucketID: "fromCSV", synch: true, toDatabase: true);
             // this.CreateMapArrayFromCSV ("map.csv", bucketID: "fromCSV", toDatabase: true);
@@ -192,7 +192,7 @@ namespace hist_mmorpg
             uint[] myArmyTroops2 = new uint[] { 5, 10, 0, 30, 40, 80, 220 };
             Army myArmy2 = new Army(Globals_Game.GetNextArmyID(), Globals_Game.pcMasterList["Char_158"].charID, Globals_Game.pcMasterList["Char_158"].charID, Globals_Game.pcMasterList["Char_158"].days, Globals_Game.pcMasterList["Char_158"].location.id, trp: myArmyTroops2, aggr: 1, odds: 2);
             myArmy2.AddArmy(); */
-
+/*
             uint[] myArmyTroops1 = new uint[] { 20, 20, 15, 5, 5, 100, 100 };
             Army myArmy1 = new Army(Globals_Game.GetNextArmyID(), Globals_Game.pcMasterList["Char_196"].charID, Globals_Game.pcMasterList["Char_196"].charID, Globals_Game.pcMasterList["Char_196"].days, Globals_Game.pcMasterList["Char_196"].location.id, trp: myArmyTroops1);
             myArmy1.AddArmy();
@@ -201,7 +201,7 @@ namespace hist_mmorpg
             // create and add army
             uint[] myArmyTroops2 = new uint[] { 10, 10, 10, 10, 25, 0, 0 };
             Army myArmy2 = new Army(Globals_Game.GetNextArmyID(), Globals_Game.pcMasterList["Char_158"].charID, Globals_Game.pcMasterList["Char_158"].charID, Globals_Game.pcMasterList["Char_158"].days, Globals_Game.pcMasterList["Char_158"].location.id, trp: myArmyTroops2, aggr: 1, odds: 2);
-            myArmy2.AddArmy();
+            myArmy2.AddArmy(); */
             /*
             // create ailment
             Ailment myAilment = new Ailment(Globals_Game.getNextAilmentID(), "Battlefield injury", Globals_Game.clock.seasons[Globals_Game.clock.currentSeason] + ", " + Globals_Game.clock.currentYear, 1, 0);
@@ -274,6 +274,7 @@ namespace hist_mmorpg
             effectsStupidity.Add(Globals_Game.Stats.NPCHIRE, -0.1);
             effectsStupidity.Add(Globals_Game.Stats.TIME, -0.1);
             effectsStupidity.Add(Globals_Game.Stats.SIEGE, -0.4);
+            effectsStupidity.Add(Globals_Game.Stats.STEALTH, -0.6);
             Trait stupidity = new Trait("trait_5", "Stupidity", effectsStupidity);
             Globals_Game.traitMasterList.Add(stupidity.id, stupidity);
 
@@ -299,12 +300,12 @@ namespace hist_mmorpg
             effectsParanoia.Add(Globals_Game.Stats.FIEFLOY, -0.05);
             Trait paranoia = new Trait("trait_8", "Paranoia", effectsParanoia);
             Globals_Game.traitMasterList.Add(paranoia.id,paranoia);
-
+            
             Dictionary<Globals_Game.Stats, double> effectsCunning = new Dictionary<Globals_Game.Stats, double>();
             effectsCunning.Add(Globals_Game.Stats.PERCEPTION, 0.1);
             effectsCunning.Add(Globals_Game.Stats.STEALTH, 0.3);
             Trait cunning = new Trait("trait_9", "Cunning", effectsCunning);
-            Globals_Game.traitMasterList.Add(paranoia.id, paranoia);
+            Globals_Game.traitMasterList.Add(cunning.id, cunning);
 
             // add each traitsCollection key to traitsKeys
             foreach (KeyValuePair<string, Trait> entry in Globals_Game.traitMasterList)
@@ -928,7 +929,7 @@ namespace hist_mmorpg
             }
 
             // PLAYERCHARACTERS
-            foreach (KeyValuePair<string, PlayerCharacter> pcEntry in Globals_Game.pcMasterList)
+            foreach (KeyValuePair<string, PlayerCharacter> pcEntry in Globals_Game.pcMasterList.ToList())
             {
                 // check if PlayerCharacter is alive
                 performCharacterUpdate = pcEntry.Value.isAlive;
@@ -968,8 +969,9 @@ namespace hist_mmorpg
 
             // ARMIES
             // keep track of any armies requiring removal (if hav fallen below 100 men)
+            List<Army> disbandedArmies = new List<Army>();
             bool hasDissolved = false;
-            Dictionary<string, Army> updateArmy = new Dictionary<string, Army>();
+
             // iterate through armies
             foreach (KeyValuePair<string, Army> armyEntry in Globals_Game.armyMasterList)
             {
@@ -978,11 +980,23 @@ namespace hist_mmorpg
                 // add to dissolvedArmies if appropriate
                 if (hasDissolved)
                 {
-                    //armyEntry.Value.DisbandArmy();
-                    updateArmy.Add(armyEntry.Key, armyEntry.Value);
+                    disbandedArmies.Add(armyEntry.Value);
                 }
             }
-            Globals_Game.armyMasterList = updateArmy;
+
+            // remove any dissolved armies
+            if (disbandedArmies.Count > 0)
+            {
+                for (int i = 0; i < disbandedArmies.Count; i++)
+                {
+                    // disband army
+                    disbandedArmies[i].DisbandArmy();
+                    disbandedArmies[i] = null;
+                }
+
+                // clear dissolvedArmies
+                disbandedArmies.Clear();
+            }
 
             // SIEGES
 
@@ -1272,7 +1286,8 @@ namespace hist_mmorpg
                             return msg;
                         }
                         // Check whether player owns character, include additional information if so
-                        bool viewAll = PermissionManager.isAuthorized(PermissionManager.ownsCharOrAdmin, pc, c);
+                        bool viewAll = PermissionManager.isAuthorized(PermissionManager.ownsCharNotCapturedOrAdmin, pc, c);
+                        bool seeLocation = PermissionManager.isAuthorized(PermissionManager.canSeeFiefOrAdmin,pc,c.location);
                         if (c is NonPlayerCharacter)
                         {
                             NonPlayerCharacter npc = c as NonPlayerCharacter;
@@ -1286,6 +1301,10 @@ namespace hist_mmorpg
                             if (viewAll)
                             {
                                 characterDetails.includeAll(c as NonPlayerCharacter);
+                            }
+                            if (seeLocation)
+                            {
+                                characterDetails.includeLocation(c);
                             }
                             // If captured, hide location
                             if (!string.IsNullOrWhiteSpace(c.captorID)&&!c.captorID.Equals(pc.charID))
@@ -1535,6 +1554,7 @@ namespace hist_mmorpg
                         else {
                             if (msgIn.Message.Contains("Family"))
                             {
+                                listOfChars.Add(new ProtoCharacterOverview(pc));
                                 foreach (NonPlayerCharacter family in pc.myNPCs)
                                 {
                                     // ensure character is employee
@@ -1679,7 +1699,7 @@ namespace hist_mmorpg
                 case Actions.ViewFief:
                     {
                         Fief f = null;
-                        if (msgIn.Message.Equals("home"))
+                        if (msgIn.Message==null||msgIn.Message.Equals("home"))
                         {
                             f = pc.GetHomeFief();
                         }
@@ -2141,6 +2161,7 @@ namespace hist_mmorpg
                         ProtoGenericArray<double> newRates = msgIn as ProtoGenericArray<double>;
                         if (newRates == null)
                         {
+                            Console.WriteLine("Null rates-auto adjust");
                             int overspend = fief.GetAvailableTreasury(true);
                             if(overspend<0) {
                                 fief.AutoAdjustExpenditure(Convert.ToUInt32(Math.Abs(overspend)));
@@ -2458,7 +2479,7 @@ namespace hist_mmorpg
                             return error;
                         }
                         // Ensure playercharacter is not captured
-                        if (string.IsNullOrWhiteSpace(pc.captorID))
+                        if (!string.IsNullOrWhiteSpace(pc.captorID))
                         {
                             ProtoMessage error = new ProtoMessage();
                             error.ResponseType = DisplayMessages.CharacterHeldCaptive;
@@ -2706,6 +2727,7 @@ namespace hist_mmorpg
                             return error;
                         }
                         ProtoMessage result;
+                        
                         army.MaintainArmy(out result);
                         return result ;
                     }
@@ -2910,6 +2932,12 @@ namespace hist_mmorpg
                 case Actions.BesiegeFief:
                     {
                         // Get army
+                        if (string.IsNullOrEmpty(msgIn.Message))
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.ResponseType = DisplayMessages.ErrorGenericArmyUnidentified;
+                            return error;
+                        }
                         Army army = null;
                         Globals_Game.armyMasterList.TryGetValue(msgIn.Message, out army);
                         if (army == null )
@@ -3379,6 +3407,7 @@ namespace hist_mmorpg
                         }
                         else
                         {
+                            result.ResponseType = DisplayMessages.Success;
                             return result;
                         }
                     }
@@ -3536,7 +3565,9 @@ namespace hist_mmorpg
                         }
                         else
                         {
-                            return null;
+                            ProtoMessage NoCaptives = new ProtoMessage();
+                            NoCaptives.ResponseType = DisplayMessages.FiefNoCaptives;
+                            return NoCaptives;
                         }
                     }
                     break;
@@ -3704,6 +3735,15 @@ namespace hist_mmorpg
                         }
                         
                     }
+                    break;
+                case Actions.SeasonUpdate:
+                    {
+                        Globals_Game.game.SeasonUpdate();
+                        ProtoMessage updated = new ProtoMessage();
+                        updated.ResponseType = DisplayMessages.Success;
+                        return updated;
+                    }
+                    break;
                 default:
                     {
                         ProtoMessage error = new ProtoMessage();

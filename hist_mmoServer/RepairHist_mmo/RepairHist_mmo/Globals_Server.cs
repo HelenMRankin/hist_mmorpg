@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using RiakClient;
 using RiakClient.Models;
-
+using Lidgren.Network;
 namespace hist_mmorpg
 {
     /// <summary>
@@ -57,7 +57,10 @@ namespace hist_mmorpg
         /// Holds type of game  (sets victory conditions)
         /// </summary>
         public static Dictionary<uint, string> gameTypes = new Dictionary<uint, string>();
-
+        /// <summary>
+        /// Holds NetServer used for hosting game
+        /// </summary>
+        public static NetServer server;
         /// <summary>
         /// Gets the next available newGameID, then increments it
         /// </summary>

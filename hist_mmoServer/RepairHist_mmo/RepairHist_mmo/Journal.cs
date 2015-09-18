@@ -1005,9 +1005,9 @@ namespace hist_mmorpg
                 // Confirm captive is still alive and being held
                 foreach(string persona in personae) {
                     string[] split = persona.Split(new char[]{'|'});
-                    if (split[0].Equals("Captive"))
+                    if (split[1].Equals("Captive"))
                     {
-                        captive = Globals_Game.getCharFromID(split[1]);
+                        captive = Globals_Game.getCharFromID(split[0]);
                     }
                 }
                 if (captive == null)

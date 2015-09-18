@@ -194,7 +194,7 @@ namespace hist_mmorpg
 
             // get available treasury
             Fief homeFief = this.GetOwner().GetHomeFief();
-            int availTreas = homeFief.GetAvailableTreasury();
+            int availTreas = homeFief.GetAvailableTreasury(true);
 
             // check if army is already maintained
             if (!this.isMaintained)
@@ -207,10 +207,6 @@ namespace hist_mmorpg
                     result.ResponseType = DisplayMessages.ArmyMaintainInsufficientFunds;
                     string[] fields = { maintCost.ToString(), availTreas.ToString() };
                     result.MessageFields = fields;
-                    //LEGACY
-                    /*
-                    Globals_Game.UpdatePlayer(this.GetOwner().playerID, DisplayMessages.ArmyMaintainInsufficientFunds,fields);
-                     */
                 }
                 else
                 {
@@ -220,13 +216,10 @@ namespace hist_mmorpg
 
                     // deduct funds from treasury
                     homeFief.AdjustTreasury(- Convert.ToInt32(maintCost));
-                    result = new ProtoMessage();
+                    result = new ProtoArmy(this,this.GetOwner());
+                    (result as ProtoArmy).includeAll(this);
                     result.ResponseType = DisplayMessages.ArmyMaintainConfirm;
                     result.MessageFields = new string[] { maintCost.ToString() };
-                    //LEGACY
-                    /*
-                    Globals_Game.UpdatePlayer(GetOwner().playerID, DisplayMessages.ArmyMaintainConfirm,new string[] {maintCost.ToString()});
-                    */
                 }
             }
             else

@@ -32,14 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Lidgren.Network, Version=2012.1.7.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\DLLS\Windows\Lidgren.Network.dll</HintPath>
-    </Reference>
-    <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\DLLS\Windows\protobuf-net.dll</HintPath>
-    </Reference>
     <Reference Include="QuickGraph">
       <HintPath>..\..\..\DLLS\Windows\QuickGraph.dll</HintPath>
     </Reference>
@@ -64,6 +56,12 @@
       <HintPath>..\..\..\..\..\home\cs3\hr80\RiakTest\RiakTest\bin\Debug\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework" />
+    <Reference Include="Lidgren.Network">
+      <HintPath>..\..\..\DLLS\Windows\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>..\..\..\..\..\home\cs3\hr80\Riak-2.1.1\DLLs\documents-export-2015-08-13\protobuf-net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ailment.cs" />
@@ -86,6 +84,7 @@
     <Compile Include="Journal.cs" />
     <Compile Include="Kingdom.cs" />
     <Compile Include="Language.cs" />
+    <Compile Include="LogInManager.cs" />
     <Compile Include="Nationality.cs" />
     <Compile Include="PermissionManager.cs" />
     <Compile Include="Pillage_Siege.cs" />
