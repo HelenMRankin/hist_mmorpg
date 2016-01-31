@@ -83,16 +83,16 @@
  <HintPath>E:/Unity/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
  <Reference Include="System.Drawing">
- <HintPath>E:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/System.Drawing.dll</HintPath>
+ <HintPath>E:/Git/hist_mmoUI/GUI/hist_mmorpg/Assets/System.Drawing.dll</HintPath>
  </Reference>
  <Reference Include="Lidgren.Network">
- <HintPath>E:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/Lidgren.Network.dll</HintPath>
+ <HintPath>E:/Git/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/Lidgren.Network.dll</HintPath>
  </Reference>
  <Reference Include="protobuf-net">
- <HintPath>E:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/protobuf-net.dll</HintPath>
+ <HintPath>E:/Git/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/protobuf-net.dll</HintPath>
  </Reference>
  <Reference Include="QuickGraph">
- <HintPath>E:/Unity/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/QuickGraph.dll</HintPath>
+ <HintPath>E:/Git/hist_mmoUI/GUI/hist_mmorpg/Assets/Libraries/QuickGraph.dll</HintPath>
  </Reference>
  <Reference Include="UnityEditor.iOS.Extensions.Xcode">
  <HintPath>E:/Unity/Unity/Editor/Data/PlaybackEngines/iossupport/UnityEditor.iOS.Extensions.Xcode.dll</HintPath>

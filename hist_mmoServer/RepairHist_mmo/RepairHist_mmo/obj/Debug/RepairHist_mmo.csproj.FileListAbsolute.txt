@@ -56,3 +56,10 @@ G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\QuickGraph.Data.dll
 G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\QuickGraph.dll
 G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\QuickGraph.Serialization.dll
 G:\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\RiakClient.dll
+G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.exe
+G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.pdb
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.exe
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.pdb
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\hist_mmorpg.exe
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\hist_mmorpg.pdb
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmo.csprojResolveAssemblyReference.cache
