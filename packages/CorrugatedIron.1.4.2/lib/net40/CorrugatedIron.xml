@@ -1,0 +1,1071 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CorrugatedIron</name>
+    </assembly>
+    <members>
+        <member name="M:CorrugatedIron.Models.MapReduce.Fluent.RiakFluentKeyFilter.Not(System.Action{CorrugatedIron.Models.MapReduce.Fluent.RiakFluentKeyFilter})">
+            <summary>
+            Negates the result of key-filter operations.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:CorrugatedIron.Models.MapReduce.Inputs.RiakIndex.AllKeys(System.String)" -->
+        <member name="M:CorrugatedIron.Models.MapReduce.Inputs.RiakIndex.Keys(System.String,System.String,System.String)">
+            <summary>
+            Retrieve a list of keys between the start and end values
+            </summary>
+            <param name="bucket">Bucket name</param>
+            <param name="start">Beginning of key range to be retrieved</param>
+            <param name="end">End of key range being retrieved</param>
+            <remarks>This is a wrapper around a range query on the $key index
+            in Riak. Working with secondary indices requires that users enable
+            the LevelDB backend and restart their cluster.</remarks>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.And">
+            <summary>
+            Joins two or more key-filter operations with a logical AND operation.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.Between`1">
+            <summary>
+            Tests that the input is between the first two arguments. 
+            If the third argument is given, it is whether to treat the range as inclusive. 
+            If the third argument is omitted, the range is treated as inclusive.
+            </summary>
+            <remarks>It is assumed that left and right supply their own JSON conversion.</remarks>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.EndsWith">
+            <summary>
+            Tests that the input ends with the argument (a string).
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.Equal`1">
+            <summary>
+            Tests that the input is equal to the argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.FloatToString">
+            <summary>
+            Turns a floating point number (previously extracted with string_to_float), into a string.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.GreaterThan`1">
+            <summary>
+            Tests that the input is greater than the argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.GreaterThanOrEqualTo`1">
+            <summary>
+            Tests that the input is greater than or equal to the argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.IntToString">
+            <summary>
+            Turns an integer (previously extracted with string_to_int), into a string.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.LessThan`1">
+            <summary>
+            Tests that the input is less than the argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.LessThanOrEqualTo`1">
+            <summary>
+            Tests that the input is less than or equal to the argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.Matches">
+            <summary>
+            Tests that the input matches the regular expression given in the argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.Not">
+            <summary>
+            Negates the result of key-filter operations.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.NotEqual`1">
+            <summary>
+            Tests that the input is not equal to the argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.Or">
+            <summary>
+            Joins two or more key-filter operations with a logical OR operation.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.SetMember`1">
+            <summary>
+            Tests that the input is contained in the set given as the arguments.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.SimilarTo`1">
+            <summary>
+            Tests that input is within the Levenshtein distance of the first argument given by the second argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.StartsWith">
+            <summary>
+            Tests that the input begins with the argument (a string).
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.StringToFloat">
+            <summary>
+            Turns a string into a floating point number.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.StringToInt">
+            <summary>
+            Turns a string into an integer.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.Tokenize">
+            <summary>
+            Splits the input on the string given as the first argument and returns the nth
+            token specified by the second argument.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.ToLower">
+            <summary>
+            Changes all letters to lowercase.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.ToUpper">
+            <summary>
+            Changes all letters to uppercase.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.MapReduce.KeyFilters.UrlDecode">
+            <summary>
+            URL-decodes the string.
+            </summary>
+        </member>
+        <member name="M:CorrugatedIron.Models.MapReduce.RiakMapReduceResultPhase.GetObjects``1">
+            <summary>
+            Deserialize a List of <typeparam name="T">T</typeparam> from the phase results
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns>IList<typeparam name="T">T</typeparam></returns>
+        </member>
+        <member name="M:CorrugatedIron.Models.MapReduce.RiakMapReduceResultPhase.GetObjectIds">
+            <summary>
+            Deserialize a List of <see cref="T:CorrugatedIron.Models.RiakObjectId"/> from $key query
+            </summary>
+            <returns>IList of <see cref="T:CorrugatedIron.Models.RiakObjectId"/></returns>
+            <remarks>This is designed specifically to deal with the data structure that is returned from
+            Riak when querying the $key index. This should be used when querying $key directly or through
+            one of the convenience methods.</remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakCounterGetOptions.PrVal">
+            <summary>
+            The number of primary replicas that must respond before a read is considered a success.
+            </summary>
+            <value>The PR value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.</value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakCounterGetOptions.RVal">
+            <summary>
+            The number of replicas that must return before a read is considered a succes.
+            </summary>
+            <value>
+            The R value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.
+            </value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakCounterGetOptions.BasicQuorum">
+            <summary>
+            Basic Quorum semantics - whether to return early in some failure cases (eg. when r=1 and you get 2 errors and a success basic_quorum=true would return an error)
+            </summary>
+            <value>
+            Whether basic quorum semantics will be used.
+            </value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakCounterGetOptions.NotFoundOk">
+            <summary>
+            Should not found responses from Riak be treated as an OK result for a find operation. 
+            </summary>
+            <value>
+            The notfound_ok value.
+            </value>
+        </member>
+        <member name="M:CorrugatedIron.Models.RiakBucketProperties.SetSearch(System.Boolean,System.Boolean)">
+            <summary>
+            Enable or disable search on a bucket.
+            </summary>
+            <param name="value">Set to <i>true</i> to enable search on this bucket, or <i>false</i>
+            to disable it.</param>
+            <returns>A reference to the current properties object.</returns>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.BigVclock">
+            <summary>
+            If the length of the vector clock is larger than BigVclock, vector clocks will be pruned.
+            </summary>
+            <remarks>See http://docs.basho.com/riak/latest/theory/concepts/Vector-Clocks/#Vector-Clock-Pruning </remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.SmallVclock">
+            <summary>
+            If the length of the vector clock is smaller than SmallVclock, vector clocks will not be pruned.
+            </summary>
+            <remarks>See http://docs.basho.com/riak/latest/theory/concepts/Vector-Clocks/#Vector-Clock-Pruning </remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.RVal">
+            <summary>
+            The number of replicas that must return before a read is considered a succes.
+            </summary>
+            <value>
+            The R value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.
+            </value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.RwVal">
+            <summary>
+            The number of replicas that must return before a delete is considered a success.
+            </summary>
+            <value>The RW Value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.</value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.DwVal">
+            <summary>
+            The number of replicas that must commit to durable storage and respond before a write is considered a success. 
+            </summary>
+            <value>The DW value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.</value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.WVal">
+            <summary>
+            The number of replicas that must respond before a write is considered a success.
+            </summary>
+            <value>The W value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.</value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.PrVal">
+            <summary>
+            The number of primary replicas that must respond before a read is considered a success.
+            </summary>
+            <value>The PR value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.</value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.PwVal">
+            <summary>
+            The number of primary replicas that must respond before a write is considered a success.
+            </summary>
+            <value>The PW value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.</value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakBucketProperties.SearchEnabled">
+            <summary>
+            An indicator of whether search indexing is enabled on the bucket.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.IWriteableVClock">
+            <summary>
+            <para>Implements a writeable vector clock interface. Callers must explictly use the
+            IWriteableVClock interface to set the vector clock value. This is by design and
+            is implemented in an attempt to prevent developers new to Riak from causing themselves
+            more pain. This trade off should present developers with a reliable way to explicitly
+            drop down to mucking about with vector clocks - it becomes apparent to a casual 
+            observer that something out of the ordinary is happening.</para>
+            <para>A better understanding of the usefulness of vector clocks can be found in 
+            John Daily's Understanding Riak’s Configurable Behaviors: Part 2
+            (http://basho.com/riaks-config-behaviors-part-2/).
+            </para>
+            </summary>
+        </member>
+        <member name="M:CorrugatedIron.Models.RiakObject.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CorrugatedIron.Models.RiakObject"/> class.
+            </summary>
+            <param name="bucket">Bucket.</param>
+            <param name="key">Key.</param>
+            <remarks>When saving a binary object to Riak, one of the appropriate binary 
+            <see cref="T:CorrugatedIron.Util.RiakConstants.ContentTypes"/> should be used.
+            If the content type is not know, fall back to application/octet-stream. In addition,
+            when saving binary data to Riak, a charSet of null/empty string should be used. The 
+            constant CharSets.Binary should be used.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.Models.RiakObject.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CorrugatedIron.Models.RiakObject"/> class.
+            </summary>
+            <param name="bucket">Bucket.</param>
+            <param name="key">Key.</param>
+            <param name="value">Value.</param>
+            <remarks>When saving a binary object to Riak, one of the appropriate binary 
+            <see cref="T:CorrugatedIron.Util.RiakConstants.ContentTypes"/> should be used.
+            If the content type is not know, fall back to application/octet-stream. In addition,
+            when saving binary data to Riak, a charSet of null/empty string should be used. The 
+            constant CharSets.Binary should be used.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.Models.RiakObject.#ctor(System.String,System.String,System.Object)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CorrugatedIron.Models.RiakObject"/> class.
+            </summary>
+            <param name="bucket">Bucket.</param>
+            <param name="key">Key.</param>
+            <param name="value">Value.</param>
+            <remarks>When saving a binary object to Riak, one of the appropriate binary 
+            <see cref="T:CorrugatedIron.Util.RiakConstants.ContentTypes"/> should be used.
+            If the content type is not know, fall back to application/octet-stream. In addition,
+            when saving binary data to Riak, a charSet of null/empty string should be used. The 
+            constant CharSets.Binary should be used.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.Models.RiakObject.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CorrugatedIron.Models.RiakObject"/> class.
+            </summary>
+            <param name="bucket">Bucket.</param>
+            <param name="key">Key.</param>
+            <param name="value">Value.</param>
+            <param name="contentType">Content type of the object. These should be MIME compliant content types.</param>
+            <remarks>When saving a binary object to Riak, one of the appropriate binary 
+            <see cref="T:CorrugatedIron.Util.RiakConstants.ContentTypes"/> should be used.
+            If the content type is not know, fall back to application/octet-stream. In addition,
+            when saving binary data to Riak, a charSet of null/empty string should be used. The 
+            constant CharSets.Binary should be used.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.Models.RiakObject.#ctor(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CorrugatedIron.Models.RiakObject"/> class.
+            </summary>
+            <param name="bucket">Bucket.</param>
+            <param name="key">Key.</param>
+            <param name="value">Value.</param>
+            <param name="contentType">Content type of the object. These should be MIME compliant content types.</param>
+            <param name="charSet">Character set used to encode saved data.</param>
+            <remarks>When saving a binary object to Riak, one of the appropriate binary 
+            <see cref="T:CorrugatedIron.Util.RiakConstants.ContentTypes"/> should be used.
+            If the content type is not know, fall back to application/octet-stream. In addition,
+            when saving binary data to Riak, a charSet of null/empty string should be used. The 
+            constant CharSets.Binary should be used.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.Models.RiakObject.#ctor(System.String,System.String,System.Byte[],System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CorrugatedIron.Models.RiakObject"/> class.
+            </summary>
+            <param name="bucket">Bucket.</param>
+            <param name="key">Key.</param>
+            <param name="value">Value.</param>
+            <param name="contentType">Content type of the object. These should be MIME compliant content types.</param>
+            <param name="charSet">Character set used to encode saved data.</param>
+            <remarks>When saving a binary object to Riak, one of the appropriate binary 
+            <see cref="T:CorrugatedIron.Util.RiakConstants.ContentTypes"/> should be used.
+            If the content type is not know, fall back to application/octet-stream. In addition,
+            when saving binary data to Riak, a charSet of null/empty string should be used. The 
+            constant CharSets.Binary should be used.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.Models.RiakObject.CalculateHashCode">
+            <summary>
+            This was moved into its own function that isn't virtual so that it could
+            be called inside the object's constructor.
+            </summary>
+            <returns>The Object's hash code.</returns>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakCounterUpdateOptions.WVal">
+            <summary>
+            The number of replicas that must respond before a write is considered a success.
+            </summary>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakCounterUpdateOptions.DwVal">
+            <summary>
+            The number of replicas that must commit to durable storage and respond before a write is considered a success. 
+            </summary>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakCounterUpdateOptions.PwVal">
+            <summary>
+            The number of primary replicas that must respond before a write is considered a success.
+            </summary>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakCounterUpdateOptions.ReturnValue">
+            <summary>
+            Whether or not the updated value should be returned from the counter
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.Search.PreSort">
+            <summary>
+            Specifies the sort order of Riak Search Results
+            </summary>
+        </member>
+        <member name="F:CorrugatedIron.Models.Search.PreSort.Key">
+            <summary>
+            Sort the results by bucket key.
+            </summary>
+        </member>
+        <member name="F:CorrugatedIron.Models.Search.PreSort.Score">
+            <summary>
+            Sort the results by search score.
+            </summary>
+        </member>
+        <member name="T:CorrugatedIron.Models.Search.DefaultOperation">
+            <summary>
+            Specifies the default_op override.
+            </summary>
+        </member>
+        <member name="P:CorrugatedIron.Models.Search.RiakSearchRequest.ReturnFields">
+            <summary>
+            Specifies the list of fields that should be returned for each
+            record in the result list.
+            </summary>
+            <remarks>
+            The 'id' field is always returned, even if not specified in this list.
+            </remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Ping">
+            <summary>
+            Ping this instance of Riak
+            </summary>
+            <description>Ping can be used to ensure that there is an operational Riak node
+            present at the other end of the client. It's important to note that this will ping
+            any Riak node in the cluster and a specific node cannot be specified by the user.
+            Do not use this method to determine individual node health.</description>
+            <returns>Returns true if the Riak instance has returned a 'pong' response. 
+            Returns false if Riak is unavailable or returns a 'pang' response. </returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.IncrementCounter(System.String,System.String,System.Int64,CorrugatedIron.Models.RiakCounterUpdateOptions)">
+            <summary>
+            Increments a Riak counter. 
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="counter">The name of the counter</param>
+            <param name="amount">The amount to increment/decrement the counter</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakCounterUpdateOptions"/></param>
+            <returns><see cref="T:CorrugatedIron.Models.RiakCounterResult"/></returns>
+            <remarks>Only available in Riak 1.4+. If the counter is not initialized, then the counter will be initialized to 0 and then incremented.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.GetCounter(System.String,System.String,CorrugatedIron.Models.RiakCounterGetOptions)">
+            <summary>
+            Returns the value of a counter
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="counter">The counter</param>
+            <param name="options"><see cref="T:CorrugatedIron.Models.RiakCounterGetOptions"/> describing how to read the counter.</param>
+            <returns><see cref="T:CorrugatedIron.Models.RiakCounterResult"/></returns>
+            <remarks>Only available in Riak 1.4+.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Get(System.String,System.String,CorrugatedIron.Models.RiakGetOptions)">
+            <summary>
+            Get the specified <paramref name="key"/> from the <paramref name="bucket"/>.
+            Optionally can be read from rVal instances. By default, the server's
+            r-value will be used, but can be overridden by rVal.
+            </summary>
+            <param name="bucket">
+            The name of the bucket containing the <paramref name="key"/>
+            </param>
+            <param name="key">
+            The key.
+            </param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakGetOptions"/> responsible for 
+            configuring the semantics of this single get request. These options will override any previously 
+            defined bucket configuration properties.</param>
+            <remarks>If a node does not respond, that does not necessarily mean that the 
+            <paramref name="bucket"/>/<paramref name="key"/> combination is not available. It simply means
+            that fewer than R/PR nodes responded to the read request. See <see cref="T:CorrugatedIron.Models.RiakGetOptions"/>
+            for information on how different options change Riak's default behavior.
+            </remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Get(System.String,System.String)">
+            <summary>
+            Get the specified <paramref name="key"/> from the <paramref name="bucket"/>.
+            Optionally can be read from <paramref name="rVal"/> instances. By default, the server's
+            r-value will be used, but can be overridden by <paramref name="rVal"/>.
+            </summary>
+            <param name='bucket'>
+            The name of the bucket containing the <paramref name="key"/>
+            </param>
+            <param name='key'>
+            The key.
+            </param>
+            <remarks>If a node does not respond, that does not necessarily mean that the 
+            <paramref name="bucket"/>/<paramref name="key"/> combination is not available. It simply means
+            that fewer than the default number nodes responded to the read request. Unfortunatley, 
+            the Riak API does not allow us to distinguish between a 404 resulting from less than <paramref name="rVal"/>
+            nodes successfully responding and a <paramref name="bucket"/>/<paramref name="key"/> combination
+            not being found in Riak.
+            </remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Get(CorrugatedIron.Models.RiakObjectId,CorrugatedIron.Models.RiakGetOptions)">
+            <summary>
+            Retrieve the specified object from Riak.
+            </summary>
+            <param name="objectId">
+            Object identifier made up of a key and bucket. <see cref="T:CorrugatedIron.Models.RiakObjectId"/>
+            </param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakGetOptions"/> responsible for 
+            configuring the semantics of this single get request. These options will override any previously 
+            defined bucket configuration properties.</param>
+            <remarks>If a node does not respond, that does not necessarily mean that the 
+            <paramref name="objectId"/> is not available. It simply means
+            that fewer than <paramref name="rVal"/> nodes responded to the read request. Unfortunatley, 
+            the Riak API does not allow us to distinguish between a 404 resulting from less than <paramref name="rVal"/>
+            nodes successfully responding and an <paramref name="objectId"/> not being found in Riak.
+            </remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Get(System.Collections.Generic.IEnumerable{CorrugatedIron.Models.RiakObjectId},CorrugatedIron.Models.RiakGetOptions)">
+            <summary>
+            Retrieve multiple objects from Riak.
+            </summary>
+            <param name="bucketKeyPairs">
+            An <see href="System.Collections.Generic.IEnumerable&lt;T&gt;"/> of <see cref="T:CorrugatedIron.Models.RiakObjectId"/> to be retrieved
+            </param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakGetOptions"/> responsible for 
+            configuring the semantics of this single get request. These options will override any previously 
+            defined bucket configuration properties.</param>
+            <returns>An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.RiakResult`1"/>
+            is returned. You should verify the success or failure of each result separately.</returns>
+            <remarks>Riak does not support multi get behavior. CorrugatedIron's multi get functionality wraps multiple
+            get requests and returns results as an IEnumerable{RiakResult{RiakObject}}. Callers should be aware that
+            this may result in partial success - all results should be evaluated individually in the calling application.
+            In addition, applications should plan for multiple failures or multiple cases of siblings being present.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Get(System.Collections.Generic.IEnumerable{CorrugatedIron.Models.RiakObjectId},System.UInt32)">
+            <summary>
+            Retrieve multiple objects from Riak.
+            </summary>
+            <param name="bucketKeyPairs">
+            An <see href="System.Collections.Generic.IEnumerable&lt;T&gt;"/> of <see cref="T:CorrugatedIron.Models.RiakObjectId"/> to be retrieved
+            </param>
+            <param name="rVal">
+            The number of nodes required to successfully respond to the read before the read is considered a success.
+            </param>
+            <returns>An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.RiakResult`1"/>
+            is returned. You should verify the success or failure of each result separately.</returns>
+            <remarks>Riak does not support multi get behavior. CorrugatedIron's multi get functionality wraps multiple
+            get requests and returns results as an IEnumerable{RiakResult{RiakObject}}. Callers should be aware that
+            this may result in partial success - all results should be evaluated individually in the calling application.
+            In addition, applications should plan for multiple failures or multiple cases of siblings being present.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Put(CorrugatedIron.Models.RiakObject,CorrugatedIron.Models.RiakPutOptions)">
+            <summary>
+            Persist a <see cref="T:CorrugatedIron.Models.RiakObject"/> to Riak using the specific <see cref="T:CorrugatedIron.Models.RiakPutOptions"/>.
+            </summary>
+            <param name="value">
+            The <see cref="T:CorrugatedIron.Models.RiakObject"/> to save.
+            </param>
+            <param name="options">
+            Put options
+            </param>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Put(System.Collections.Generic.IEnumerable{CorrugatedIron.Models.RiakObject},CorrugatedIron.Models.RiakPutOptions)">
+            <summary>
+            Persist an <see href="System.Collections.Generic.IEnumerable{T}"/> of <see cref="T:CorrugatedIron.Models.RiakObjectId"/> to Riak.
+            </summary>
+            <param name="values">
+            The <see href="System.Collections.Generic.IEnumerable{T}"/> of <see cref="T:CorrugatedIron.Models.RiakObjectId"/> to save.
+            </param>
+            <param name="options">
+            Put options.
+            </param>
+            <returns>An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.RiakResult`1"/>
+            is returned. You should verify the success or failure of each result separately.</returns>
+            <remarks>Riak does not support multi put behavior. CorrugatedIron's multi put functionality wraps multiple
+            put requests and returns results as an IEnumerable{RiakResult{RiakObject}}. Callers should be aware that
+            this may result in partial success - all results should be evaluated individually in the calling application.
+            In addition, applications should plan for multiple failures or multiple cases of siblings being present.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Delete(CorrugatedIron.Models.RiakObject,CorrugatedIron.Models.RiakDeleteOptions)">
+            <summary>
+            Delete the data identified by the <paramref name="riakObject"/>
+            </summary>
+            <param name='riakObject'>
+            The object to delete
+            </param>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Delete(System.String,System.String,CorrugatedIron.Models.RiakDeleteOptions)">
+            <summary>
+            Delete the record identified by <paramref name="key"/> from a <paramref name="bucket"/>.
+            </summary>
+            <param name='bucket'>
+            The name of the bucket that contains the record to be deleted.
+            </param>
+            <param name='key'>
+            The key identifying the record to be deleted.
+            </param>
+            <param name='options'>
+            Delete options
+            </param>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Delete(CorrugatedIron.Models.RiakObjectId,CorrugatedIron.Models.RiakDeleteOptions)">
+            <summary>
+            Delete the record identified by the <paramref name="objectId"/>.
+            </summary>
+            <param name="objectId">
+            A <see cref="T:CorrugatedIron.Models.RiakObjectId"/> identifying the bucket/key combination for the record to be deleted.
+            </param>
+            <param name="options">
+            Delete options
+            </param>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Delete(System.Collections.Generic.IEnumerable{CorrugatedIron.Models.RiakObjectId},CorrugatedIron.Models.RiakDeleteOptions)">
+            <summary>
+            Delete multiple objects identified by a <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.Models.RiakObjectId"/>.
+            </summary>
+            <param name="objectIds">
+            A <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.Models.RiakObjectId"/>.
+            </param>
+            <param name="options">
+            Delete options.
+            </param>    
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.DeleteBucket(System.String,System.UInt32)">
+            <summary>
+            Deletes the contents of the specified <paramref name="bucket"/>.
+            </summary>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.RiakResult"/> listing the success of all deletes
+            </returns>
+            <param name="bucket">
+            The bucket to be deleted.
+            </param>
+            <param name="rwVal">
+            The number of nodes that must respond successfully to a delete request.
+            </param>
+            <remarks>
+            /// <para>
+            Because of the <see cref="M:CorrugatedIron.RiakClient.ListKeys(System.String)"/> operation, this may be a time consuming operation on
+            production systems and may cause memory problems for the client. This should be used either in testing or on small buckets with 
+            known amounts of data.
+            </para>
+            <para>
+            A delete bucket operation actually deletes all keys in the bucket individually. 
+            A <see cref="M:CorrugatedIron.RiakClient.ListKeys(System.String)"/> operation is performed to retrieve a list of keys
+            The keys retrieved from the <see cref="M:CorrugatedIron.RiakClient.ListKeys(System.String)"/> are then deleted through
+            <see cref="M:CorrugatedIron.RiakClient.Delete(CorrugatedIron.Models.RiakObject,CorrugatedIron.Models.RiakDeleteOptions)"/>. 
+            </para>
+            </remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.DeleteBucket(System.String,CorrugatedIron.Models.RiakDeleteOptions)">
+            <summary>
+            Deletes the contents of the specified <paramref name="bucket"/>.
+            </summary>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.RiakResult"/> listing the success of all deletes
+            </returns>
+            <param name="bucket">
+            The bucket to be deleted.
+            </param>
+            <param name="deleteOptions">
+            Options for Riak delete operation <see cref="T:CorrugatedIron.Models.RiakDeleteOptions"/>
+            </param>
+            <remarks>
+            <para>
+            A delete bucket operation actually deletes all keys in the bucket individually. 
+            A <see cref="M:CorrugatedIron.RiakClient.ListKeys(System.String)"/> operation is performed to retrieve a list of keys
+            The keys retrieved from the <see cref="M:CorrugatedIron.RiakClient.ListKeys(System.String)"/> are then deleted through
+            <see cref="M:CorrugatedIron.RiakClient.Delete(CorrugatedIron.Models.RiakObject,CorrugatedIron.Models.RiakDeleteOptions)"/>. 
+            </para>
+            <para>
+            Because of the <see cref="M:CorrugatedIron.RiakClient.ListKeys(System.String)"/> operation, this may be a time consuming operation on
+            production systems and may cause memory problems for the client. This should be used either in testing or on small buckets with 
+            known amounts of data.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.MapReduce(CorrugatedIron.Models.MapReduce.RiakMapReduceQuery)">
+            <summary>
+            Execute a map reduce query.
+            </summary>
+            <param name="query">A <see cref="T:CorrugatedIron.Models.MapReduce.RiakMapReduceQuery"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult"/> of <see cref="T:CorrugatedIron.Models.MapReduce.RiakMapReduceResult"/></returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Search(CorrugatedIron.Models.Search.RiakSearchRequest)">
+            <summary>
+            Perform a Riak Search query
+            </summary>
+            <param name="search">The <see cref="T:CorrugatedIron.Models.Search.RiakSearchRequest"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult"/> of <see cref="T:CorrugatedIron.Models.Search.RiakSearchResult"/></returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.StreamMapReduce(CorrugatedIron.Models.MapReduce.RiakMapReduceQuery)">
+            <summary>
+            Perform a map reduce query and stream the results.
+            </summary>
+            <param name="query">The query</param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult"/> of <see cref="T:CorrugatedIron.Models.MapReduce.RiakStreamedMapReduceResult"/></returns>
+            <remarks>Make sure to fully enumerate the <see cref="T:CorrugatedIron.Models.MapReduce.RiakStreamedMapReduceResult"/> or connections may be left open.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.ListBuckets">
+            <summary>
+            Lists all buckets available on the Riak cluster.
+            </summary>
+            <returns>
+            An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:System.String"/> bucket names.
+            </returns>
+            <remarks>Buckets provide a logical namespace for keys. Listing buckets requires folding over all keys in a cluster and 
+            reading a list of buckets from disk. This operation, while non-blocking in Riak 1.0 and newer, still produces considerable
+            physical I/O and can take a long time.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.StreamListBuckets">
+            <summary>
+            Lists all buckets available on the Riak cluster. This uses an <see cref="T:System.Collections.Generic.IEnumerable`1"/> 
+            of <see cref="T:System.String"/> to lazy initialize the collection of bucket names. 
+            </summary>
+            <returns>
+            An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:System.String"/> bucket names.
+            </returns>
+            <remarks>Buckets provide a logical namespace for keys. Listing buckets requires folding over all keys in a cluster and 
+            reading a list of buckets from disk. This operation, while non-blocking in Riak 1.0 and newer, still produces considerable
+            physical I/O and can take a long time. Callers should fully enumerate the collection or else close the connection when finished.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.ListKeys(System.String)">
+            <summary>
+            Lists all keys in the specified <paramref name="bucket"/>.
+            </summary>
+            <returns>
+            The keys.
+            </returns>
+            <param name='bucket'>
+            The bucket.
+            </param>
+            <remarks>ListKeys is an expensive operation that requires folding over all data in the Riak cluster to produce
+            a list of keys. This operation, while cheaper in Riak 1.0 than in earlier versions of Riak, should be avoided.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.StreamListKeys(System.String)">
+            <summary>
+            Performs a streaming list keys operation.
+            </summary>
+            <param name="bucket">The bucket</param>
+            <returns>An <see cref="T:System.Collections.Generic.IEnumerable`1"/></returns>
+            <remarks>While this streams results back to the client, alleviating pressure on Riak, this still relies on
+            folding over all keys present in the Riak cluster. Use at your own risk. A better approach would be to
+            use <see cref="M:CorrugatedIron.RiakClient.ListKeysFromIndex(System.String)"/></remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.ListKeysFromIndex(System.String)">
+            <summary>
+            Return a list of keys from the given bucket.
+            </summary>
+            <param name="bucket"></param>
+            <returns></returns>
+            <remarks>This uses the $key special index instead of the list keys API to 
+            quickly return an unsorted list of keys from Riak.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.GetBucketProperties(System.String)">
+            <summary>
+            Returns all properties for a <paramref name="bucket"/>.
+            </summary>
+            <returns>
+            The bucket properties.
+            </returns>
+            <param name='bucket'>
+            The Riak bucket.
+            </param>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.SetBucketProperties(System.String,CorrugatedIron.Models.RiakBucketProperties,System.Boolean)">
+            <summary>
+            Sets the <see cref="T:CorrugatedIron.Models.RiakBucketProperties"/> properties of a <paramref name="bucket"/>.
+            </summary>
+            <returns>
+            A <see cref="T:CorrugatedIron.RiakResult"/> detailing the success or failure of the operation.
+            </returns>
+            <param name="bucket">
+            The Bucket.
+            </param>
+            <param name="properties">
+            The Properties.
+            </param>
+            <param name="useHttp">When true, CorrugatedIron will use the HTTP interface</param>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.ResetBucketProperties(System.String,System.Boolean)">
+            <summary>
+            Reset the properties on a bucket back to their defaults.
+            </summary>
+            <param name="bucket">The name of the bucket to reset the properties on.</param>
+            <param name="useHttp">Whether or not to use the HTTP interface to Riak. Set to true for Riak 1.3 and earlier</param> 
+            <returns>An indication of success or failure.</returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.WalkLinks(CorrugatedIron.Models.RiakObject,System.Collections.Generic.IList{CorrugatedIron.Models.RiakLink})">
+            <summary>
+            Retrieve arbitrarily deep list of links for a <see cref="T:CorrugatedIron.Models.RiakObject"/>
+            </summary>
+            <returns>
+            A list of <see cref="T:CorrugatedIron.Models.RiakObject"/> identified by the list of links.
+            </returns>
+            <param name="riakObject">
+            The initial object to use for the beginning of the link walking.
+            </param>
+            <param name="riakLinks">
+            A list of link definitions
+            </param>
+            <remarks>Refer to http://wiki.basho.com/Links-and-Link-Walking.html for more information.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.GetServerInfo">
+            <summary>
+            Get the server information from the connected cluster.
+            </summary>
+            <returns>Model containing information gathered from a node in the cluster.</returns>
+            <remarks>This function will assume that all of the nodes in the cluster are running
+            the same version of Riak. It will only get executed on a single node, and the content
+            that is returned technically only relates to that node. All nodes in a cluster should
+            run on the same version of Riak.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.StreamIndexGet(System.String,System.String,System.Numerics.BigInteger,CorrugatedIron.Models.RiakIndexGetOptions)">
+            <summary>
+            Retrieve index results using the streaming interface.
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="indexName">The index</param>
+            <param name="value">The indexed value to search for</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakIndexGetOptions"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakStreamedIndexResult"/> containing an <see cref="T:System.Collections.Generic.IEnumerable`1"/>
+            of <see cref="T:CorrugatedIron.Models.Index.RiakIndexKeyTerm"/></returns>
+            <remarks>Make sure to fully enumerate the <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakIndexKeyTerm"/>.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.StreamIndexGet(System.String,System.String,System.String,CorrugatedIron.Models.RiakIndexGetOptions)">
+            <summary>
+            Retrieve index results using the streaming interface.
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="indexName">The index</param>
+            <param name="value">The indexed value to search for</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakIndexGetOptions"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakStreamedIndexResult"/> containing an <see cref="T:System.Collections.Generic.IEnumerable`1"/>
+            of <see cref="T:CorrugatedIron.Models.Index.RiakIndexKeyTerm"/></returns>
+            <remarks>Make sure to fully enumerate the <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakIndexKeyTerm"/>.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.StreamIndexGet(System.String,System.String,System.Numerics.BigInteger,System.Numerics.BigInteger,CorrugatedIron.Models.RiakIndexGetOptions)">
+            <summary>
+            Retrieve index results using the streaming interface.
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="indexName">The index</param>
+            <param name="minValue">The start of the indexed range to search for</param>
+            <param name="maxValue">The end of the indexed range to search for</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakIndexGetOptions"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakStreamedIndexResult"/> containing an <see cref="T:System.Collections.Generic.IEnumerable`1"/>
+            of <see cref="T:CorrugatedIron.Models.Index.RiakIndexKeyTerm"/></returns>
+            <remarks>Make sure to fully enumerate the <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakIndexKeyTerm"/>.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.StreamIndexGet(System.String,System.String,System.String,System.String,CorrugatedIron.Models.RiakIndexGetOptions)">
+            <summary>
+            Retrieve index results using the streaming interface.
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="indexName">The index</param>
+            <param name="minValue">The start of the indexed range to search for</param>
+            <param name="maxValue">The end of the indexed range to search for</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakIndexGetOptions"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakStreamedIndexResult"/> containing an <see cref="T:System.Collections.Generic.IEnumerable`1"/>
+            of <see cref="T:CorrugatedIron.Models.Index.RiakIndexKeyTerm"/></returns>
+            <remarks>Make sure to fully enumerate the <see cref="T:System.Collections.Generic.IEnumerable`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakIndexKeyTerm"/>.</remarks>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.IndexGet(System.String,System.String,System.String,System.String,CorrugatedIron.Models.RiakIndexGetOptions)">
+            <summary>
+            Retrieve a range of indexed values.
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="indexName">The index</param>
+            <param name="minValue">The start of the indexed range to search for</param>
+            <param name="maxValue">The end of the indexed range to search for</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakIndexGetOptions"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakIndexResult"/></returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.IndexGet(System.String,System.String,System.Numerics.BigInteger,System.Numerics.BigInteger,CorrugatedIron.Models.RiakIndexGetOptions)">
+            <summary>
+            Retrieve a range of indexed values.
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="indexName">The index</param>
+            <param name="minValue">The start of the indexed range to search for</param>
+            <param name="maxValue">The end of the indexed range to search for</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakIndexGetOptions"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakIndexResult"/></returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.IndexGet(System.String,System.String,System.String,CorrugatedIron.Models.RiakIndexGetOptions)">
+            <summary>
+            Retrieve a indexed values
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="indexName">The index</param>
+            <param name="value">The indexed value to search for</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakIndexGetOptions"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakIndexResult"/></returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.IndexGet(System.String,System.String,System.Numerics.BigInteger,CorrugatedIron.Models.RiakIndexGetOptions)">
+            <summary>
+            Retrieve a indexed values
+            </summary>
+            <param name="bucket">The bucket</param>
+            <param name="indexName">The index</param>
+            <param name="value">The indexed value to search for</param>
+            <param name="options">The <see cref="T:CorrugatedIron.Models.RiakIndexGetOptions"/></param>
+            <returns>A <see cref="T:CorrugatedIron.RiakResult`1"/> of <see cref="T:CorrugatedIron.Models.Index.RiakIndexResult"/></returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakClient.Batch(System.Action{CorrugatedIron.IRiakBatchClient})">
+            <summary>
+            Used to create a batched set of actions to be sent to a Riak cluster. This guarantees some level of serialized activity.
+            </summary>
+            <param name="batchAction">
+            Batch action.
+            </param>
+            <exception cref="T:System.Exception">
+            Represents errors that occur during application execution.
+            </exception>
+        </member>
+        <member name="M:CorrugatedIron.RiakEndPoint.CreateClient(System.String)">
+            <summary>
+            [Obsolete] Creates a new instance of <see cref="T:CorrugatedIron.RiakClient"/>.
+            </summary>
+            <returns>
+            A minty fresh client.
+            </returns>
+            <param name="seed">
+            An optional seed to generate the Client Id for the <see cref="T:CorrugatedIron.RiakClient"/>. Having a unique Client Id is important for
+            generating good vclocks. For more information about the importance of vector clocks, refer to http://wiki.basho.com/Vector-Clocks.html
+            </param>
+        </member>
+        <member name="M:CorrugatedIron.RiakEndPoint.CreateClient">
+            <summary>
+            Creates a new instance of <see cref="T:CorrugatedIron.RiakClient"/>.
+            </summary>
+            <returns>
+            A minty fresh client.
+            </returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakCluster.FromConfig(System.String)">
+            <summary>
+            Creates an instance of <see cref="T:CorrugatedIron.IRiakClient"/> populated from from the configuration section
+            specified by <paramref name="configSectionName"/>.
+            </summary>
+            <param name="configSectionName">The name of the configuration section to load the settings from.</param>
+            <returns>A fully configured <see cref="T:CorrugatedIron.IRiakEndPoint"/></returns>
+        </member>
+        <member name="M:CorrugatedIron.RiakCluster.FromConfig(System.String,System.String)">
+            <summary>
+            Creates an instance of <see cref="T:CorrugatedIron.IRiakClient"/> populated from from the configuration section
+            specified by <paramref name="configSectionName"/>.
+            </summary>
+            <param name="configSectionName">The name of the configuration section to load the settings from.</param>
+            <param name="configFileName">The full path and name of the config file to load the configuration from.</param>
+            <returns>A fully configured <see cref="T:CorrugatedIron.IRiakEndPoint"/></returns>
+        </member>
+        <member name="P:CorrugatedIron.RiakResult`1.Done">
+            <summary>Is the current paginated query done?</summary>
+            <remarks>Valid for Riak 1.4 and newer only.</remarks>
+        </member>
+        <member name="P:CorrugatedIron.RiakResult`1.Continuation">
+            <summary>
+            An opaque continuation returned if there are still additional 
+            results to be returned in a paginated query. This value should
+            be supplied to the next query issued to Riak.
+            </summary>
+            <remarks>Valid for Riak 1.4 and newer only.</remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakDeleteOptions.Rw">
+            <summary>
+            The number of replicas that need to agree when retrieving the object.
+            </summary>
+            <value>The RW Value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.</value>
+            <remarks>Developers looking for an easy way to set this can look at <see cref="T:CorrugatedIron.Util.RiakConstants.QuorumOptions"/></remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakDeleteOptions.Vclock">
+            <summary>
+            The Vclock of the version that is being deleted. Use this to prevent deleting objects that have been modified since the last get request.
+            </summary>
+            <value>
+            The vclock.
+            </value>
+            <remarks>Review the information at http://wiki.basho.com/Vector-Clocks.html for additional information on how vector clocks 
+            are used in Riak.</remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakDeleteOptions.R">
+            <summary>
+            The number of replicas that must return before a delete is considered a succes.
+            </summary>
+            <value>
+            The R value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.
+            </value>
+            <remarks>Developers looking for an easy way to set this can look at <see cref="T:CorrugatedIron.Util.RiakConstants.QuorumOptions"/></remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakDeleteOptions.W">
+            <summary>
+            The number of replicas that must respond before a write is considered a success.
+            </summary>
+            <value>The W value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.</value>
+            <remarks>Developers looking for an easy way to set this can look at <see cref="T:CorrugatedIron.Util.RiakConstants.QuorumOptions"/></remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakDeleteOptions.Pr">
+            <summary>
+            Primary Read Quorum - the number of replicas that need to be available when retrieving the object.
+            </summary>
+            <value>
+            The primary read quorum. Possible values include 'default', 'one', 'quorum', 'all', or any integer.
+            </value>
+            <remarks>Developers looking for an easy way to set this can look at <see cref="T:CorrugatedIron.Util.RiakConstants.QuorumOptions"/></remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakDeleteOptions.Pw">
+            <summary>
+            Primary Write Quorum - the number of replicas need to be available when the write is attempted.
+            </summary>
+            <value>
+            The primary write quorum. Possible values include 'default', 'one', 'quorum', 'all', or any integer.
+            </value>
+            <remarks>Developers looking for an easy way to set this can look at <see cref="T:CorrugatedIron.Util.RiakConstants.QuorumOptions"/></remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakDeleteOptions.Dw">
+            <summary>
+            Durable writes - the number of replicas that must commit to durable storage before returning a successful response.
+            </summary>
+            <value>
+            The durable write value. Possible values include 'default', 'one', 'quorum', 'all', or any integer.
+            </value>
+            <remarks>Developers looking for an easy way to set this can look at <see cref="T:CorrugatedIron.Util.RiakConstants.QuorumOptions"/></remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakGetOptions.R">
+            <summary>
+            The number of replicas that must return before a delete is considered a success.
+            </summary>
+            <value>
+            The R value. Possible values include any integer as well as magic numbers
+            to indicate 'quorum', 'one', 'all', or 'default'. 
+            </value>
+            <remarks>Developers looking for an easy way to set this can look at <see cref="T:CorrugatedIron.Util.RiakConstants.QuorumOptions"/></remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakGetOptions.Pr">
+            <summary>
+            Primary Read Quorum - the number of replicas that need to be available when retrieving the object.
+            </summary>
+            <value>
+            The primary read quorum. Possible values include any integer as well as magic numbers
+            to indicate 'quorum', 'one', 'all', or 'default'. 
+            </value>
+            <remarks>Developers looking for an easy way to set this can look at <see cref="T:CorrugatedIron.Util.RiakConstants.QuorumOptions"/></remarks>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakGetOptions.BasicQuorum">
+            <summary>
+            Basic Quorum semantics - whether to return early in some failure cases (eg. when r=1 and you get 2 errors and a success basic_quorum=true would return an error)
+            </summary>
+            <value>
+            Whether basic quorum semantics will be used.
+            </value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakGetOptions.NotFoundOk">
+            <summary>
+            Should not found responses from Riak be treated as an OK result for a find operation. 
+            </summary>
+            <value>
+            The notfound_ok value.
+            </value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakGetOptions.Head">
+            <summary>
+            Should Riak only return object metadata
+            </summary>
+            <value>
+            The head value.
+            </value>
+            <remarks>
+            This allows the user to retrieve the metadata for an otherwise large object value.
+            </remarks>            
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakGetOptions.DeletedVclock">
+            <summary>
+            Should tombstone vclocks be returned?
+            </summary>
+            <value>
+            deletedvclock. A boolean.
+            </value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakGetOptions.IfModified">
+            <summary>
+            The reference vclock is supplied results will only returned if the vclocks do not match. 
+            </summary>
+            <value>
+            The reference vclock.
+            </value>
+        </member>
+        <member name="P:CorrugatedIron.Models.RiakGetOptions.Timeout">
+            <summary>
+            Query timeout parameter. If a request to Riak exceeds the query timeout, Riak should stop processing the request.
+            </summary>
+        </member>
+    </members>
+</doc>
