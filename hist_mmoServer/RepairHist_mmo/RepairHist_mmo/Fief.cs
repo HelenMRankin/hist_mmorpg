@@ -522,7 +522,6 @@ namespace hist_mmorpg
         /// <param name="kp">Proposed keep expenditure</param>
         public ProtoMessage AdjustExpenditures(double tx, uint off, uint garr, uint infr, uint kp)
         {
-            Console.WriteLine("Tax: " + tx);
             ProtoMessage error = null;
             // keep track of whether any spends ahve changed
             bool spendChanged = false;

@@ -11,6 +11,24 @@
     <AssemblyName>hist_mmorpg</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>G:\Backup\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <AutorunEnabled>true</AutorunEnabled>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -18,9 +36,10 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -30,8 +49,24 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>133E04BA1AE64A61327B80C67B334F1BF9A2E390</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>RepairHist_mmo_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lidgren.Network">
+      <HintPath>..\..\..\DLLS\Windows\Lidgren.Network.dll</HintPath>
+    </Reference>
     <Reference Include="QuickGraph">
       <HintPath>..\..\..\DLLS\Windows\QuickGraph.dll</HintPath>
     </Reference>
@@ -45,7 +80,9 @@
       <HintPath>..\..\..\DLLS\Linux\RiakClient.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -56,11 +93,8 @@
       <HintPath>..\..\..\..\..\home\cs3\hr80\RiakTest\RiakTest\bin\Debug\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework" />
-    <Reference Include="Lidgren.Network">
-      <HintPath>..\..\..\DLLS\Windows\Lidgren.Network.dll</HintPath>
-    </Reference>
     <Reference Include="protobuf-net">
-      <HintPath>..\..\..\..\..\home\cs3\hr80\Riak-2.1.1\DLLs\documents-export-2015-08-13\protobuf-net.dll</HintPath>
+      <HintPath>..\..\..\DLLS\Windows\protobuf-net.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -91,19 +125,43 @@
     <Compile Include="Place.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProtoMessage.cs" />
+    <Compile Include="ProtoMessage2.cs" />
     <Compile Include="Province.cs" />
     <Compile Include="Rank.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Siege.cs" />
     <Compile Include="Terrain.cs" />
+    <Compile Include="TestClient.Battle.cs" />
+    <Compile Include="TestClient.cs" />
+    <Compile Include="TestSuite.cs" />
     <Compile Include="Trait.cs" />
     <Compile Include="Utility_Methods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="CSVs\gameObjects.csv" />
     <None Include="CSVs\map.csv" />
+    <None Include="RepairHist_mmo_TemporaryKey.pfx" />
   </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -46,15 +46,24 @@ namespace hist_mmorpg
             Globals_Game.game = this;
             // initialise game objects
             // This path handling should ensure that the correct path will be found in Linux, Windows or debug mode
-            String dir = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
+            /*String dir = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
             // if the program is being run in debug mode, this will obtain the correct directory
             if (dir.Contains("bin"))
             {
                 dir = Directory.GetParent(dir).FullName;
-            }
-            String path = Path.Combine(dir, "CSVs");
+            }*/
+
+            Trace.Listeners.Add(new ConsoleTraceListener(true));
+            Trace.TraceInformation("Test");
+            String dir = Directory.GetCurrentDirectory();
+            dir = dir.Remove(dir.IndexOf("RepairHist_mmo"));
+            String path = Path.Combine(dir,"RepairHist_mmo","CSVs");
+            Trace.WriteLine("Path: " + path);
+            Trace.Flush();
             String gameObjects = Path.Combine(path, "gameObjects.csv");
             String mapData = Path.Combine(path, "map.csv");
+            
+            Trace.WriteLine("Datapath: "+mapData);
 			this.InitGameObjects(gameID: "testBucket", objectDataFile: gameObjects, mapDataFile: mapData,
             start: 1194, king1: "Char_47", king2: "Char_40", herald1: "Char_1", sysAdmin: null);
            // initialiseTypes();
@@ -626,18 +635,18 @@ namespace hist_mmorpg
             Globals_Game.scheduledEvents.entries.Add(myEntry.jEntryID, myEntry); */
 
             // get character's correct days allowance
-            myChar1.days = myChar1.GetDaysAllowance();
-            myChar2.days = myChar2.GetDaysAllowance();
-            myNPC1.days = myNPC1.GetDaysAllowance();
-            myNPC2.days = myNPC2.GetDaysAllowance();
-            myNPC3.days = myNPC3.GetDaysAllowance();
-            myChar1Wife.days = myChar1Wife.GetDaysAllowance();
-            myChar2Son.days = myChar2Son.GetDaysAllowance();
-            myChar2SonWife.days = myChar2SonWife.GetDaysAllowance();
-            myChar1Son.days = myChar1Son.GetDaysAllowance();
-            myChar1Daughter.days = myChar1Daughter.GetDaysAllowance();
-            myChar2Son2.days = myChar2Son2.GetDaysAllowance();
-            myChar2Daughter.days = myChar2Daughter.GetDaysAllowance();
+            myChar1.days = myChar1.days;
+            myChar2.days = myChar2.days;
+            myNPC1.days = myNPC1.days;
+            myNPC2.days = myNPC2.days;
+            myNPC3.days = myNPC3.days;
+            myChar1Wife.days = myChar1Wife.days;
+            myChar2Son.days = myChar2Son.days;
+            myChar2SonWife.days = myChar2SonWife.days;
+            myChar1Son.days = myChar1Son.days;
+            myChar1Daughter.days = myChar1Daughter.days;
+            myChar2Son2.days = myChar2Son2.days;
+            myChar2Daughter.days = myChar2Daughter.days;
 
             // set kingdom owners
             Globals_Game.kingOne = myChar1;
@@ -1249,7 +1258,7 @@ namespace hist_mmorpg
                         }
                         else
                         {
-                            Console.Error.WriteLine("error: client unidentified for player: " + pc.playerID);
+                            Globals_Server.logError("error: client unidentified for player: " + pc.playerID);
                             ProtoMessage error = new ProtoMessage();
                             error.ResponseType=DisplayMessages.Error;
                             return error;
@@ -1271,6 +1280,7 @@ namespace hist_mmorpg
                             playerList.Add(player);
                         }
                         players.fields = playerList.ToArray();
+                        players.ResponseType = DisplayMessages.Success;
                         return players;
                     }
                     break;
@@ -1612,7 +1622,7 @@ namespace hist_mmorpg
                         else
                         {
                             // Check permissions
-                            if (PermissionManager.isAuthorized(PermissionManager.ownsCharNotCapturedOrAdmin, pc, charToMove))
+                            if (PermissionManager.isAuthorized(PermissionManager.ownsCharNotCapturedOrAdmin, pc, charToMove)&&charToMove.isAlive)
                             {
                                 // Identify fief
                                 Fief fief = null;
@@ -2184,10 +2194,20 @@ namespace hist_mmorpg
                                 error.Message = "Expected array:5";
                                 return error;
                             }
+                            // Perform conversion
+                            try
+                            {
+                                ProtoMessage adjust = fief.AdjustExpenditures(adjustedValues[0], Convert.ToUInt32(adjustedValues[1]), Convert.ToUInt32(adjustedValues[2]), Convert.ToUInt32(adjustedValues[3]), Convert.ToUInt32(adjustedValues[4]));
+                                return adjust;
+                            }
+                            catch (System.OverflowException e)
+                            {
+                                ProtoMessage error = new ProtoMessage();
+                                error.ResponseType = DisplayMessages.ErrorGenericMessageInvalid;
+                                error.Message = "Invalid values";
+                                return error;
 
-                            ProtoMessage adjust = fief.AdjustExpenditures(adjustedValues[0], Convert.ToUInt32(adjustedValues[1]), Convert.ToUInt32(adjustedValues[2]), Convert.ToUInt32(adjustedValues[3]), Convert.ToUInt32(adjustedValues[4]));
-                            return adjust;
-                   
+                            }
                         }
 
                         // Return fief after adjusting expenditures
@@ -3334,6 +3354,14 @@ namespace hist_mmorpg
                             error.ResponseType = DisplayMessages.ErrorSpyOwn;
                             error.MessageFields = new string[] { "army" };
                             return error;
+                        
+                        }
+                        if (spy.days < 10)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                            return error;
+
                         }
                         ProtoMessage result = null;
                         if (spy.SpyOn(army, out result))
@@ -3397,6 +3425,13 @@ namespace hist_mmorpg
                             error.MessageFields = new string[] { "personnel" };
                             return error;
                         }
+                        if (spy.days < 10)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                            return error;
+
+                        }
                         ProtoMessage result = null;
                         spy.SpyOn(target, out result);
                         if (result == null)
@@ -3459,6 +3494,13 @@ namespace hist_mmorpg
                             error.MessageFields = new string[] { "fief" };
                             return error;
                         }
+                        if (spy.days < 10)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                            return error;
+
+                        }
                         ProtoMessage result = null;
                         if (spy.SpyOn(fief, out result))
                         {
@@ -3496,6 +3538,13 @@ namespace hist_mmorpg
                             ProtoMessage error = new ProtoMessage();
                             error.ResponseType = DisplayMessages.ErrorGenericUnauthorised; ;
                             return error;
+                        }
+                        if (kidnapper.days < 10)
+                        {
+                            ProtoMessage error = new ProtoMessage();
+                            error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                            return error;
+
                         }
                         ProtoMessage result;
                         kidnapper.Kidnap(target, out result);

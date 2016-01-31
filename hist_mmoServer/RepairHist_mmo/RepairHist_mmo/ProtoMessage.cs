@@ -125,10 +125,20 @@ namespace hist_mmorpg
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoLogIn : ProtoMessage
     {
+        // The session salt, used to salt the password hash
         public byte[] sessionSalt {get;set;}
+        /// <summary>
+        /// The user's salt, used to salt the password hash
+        /// </summary>
         public byte[] userSalt { get; set; }
-        public byte[] publicKey { get; set; }
-
+        /// <summary>
+        /// Key used in symmetric encryption. This key should be created on the client side and encrypted with the server's public key, then decrypted on the server side with the public key
+        /// </summary>
+        public byte[] Key { get; set; }
+        /// <summary>
+        /// Holds the X509 certificate as a byte array for optionally verifying the peer
+        /// </summary>
+        public byte[] certificate { get; set; }
         public ProtoLogIn()
             : base()
         {
@@ -722,7 +732,11 @@ namespace hist_mmorpg
                 myNPCs[i] = new ProtoCharacterOverview(c);
                 i++;
             }
-            this.myHeir = new ProtoCharacterOverview(pc.GetHeir());
+            // if has an Heir, include details
+            if (pc.GetHeir() != null)
+            {
+                this.myHeir = new ProtoCharacterOverview(pc.GetHeir());
+            }
             i = 0;
             this.ownedFiefs = new string[pc.ownedFiefs.Count];
             foreach (Fief f in pc.ownedFiefs)

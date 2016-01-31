@@ -1508,6 +1508,24 @@ namespace hist_mmorpg
                 
                 JournalEntry deathEntry = new JournalEntry(deathEntryID, year, season, deathPersonae, type, death);
                 success = Globals_Game.AddPastEvent(deathEntry);
+
+                // If currently controlled character dies, switch to player character
+                if (this.GetPlayerCharacter() != null)
+                {
+
+                    if (!String.IsNullOrWhiteSpace(this.GetPlayerCharacter().playerID))
+                    {
+                        Client c;
+                        Globals_Server.clients.TryGetValue(this.GetPlayerCharacter().playerID, out c);
+                        if (c != null)
+                        {
+                            if (c.activeChar == this)
+                            {
+                                c.activeChar = this.GetPlayerCharacter();
+                            }
+                        }
+                    }
+                }
             }
 
 
@@ -1770,6 +1788,10 @@ namespace hist_mmorpg
         /// <param name="deceased">Deceased PlayerCharacter</param>
         public void ProcessInheritance(PlayerCharacter deceased, NonPlayerCharacter inheritor = null)
         {
+            if (inheritor != null)
+            {
+                Globals_Server.logEvent(deceased.charID + " dies; " + inheritor.charID + " inherits");
+            }
             // ============== 1. CREATE NEW PC from NPC (inheritor)
 			// remove inheritor from deceased's myNPCs
 			if (deceased.myNPCs.Contains(inheritor))
@@ -1887,7 +1909,7 @@ namespace hist_mmorpg
                     promotedNPC.playerID = user;
                     Globals_Server.clients[user].myPlayerCharacter = promotedNPC;
                     //TODO notify user if logged in and write to database
-                    Globals_Game.UpdatePlayer(user, DisplayMessages.YouDied, new string[] { inheritor.GetFunction(deceased) + " " + promotedNPC.firstName + promotedNPC.familyName });
+                    Globals_Server.logEvent("Debug: role is  : "+inheritor.GetFunction(deceased));
                     Client player;
                     Globals_Server.clients.TryGetValue(user, out player);
                     if (player != null)

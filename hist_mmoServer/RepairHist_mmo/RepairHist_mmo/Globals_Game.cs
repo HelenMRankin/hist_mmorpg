@@ -1331,6 +1331,12 @@ namespace hist_mmorpg
                 }
             }
         }
+
+
+        public static bool IsObserver(Client c)
+        {
+            return (registeredObservers.Contains(c));
+        }
     }
 
     /// <summary>

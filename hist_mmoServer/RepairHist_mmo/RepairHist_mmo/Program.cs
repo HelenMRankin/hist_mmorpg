@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define TESTSUITE
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,8 +7,13 @@ using System.Diagnostics;
 using RiakClient;
 using System.Threading;
 using RiakClient.Models;
+using System.Configuration;
+using System.IO;
+using System.Windows.Forms;
+
 namespace hist_mmorpg
 {
+
     static class Program
     {
         /// <summary>
@@ -15,57 +21,99 @@ namespace hist_mmorpg
         /// </summary>
         static void Main()
         {
-            using (Globals_Server.LogFile = new System.IO.StreamWriter("LogFile.txt"))
+           
+            try
             {
-				//Globals_Server.rCluster = RiakCluster.FromConfig("riakConfig","app.config");
-				//Globals_Server.rClient = Globals_Server.rCluster.CreateClient();
-                Globals_Server.LogFile.AutoFlush = true;
-                Globals_Server.logEvent("Server start");
-                Game game = new Game();
-				//DatabaseWrite.DatabaseWriteAll ("testBucket");
-                SetUpForDemo();
-				/*if (Globals_Server.rClient.Ping ().IsSuccess) {
-					Console.WriteLine ("Database connection successful");
-					string gameID = "testBucket";
-					foreach (string trait in Globals_Game.traitKeys) {
-						Console.WriteLine (trait);
-					}
-
-					// Test can read from database
-					var newClient = Globals_Server.rCluster.CreateClient();
-					RiakObject newObj = new RiakObject (gameID, "superawesome3", Globals_Game.traitKeys.ToArray ());
-					newClient.Put (newObj);
-					Thread.Sleep (5000);
-					var testRead =newClient.Get (gameID, "superawesome3");
-					if (!testRead.IsSuccess) {
-						Console.WriteLine ("FAIL :(" + testRead.ErrorMessage);
-					} else {
-						Console.WriteLine ("Got traitkeys:");
-					}
-					//DatabaseRead.DatabaseReadAll (gameID);
-				} else {
-					Console.WriteLine ("Could not connect to database :( ");
-				} */
-                
-                //testCaptives();
-                Server server = new Server();
-
-                //testArmy();
-                //testSpying();
-
-                while (true)
+                using (Globals_Server.LogFile = new System.IO.StreamWriter("LogFile.txt"))
                 {
-                    if (Console.ReadLine().Equals("exit"))
-                    {
-                        Globals_Server.logEvent("Server exits");
-                        server.isListening = false;
-                        Globals_Server.server.Shutdown("Server exits");
-                        break;
-                    }
                     
+                    //Globals_Server.rCluster = RiakCluster.FromConfig("riakConfig","app.config");
+                    //Globals_Server.rClient = Globals_Server.rCluster.CreateClient();
+                    Globals_Server.LogFile.AutoFlush = true;
+                    Globals_Server.logEvent("Server start");
+                    
+                    Game game = new Game();
+                    SetUpForDemo();
+                    /*
+                    //DatabaseWrite.DatabaseWriteAll ("testBucket");
+                    
+                    /*if (Globals_Server.rClient.Ping ().IsSuccess) {
+                        Console.WriteLine ("Database connection successful");
+                        string gameID = "testBucket";
+                        foreach (string trait in Globals_Game.traitKeys) {
+                            Console.WriteLine (trait);
+                        }
+
+                        // Test can read from database
+                        var newClient = Globals_Server.rCluster.CreateClient();
+                        RiakObject newObj = new RiakObject (gameID, "superawesome3", Globals_Game.traitKeys.ToArray ());
+                        newClient.Put (newObj);
+                        Thread.Sleep (5000);
+                        var testRead =newClient.Get (gameID, "superawesome3");
+                        if (!testRead.IsSuccess) {
+                            Console.WriteLine ("FAIL :(" + testRead.ErrorMessage);
+                        } else {
+                            Console.WriteLine ("Got traitkeys:");
+                        }
+                        //DatabaseRead.DatabaseReadAll (gameID);
+                    } else {
+                        Console.WriteLine ("Could not connect to database :( ");
+                    } */
+
+                    //testCaptives();
+
+                    
+                    
+                            Server server = new Server();
+                    try
+                    {
+                        //TestSuite testSuite = new TestSuite();
+                        TestClient client = new TestClient();
+                        client.LogIn("helen", "potato");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    //client.LogIn("helen", "potato");
+                            String s = Console.ReadLine();
+                            if (s != null && s.Equals("exit"))
+                            {
+                                Globals_Server.logEvent("Server exits");
+                                server.isListening = false;
+                                Globals_Server.server.Shutdown("Server exits");
+                            }
+
+                    //testArmy();
+                    //testSpying();
+                    /*
+                            while (true)
+                            {
+                                
+                                if (s != null && s.Equals("exit"))
+                                {
+                                    Globals_Server.logEvent("Server exits");
+                                    server.isListening = false;
+                                    Globals_Server.server.Shutdown("Server exits");
+                                    break;
+                                }
+
+                            }
+                     
+                            * */
+                    Globals_Server.LogFile.Close();
+
                 }
-                
+             
             }
+            catch (Exception e)
+            {
+                Globals_Server.LogFile.Close();
+                Console.WriteLine("Encountered an error:" +e.StackTrace);
+                Console.ReadLine();
+            }
+
+            
         }
 
         public static void SetUpForDemo()

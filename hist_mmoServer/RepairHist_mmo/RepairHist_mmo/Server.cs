@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,12 @@ using Lidgren.Network;
 using ProtoBuf;
 using System.Threading;
 using System.Diagnostics;
+using System.Net.Security;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Configuration;
+using System.Windows.Forms;
+
 namespace hist_mmorpg
 {
     /// <summary>
@@ -21,7 +28,6 @@ namespace hist_mmorpg
     /// </summary>
     public class Server
     {
-        private Dictionary<string, byte[]> sessionSalts = new Dictionary<string, byte[]>();
         private static Dictionary<NetConnection, Client> clientConnections = new Dictionary<NetConnection, Client>();
         static NetServer server;
         public bool isListening = true;
@@ -33,7 +39,8 @@ namespace hist_mmorpg
         // Used in the NetPeerConfiguration to identify application
         private readonly string app_identifier = "test";
         /*******End of settings************/
-
+        private X509Certificate2 ServerCert;
+        private RSACryptoServiceProvider rsa;
         void initialise()
         {
             logInManager.StoreNewUser("helen", "potato");
@@ -55,6 +62,43 @@ namespace hist_mmorpg
             Globals_Server.clients.Add("helen", client);
             Client client2 = new Client("test", "Char_126");
             Globals_Server.clients.Add("test", client2);
+            String dir = Directory.GetCurrentDirectory();
+            dir = dir.Remove(dir.IndexOf("RepairHist_mmo"));
+            String path = Path.Combine(dir, "RepairHist_mmo", "Certificates");
+            try
+            {
+                Console.WriteLine(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile);
+                path = Path.Combine(path, "ServerCert.pfx");
+                Console.WriteLine("Certificate path: "+path);
+                
+                ServerCert =
+                    new X509Certificate2(path,"zip1020");
+                Console.WriteLine("Verify? "+ServerCert.Verify());
+	            X509Chain chain = new X509Chain();
+                chain.ChainPolicy.RevocationFlag=X509RevocationFlag.EndCertificateOnly;
+                chain.ChainPolicy.RevocationMode=X509RevocationMode.NoCheck;
+                Console.WriteLine("Chain build? "+ chain.Build(ServerCert));
+                foreach (X509ChainStatus stat in chain.ChainStatus) 
+                {
+                    Console.WriteLine("Status: "+stat.Status+" info: "+stat.StatusInformation);
+                }
+                // Set up asymmetric decryption algorithm
+                Console.WriteLine("Private key?: " + ServerCert.HasPrivateKey);
+                
+                rsa = (RSACryptoServiceProvider)ServerCert.PrivateKey;
+                Console.WriteLine("public key: ");
+                foreach (var bite in rsa.ExportParameters(false).Exponent) 
+                {
+                    Console.Write(bite.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Type: "+ e.GetType().FullName + " message: " + e.Message);
+                Application.Exit();
+            }
+            // TEST
+            
             Globals_Server.logEvent("Total approximate memory: " + GC.GetTotalMemory(true));
             byte[] test = new byte[] { 1, 2, 3, 4 };
             byte[] result = logInManager.ComputeHash(test, test);
@@ -65,6 +109,7 @@ namespace hist_mmorpg
                 hashstring += b.ToString();
             }
             Console.WriteLine(hashstring);
+            
         }
 
 
@@ -84,8 +129,21 @@ namespace hist_mmorpg
                             break;
                         case NetIncomingMessageType.VerboseDebugMessage:
                         case NetIncomingMessageType.Data:
+                        {
                             Console.WriteLine("recieved data message");
-
+                                if (!clientConnections.ContainsKey(im.SenderConnection))
+                                {
+                                    //error
+                                    im.SenderConnection.Disconnect("Not recognised");
+                                    return;
+                                }
+                                Client c = clientConnections[im.SenderConnection];
+                                if(c.alg!= null)
+                                {
+                                    Console.WriteLine("SERVER: decrypting client message");
+                                    im.Decrypt(c.alg);
+                                }
+                                
                             MemoryStream ms = new MemoryStream(im.Data);
                             ProtoMessage m = null;
                             try
@@ -105,67 +163,90 @@ namespace hist_mmorpg
                                 }
                                 else
                                 {
-                                    error +=", unrecognised client (possible ping)";
+                                    error += ", unrecognised client (possible ping)";
                                 }
                                 error += ". Data: " + im.ReadString();
                                 Globals_Server.logError(error);
                                 break;
                             }
-                            
+
                             if (m.ActionType == Actions.LogIn)
                             {
+#if TESTSUITE
+                                Stopwatch timer = new Stopwatch();
+                                timer.Start();
+#endif         
                                 Console.WriteLine("Got log in");
                                 ProtoLogIn login = m as ProtoLogIn;
-                                if(login==null) {
+                                if (login == null)
+                                {
                                     // error
                                     im.SenderConnection.Disconnect("Not login");
                                     return;
                                 }
-                                byte[] sessionSalt;
-                                if (!clientConnections.ContainsKey(im.SenderConnection))
+                                if (logInManager.VerifyUser(c.user, login.userSalt))
                                 {
-                                    //error
-                                    im.SenderConnection.Disconnect("Not recognised");
-                                    return;
-                                }
-                                Client c = clientConnections[im.SenderConnection];
-                                if (!sessionSalts.TryGetValue(c.user, out sessionSalt))
-                                {
-                                    //error;
-                                    im.SenderConnection.Disconnect("No salt");
-                                    return;
-                                }
-                                if (logInManager.VerifyUser(c.user, login.userSalt, sessionSalt))
-                                {
+
                                     Globals_Server.logEvent(c.user + " logs in from " + im.SenderEndPoint.ToString());
-                                    ProtoClient clientDetails = new ProtoClient(c);
-                                    clientDetails.ActionType = Actions.LogIn;
-                                    clientDetails.ResponseType = DisplayMessages.LogInSuccess;
-                                    SendViaProto(clientDetails, im.SenderConnection);
-                                    Globals_Game.RegisterObserver(c);
+                                        // Decrypt key
+
+
+                                    try
+                                        {
+                                            Console.WriteLine("SERVER: decrypting client key");
+                                            byte[] key = rsa.Decrypt(login.Key, false);
+                                            Console.WriteLine("SERVER: Key for client1: ");
+                                            foreach (var bite in key)
+                                            {
+                                                Console.Write(bite.ToString());
+                                            }
+                                            Console.WriteLine("\n");
+                                            c.alg = new NetAESEncryption(server, key, 0, key.Length);
+                                            ProtoClient clientDetails = new ProtoClient(c);
+                                            clientDetails.ActionType = Actions.LogIn;
+                                            clientDetails.ResponseType = DisplayMessages.LogInSuccess;
+                                            SendViaProto(clientDetails, im.SenderConnection, c.alg);
+                                            Globals_Game.RegisterObserver(c);
+                                        }
+                                        catch(Exception e)
+                                        {
+                                            Console.WriteLine("Failure during decryption: " + e.GetType() + " " + e.Message + ";" + e.StackTrace);
+                                            Application.Exit();
+                                        }
+                                    
                                 }
                                 else
                                 {
+                                    Console.WriteLine("SERVER: Verification Failure");
                                     ProtoMessage reply = new ProtoMessage();
                                     reply.ActionType = Actions.LogIn;
                                     reply.ResponseType = DisplayMessages.LogInFail;
                                     im.SenderConnection.Disconnect("Authentication Fail");
-                                    sessionSalts.Remove(c.user);
                                 }
 
-                                
-                               // Test();
+#if TESTSUITE
+                                timer.Stop();
+                                long timeLogin = timer.ElapsedMilliseconds;
+                                TestSuite.LogData("LogIn time",timeLogin.ToString());
+#endif
                             }
                             // temp for testing, should validate connection first
                             else if (clientConnections.ContainsKey(im.SenderConnection))
                             {
-                                readReply(m, im.SenderConnection);
-                                Client c = clientConnections[im.SenderConnection];
-                                ProtoClient clientDetails = new ProtoClient(c);
-                                clientDetails.ActionType = Actions.Update;
-                                SendViaProto(clientDetails, im.SenderConnection);
+                                if (Globals_Game.IsObserver(c))
+                                {
+                                    Console.WriteLine("SERVER: TEST reached");
+                                    readReply(m, im.SenderConnection);
+                                    ProtoClient clientDetails = new ProtoClient(c);
+                                    clientDetails.ActionType = Actions.Update;
+                                    SendViaProto(clientDetails, im.SenderConnection,c.alg);
+                                }
+                                else
+                                {
+                                    im.SenderConnection.Disconnect("Not logged in- Disconnecting");
+                                }
                             }
-                            
+                        }
                             break;
                         case NetIncomingMessageType.StatusChanged:
                              NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
@@ -179,18 +260,41 @@ namespace hist_mmorpg
                             {
                                 if (clientConnections.ContainsKey(im.SenderConnection))
                                 {
-                                    // TODO process log out
-                                    Client client = clientConnections[im.SenderConnection];
-                                    Globals_Server.logEvent("Client " + client.user + "disconencts: "+reason);
-                                    Globals_Game.RemoveObserver(client);
-                                    client.conn = null;
-                                    clientConnections.Remove(im.SenderConnection);
+                                    Disconnect(im.SenderConnection);
                                 }
                             }
                             break;
                         case NetIncomingMessageType.ConnectionApproval:
                             {
-                                acceptDenyConnection(im);
+                                string senderID = im.ReadString();
+                                Client client;
+                                Globals_Server.clients.TryGetValue(senderID, out client);
+                                if (client != null)
+                                {
+                                    ProtoLogIn logIn;
+                                    if (!logInManager.AcceptConnection(client, out logIn))
+                                    {
+                                        im.SenderConnection.Deny();
+                                    }
+                                    else
+                                    {
+                                        NetOutgoingMessage msg = server.CreateMessage();
+                                        MemoryStream ms = new MemoryStream();
+                                        // Include X509 certificate as bytes for client to validate
+                                        logIn.certificate = ServerCert.GetRawCertData();
+                                        Serializer.SerializeWithLengthPrefix<ProtoLogIn>(ms, logIn, PrefixStyle.Fixed32);
+                                        msg.Write(ms.GetBuffer());
+                                        clientConnections.Add(im.SenderConnection, client);
+                                        client.conn = im.SenderConnection;
+                                        im.SenderConnection.Approve(msg);
+                                        server.FlushSendQueue();
+                                    }
+
+                                }
+                                else
+                                {
+                                    im.SenderConnection.Deny("unrecognised");
+                                }
                             }
 
                             break;
@@ -203,73 +307,25 @@ namespace hist_mmorpg
                 }
             }
         }
+        
         /// <summary>
-        /// Sends a ProtoMessage
+        /// Sends a message by serializing with ProtoBufs
         /// </summary>
-        public static void SendViaProto(ProtoMessage m,NetConnection conn)
+        /// <param name="m">Message to be sent</param>
+        /// <param name="conn">Connection to send across</param>
+        /// <param name="key">Optional encryption key</param>
+        public static void SendViaProto(ProtoMessage m,NetConnection conn, NetEncryption alg = null)
         {
             NetOutgoingMessage msg = server.CreateMessage();
             MemoryStream ms = new MemoryStream();
             Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, m, PrefixStyle.Fixed32);
             msg.Write(ms.GetBuffer());
+            if(alg!=null)
+            {
+                msg.Encrypt(alg);
+            }
             server.SendMessage(msg, conn, NetDeliveryMethod.ReliableOrdered);
             server.FlushSendQueue();
-        }
-
-        public void acceptDenyConnection(NetIncomingMessage message)
-        {
-            Console.WriteLine("In accept-deny");
-            string senderID = message.ReadString();
-            Client client;
-            Globals_Server.clients.TryGetValue(senderID, out client);
-            if (client != null)
-            {
-                byte[] sessionSalt = logInManager.GetRandomSalt(32);
-                byte[] passSalt = logInManager.GetUserSalt(senderID);
-                if (passSalt == null)
-                {
-                    Console.WriteLine("No salt");
-                    message.SenderConnection.Deny(); 
-                    return;
-                } 
-                ProtoLogIn login = new ProtoLogIn();
-                Console.WriteLine("Session salt: ");
-                foreach (byte b in sessionSalt)
-                {
-                    Console.Write(b.ToString());
-                }
-                login.sessionSalt = sessionSalt;
-                if (!sessionSalts.ContainsKey(client.user))
-                {
-                    sessionSalts.Add(senderID, sessionSalt);
-                }
-                else
-                {
-                    sessionSalts[senderID] = sessionSalt;
-                }
-                login.userSalt = passSalt;
-                Console.WriteLine("\nPass salt: ");
-                foreach (byte b in passSalt)
-                {
-                    Console.Write(b.ToString());
-                }
-                login.ActionType = Actions.LogIn;
-                NetOutgoingMessage msg = server.CreateMessage();
-                MemoryStream ms = new MemoryStream();
-                Serializer.SerializeWithLengthPrefix<ProtoLogIn>(ms, login, PrefixStyle.Fixed32);
-                msg.Write(ms.GetBuffer());
-                clientConnections.Add(message.SenderConnection, client);
-                client.conn = message.SenderConnection;
-                message.SenderConnection.Approve(msg);
-                server.FlushSendQueue();
-                //SendViaProto(login, message.SenderConnection);
-                Console.WriteLine("accepted");
-            }
-            else
-            {
-                message.SenderConnection.Deny("unrecognised");
-                Console.Write("denied");
-            }
         }
 
         public void readReply(ProtoMessage m, NetConnection connection)
@@ -282,25 +338,31 @@ namespace hist_mmorpg
                 //TODO error
             }
             pc = client.myPlayerCharacter;
-            if (pc == null)
+            if (pc == null || !pc.isAlive)
             {
-                //TODO error
-            }
-            ProtoMessage reply = Game.ActionController(m, pc);
-            // Set action type to ensure client knows which action invoked response
-            if (reply == null)
-            {
-                ProtoMessage invalid = new ProtoMessage();
-                invalid.ActionType = Actions.Update;
-                invalid.ResponseType = DisplayMessages.ErrorGenericMessageInvalid;
-                reply = invalid;
+                NetOutgoingMessage msg = server.CreateMessage("You have no valid PlayerCharacter!");
+                server.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
+                server.FlushSendQueue();
             }
             else
             {
-                reply.ActionType = m.ActionType;
+                ProtoMessage reply = Game.ActionController(m, pc);
+                // Set action type to ensure client knows which action invoked response
+                if (reply == null)
+                {
+                    ProtoMessage invalid = new ProtoMessage();
+                    invalid.ActionType = Actions.Update;
+                    invalid.ResponseType = DisplayMessages.ErrorGenericMessageInvalid;
+                    reply = invalid;
+                }
+                else
+                {
+                    reply.ActionType = m.ActionType;
+                }
+                SendViaProto(reply, connection, client.alg);
+                Globals_Server.logEvent("From " + clientConnections[connection] + ": request = " + m.ActionType.ToString() + ", reply = " + reply.ResponseType.ToString());
             }
-            SendViaProto(reply, connection);
-            Globals_Server.logEvent("From " + clientConnections[connection] + ": request = " + m.ActionType.ToString() + ", reply = " + reply.ResponseType.ToString());
+            
         }
 
         public Server()
@@ -311,9 +373,24 @@ namespace hist_mmorpg
         }
 
         //TODO write all client details to database, remove client from connected list and close connection
-        void disconnect()
+        void Disconnect(NetConnection conn)
         {
+            if (clientConnections.ContainsKey(conn))
+            {
+                // TODO process log out
+                Client client = clientConnections[conn];
+                Globals_Server.logEvent("Client " + client.user + "disconnects");
+                Globals_Game.RemoveObserver(client);
+                client.conn = null;
+                clientConnections.Remove(conn);
+                conn.Disconnect("Disconnect");
+            }
+        }
 
+        public void Shutdown()
+        {
+            isListening = false;
+            server.Shutdown("Server Shutdown");
         }
         public void Test()
         {

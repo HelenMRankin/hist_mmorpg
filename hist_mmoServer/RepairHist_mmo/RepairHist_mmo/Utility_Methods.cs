@@ -536,7 +536,7 @@ namespace hist_mmorpg
         /// Checks to see if a string meets the specified conditions (all letters, all numbers)
         /// </summary>
         /// <returns>bool indicating whether the string fulfils the conditions</returns>
-        /// <param name="matchType">Type of pattern to match (letters, numbers)</param>
+        /// <param name="matchType">Type of pattern to match (letters, numbers, combined)</param>
         /// <param name="input">string to be converted</param>
         public static bool CheckStringValid(string matchType, string input)
         {
@@ -547,6 +547,8 @@ namespace hist_mmorpg
                 case "numbers":
                     int myNumber;
                     return int.TryParse(input, out myNumber);
+                case "combined":
+                    return Regex.IsMatch(input, @"^[a-zA-Z0-9]+$");
                 default:
                     return false;
             }

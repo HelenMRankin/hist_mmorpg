@@ -60,7 +60,10 @@ namespace hist_mmorpg
         /// Holds bool indicating whether or not to display popup debug messages
         /// </summary>
         public bool showDebugMessages = false;
-
+        /// <summary>
+        /// Holds the algorithm to be used during encryption and decryption. Alg is generated using the peer and a key obtained from the client 
+        /// </summary>
+        public NetAESEncryption alg = null;
         public Client(String user, String pcID)
         {
             // set username associated with client
@@ -78,6 +81,8 @@ namespace hist_mmorpg
 
             // set player's character to display
             activeChar = myPlayerCharacter;
+
+            Globals_Game.userChars.Add(user,myPlayerCharacter);
         }
         /// <summary>
         /// Updates the client
@@ -94,7 +99,7 @@ namespace hist_mmorpg
             {
                 Globals_Server.logEvent("Update " + this.user + ": " + type.ToString());
                 Console.WriteLine("Sending update " + type.ToString() + " to " + this.user);
-                Server.SendViaProto(m, conn);
+                Server.SendViaProto(m, conn,alg);
             }
         }
 
@@ -105,7 +110,7 @@ namespace hist_mmorpg
             {
                 Globals_Server.logEvent("Update " + this.user + ": " + message.ResponseType.ToString());
                 Console.WriteLine("Sending update " + message.ResponseType.ToString() + " to " + this.user);
-                Server.SendViaProto(message, conn);
+                Server.SendViaProto(message, conn, alg);
             }
         }
     }
