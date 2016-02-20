@@ -8,6 +8,16 @@ namespace hist_mmorpg
 {
     public static class Utility_Methods
     {
+        public static ProtoMessage CharacterUnidentified { get { return new ProtoMessage(DisplayMessages.ErrorGenericCharacterUnidentified); } private set { } }
+        public static ProtoMessage ArmyUnidentified { get { return new ProtoMessage(DisplayMessages.ErrorGenericArmyUnidentified); } private set { } }
+        public static ProtoMessage FiefUnidentified { get { return new ProtoMessage(DisplayMessages.ErrorGenericFiefUnidentified); } private set { } }
+        public static ProtoMessage Unauthorised { get { return new ProtoMessage(DisplayMessages.ErrorGenericUnauthorised); } private set { } }
+        public static ProtoMessage MessageInvalid { get { return new ProtoMessage(DisplayMessages.ErrorGenericMessageInvalid); } private set { } }
+        public static ProtoMessage Error { get { return new ProtoMessage(DisplayMessages.Error); } private set { } }
+        public static ProtoMessage PositiveInteger { get { return new ProtoMessage(DisplayMessages.ErrorGenericPositiveInteger); } private set { } }
+        public static ProtoMessage CharacterHeldCaptive { get { return new ProtoMessage(DisplayMessages.CharacterHeldCaptive); } private set { } }
+        public static ProtoMessage Timeout { get { return new ProtoMessage(DisplayMessages.Timeout); } private set { } }
+        
         /// <summary>
         /// Creates a JournalEntry for the attention of the game sysAdmin
         /// </summary>

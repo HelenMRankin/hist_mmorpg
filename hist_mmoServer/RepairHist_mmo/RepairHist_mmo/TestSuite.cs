@@ -84,7 +84,7 @@ namespace hist_mmorpg
             GetMemoryUsage(out vMem, out wMem);
             // Use NetPeer to send login to server
             try {
-                client.LogIn(user, pass);
+                client.LogInAndConnect(user, pass);
                 int timeout = 1000;
                 var reply = client.GetReply();
                 if (await Task.WhenAny(reply, Task.Delay(timeout)) == reply)

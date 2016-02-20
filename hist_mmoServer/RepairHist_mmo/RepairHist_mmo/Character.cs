@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
+
 namespace hist_mmorpg
 {
     /// <summary>
@@ -4054,18 +4056,15 @@ namespace hist_mmorpg
                 // get travel cost
                 travelCost = this.location.getTravelCost(this.goTo.Peek(), this.armyID);
                 // attempt to move character
-                Console.WriteLine("In multimove, moving character to " + this.goTo.Peek().name);
                 success = this.MoveCharacter(this.goTo.Peek(), travelCost,out error);
                 // if move successfull, remove fief from goTo queue
                 if (success)
                 {
-                    Console.WriteLine("Successful move");
                     this.goTo.Dequeue();
                 }
                 // if not successfull, exit loop
                 else
                 {
-                    Console.WriteLine("unsuccessful move");
                     break;
                 }
            }
@@ -4398,15 +4397,80 @@ namespace hist_mmorpg
            }
 
        }
-       
-       
-       /// <summary>
-       /// Spy on a fief to obtain information
-       /// </summary>
-       /// <param name="fief">Fief to spy on</param>
-       /// <param name="result"> Full details of spy result, including information if successful and spy status</param>
-       /// <returns>boolean indicating spy success</returns>
-       public bool SpyOn(Fief fief, out ProtoMessage result)
+        
+
+        public double GetSpySuccessChance(object target)
+        {
+            Type t = target.GetType();
+            if (t.IsSubclassOf(typeof(Character)))
+            {
+                Character character = target as Character;
+                if(character== null)
+                {
+                    return -1;
+                }
+                this.AdjustDays(10);
+                // Get own stealth rating and enemy perception rating
+                double stealth = this.CalcTraitEffect(Globals_Game.Stats.STEALTH);
+                double enemyPerception = character.CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
+
+                double baseCharacterChance = 40;
+                // Total chance of success
+                double success = ((stealth - enemyPerception) * 100) + baseCharacterChance;
+                return success;
+            }
+            else if (t == typeof(Fief))
+            {
+                Fief fief = target as Fief;
+                if(fief== null)
+                {
+                    return -1;
+                }
+                double baseFiefChance = 40;
+                // Calculate stealth bonus
+                double stealth = CalcTraitEffect(Globals_Game.Stats.STEALTH);
+                // Calculate bailiff's percepton
+                double bailiffPerception = 0;
+                if (fief.bailiff != null)
+                {
+                    bailiffPerception = fief.bailiff.CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
+                }
+                double totalModifier = ((stealth - bailiffPerception) * 100);
+                double success = baseFiefChance + totalModifier;
+                return success;
+
+            }
+            else if (t == typeof(Army))
+            {
+                Army army = target as Army;
+                if (army == null)
+                {
+                    return -1;
+                }
+                double stealth = this.CalcTraitEffect(Globals_Game.Stats.STEALTH);
+                double enemyPerception = 0;
+                if (!string.IsNullOrWhiteSpace(army.leader))
+                {
+                    enemyPerception = army.GetLeader().CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
+                }
+                double baseArmyChance = 30;
+                // Total chance of success
+                double success = ((stealth - enemyPerception) * 100) + baseArmyChance;
+                return success;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Spy on a fief to obtain information
+        /// </summary>
+        /// <param name="fief">Fief to spy on</param>
+        /// <param name="result"> Full details of spy result, including information if successful and spy status</param>
+        /// <returns>boolean indicating spy success</returns>
+        public bool SpyOn(Fief fief, out ProtoMessage result)
        {
            // Booleans indicating result
            bool isSuccessful=false;
@@ -4415,7 +4479,7 @@ namespace hist_mmorpg
 
            Console.WriteLine("Spying on fief: " + fief.id);
            this.AdjustDays(10);
-           result = null;
+           result = new ProtoMessage(DisplayMessages.None);
            // TOOD Move to config
            // Base chance of success in fief 
            double baseFiefChance = 40;
@@ -4472,7 +4536,7 @@ namespace hist_mmorpg
                Globals_Game.UpdatePlayer(fief.owner.playerID, DisplayMessages.EnemySpySuccess, new string[] { fief.id, owner.firstName + " "+ owner.familyName });
                ProtoFief fiefDetails = new ProtoFief(fief);
                fiefDetails.includeSpy(fief);
-                
+               result.ResponseType = DisplayMessages.Success;
                result = fiefDetails;
            }
            else if (isSuccessful)
@@ -4480,6 +4544,7 @@ namespace hist_mmorpg
                Globals_Game.UpdatePlayer(owner.playerID, DisplayMessages.SpySuccess, new string[] { this.firstName + " " + this.familyName, fief.id});
                ProtoFief fiefDetails = new ProtoFief(fief);
                fiefDetails.includeSpy(fief);
+               result.ResponseType = DisplayMessages.Success;
                result = fiefDetails;
            }
            else if (!isSuccessful && wasKilled)
@@ -4498,7 +4563,111 @@ namespace hist_mmorpg
            }
            return isSuccessful;
        }
+        public bool SpyCheck(Character character, out ProtoMessage result)
+        {
+            Contract.Requires(character != null);
+            // Cannot spy on captive
+            if (!string.IsNullOrWhiteSpace(character.captorID))
+            {
+                result = new ProtoMessage();
+                result.ResponseType = DisplayMessages.ErrorSpyCaptive;
+                return false;
+            }
+            // Cannot spy on own character
+            if (character.GetPlayerCharacter() == this.GetPlayerCharacter())
+            {
+                result = new ProtoMessage();
+                result.ResponseType = DisplayMessages.ErrorSpyOwn;
+                return false;
+            }
+            // Ensure spy is in same location
+            if (!this.location.Equals(character.location))
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotInSameFief;
+                result = error;
+                return false;
+            }
+            if (this.days < 10)
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                result = error;
+                return false;
+            }
+            // Cannot spy on dead character
+            if (!character.isAlive)
+            {
+                result = new ProtoMessage();
+                result.ResponseType = DisplayMessages.ErrorSpyDead;
+                return false;
+            }
+            result = null;
+            return true;
+        }
 
+        public bool SpyCheck(Fief fief, out ProtoMessage result)
+        {
+            Contract.Requires(fief != null);
+            result = null;
+            // Ensure spy is in same location
+            if (!this.location.Equals(fief))
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotInSameFief;
+                result = error;
+                return false;
+            }
+            // Ensure not trying to spy on own army
+            if (fief.owner == this.GetPlayerCharacter())
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorSpyOwn;
+                error.MessageFields = new string[] { "fief" };
+                result = error;
+                return false;
+            }
+            if (this.days < 10)
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                result = error;
+                return false;
+            }
+            return true;
+        }
+
+        public bool SpyCheck(Army army, out ProtoMessage result )
+        {
+            Contract.Requires(army != null);
+            result = null;
+            // Ensure spy is in same location
+            if (this.location.id != (army.location))
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotInSameFief;
+                result = error;
+                return false;
+            }
+            // Ensure not trying to spy on own army
+            if (army.GetOwner() == this.GetPlayerCharacter())
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorSpyOwn;
+                error.MessageFields = new string[] { "army" };
+                result = error;
+                return false;
+
+            }
+            if (this.days < 10)
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                result = error;
+                return false;
+            }
+            return true;
+        }
        /// <summary>
        /// Spy on a character to gain additional information
        /// </summary>
@@ -4507,27 +4676,10 @@ namespace hist_mmorpg
        /// <returns>Bool indicating spy success</returns>
        public bool SpyOn(Character character, out ProtoMessage result)
        {
-           // Cannot spy on captive
-           if (!string.IsNullOrWhiteSpace(character.captorID))
-           {
-               result = new ProtoMessage();
-               result.ResponseType = DisplayMessages.ErrorSpyCaptive;
-               return false;
-           }
-           // Cannot spy on own character
-           if (character.GetPlayerCharacter() == this.GetPlayerCharacter())
-           {
-               result = new ProtoMessage();
-               result.ResponseType = DisplayMessages.ErrorSpyOwn;
-               return false;
-           }
-           // Cannot spy on dead character
-           if (!character.isAlive)
-           {
-               result = new ProtoMessage();
-               result.ResponseType = DisplayMessages.ErrorSpyDead;
-               return false; 
-           }
+           if(!SpyCheck(character, out result))
+            {
+                return false;
+            }
            // Booleans indicating result
            bool isSuccessful = false;
            bool wasDetected = false;
@@ -4576,7 +4728,7 @@ namespace hist_mmorpg
                wasKilled = true;
                this.ProcessDeath("spy");
            }
-
+           result = new ProtoMessage(DisplayMessages.None);
            /***Send results**/
            PlayerCharacter owner = this.GetPlayerCharacter();
            PlayerCharacter enemyOwner = character.GetPlayerCharacter();
@@ -4592,12 +4744,14 @@ namespace hist_mmorpg
                    ProtoNPC charDetails = new ProtoNPC(character as NonPlayerCharacter);
                    charDetails.includeSpy(character);
                    result = charDetails;
+                   result.ResponseType = DisplayMessages.Success;
                }
                else
                {
                    ProtoPlayerCharacter charDetails = new ProtoPlayerCharacter(character as PlayerCharacter);
                    charDetails.includeSpy(character);
                    result = charDetails;
+                   result.ResponseType = DisplayMessages.Success;
                }
                
            }
@@ -4609,12 +4763,14 @@ namespace hist_mmorpg
                    ProtoNPC charDetails = new ProtoNPC(character as NonPlayerCharacter);
                    charDetails.includeSpy(character);
                    result = charDetails;
+                   result.ResponseType = DisplayMessages.Success;
                }
                else
                {
                    ProtoPlayerCharacter charDetails = new ProtoPlayerCharacter(character as PlayerCharacter);
                    charDetails.includeSpy(character);
                    result = charDetails;
+                   result.ResponseType = DisplayMessages.Success;
                }
            }
            else if (!isSuccessful && wasKilled)
@@ -4659,7 +4815,8 @@ namespace hist_mmorpg
            // Threshold under which this character will be killed //TODO add capture
            double killThreshold = 30;
 
-           result = null;
+           result = new ProtoMessage(DisplayMessages.None);
+
            this.AdjustDays(10);
            // Get own stealth rating and enemy perception rating (if the army has a leader)
            double stealth = this.CalcTraitEffect(Globals_Game.Stats.STEALTH);
@@ -4712,6 +4869,7 @@ namespace hist_mmorpg
                ProtoArmy armyInfo = new ProtoArmy(army,this);
                armyInfo.includeSpy(army);
                result = armyInfo;
+               result.ResponseType = DisplayMessages.Success;
            }
            else if (isSuccessful)
            {
@@ -4719,6 +4877,7 @@ namespace hist_mmorpg
                ProtoArmy armyInfo = new ProtoArmy(army, this);
                armyInfo.includeSpy(army);
                result = armyInfo;
+               result.ResponseType = DisplayMessages.Success;
            }
            else if (!isSuccessful && wasKilled)
            {
@@ -4745,6 +4904,14 @@ namespace hist_mmorpg
         /// <returns>Success</returns>
        public bool Kidnap(Character target, out ProtoMessage result)
        {
+           result= new ProtoMessage(DisplayMessages.None);
+           if (this.days < 10)
+           {
+               ProtoMessage error = new ProtoMessage();
+               error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+               return false;
+
+           }
            // Cannot kidnap dead person
            if (!target.isAlive) {
                // error
@@ -4785,7 +4952,7 @@ namespace hist_mmorpg
            double detectedThreshold = 70;
            double killThreshold = 30;
 
-           result = null;
+           result = new ProtoMessage(DisplayMessages.None);
            this.AdjustDays(10);
            // Get own stealth rating and enemy perception rating (if the army has a leader)
            double stealth = this.CalcTraitEffect(Globals_Game.Stats.STEALTH);
@@ -4827,6 +4994,7 @@ namespace hist_mmorpg
            if (success > successChance)
            {
                isSuccessful = true;
+               result.ResponseType = DisplayMessages.Success;
                // Add captive to home fief
                this.GetPlayerCharacter().AddCaptive(target, this.GetPlayerCharacter().GetHomeFief());
            }
@@ -5838,6 +6006,7 @@ namespace hist_mmorpg
         /// <param name="armyExists">bool indicating whether the army already exists</param>
         public ProtoMessage RecruitTroops(uint number, Army thisArmy, bool isConfirm)
         {
+            Console.WriteLine("SERVER: In Recruit Troops");
             bool armyExists = (thisArmy != null);
             // used to record outcome of various checks
             bool proceed = true;
@@ -5902,7 +6071,11 @@ namespace hist_mmorpg
                     recruitDetails.MessageFields = new string[] { number.ToString(), revisedRecruited.ToString() };
                     recruitDetails.amount = Convert.ToUInt32(revisedRecruited);
                     recruitDetails.cost = revisedRecruited * indivTroopCost;
-                    recruitDetails.armyID = thisArmy.armyID;
+                    if (thisArmy != null)
+                    {
+                        recruitDetails.armyID = thisArmy.armyID;
+                    }
+                    
                     return recruitDetails;
                 }
 
@@ -5929,7 +6102,10 @@ namespace hist_mmorpg
                     if (!isConfirm)
                     {
                         ProtoRecruit recruitmentDetails = new ProtoRecruit();
-                        recruitmentDetails.armyID = thisArmy.armyID;
+                        if (armyExists)
+                        {
+                           recruitmentDetails.armyID = thisArmy.armyID; 
+                        }
                         recruitmentDetails.ResponseType = DisplayMessages.CharacterRecruitOk;
                         recruitmentDetails.amount = Convert.ToUInt32(troopsRecruited);
                         recruitmentDetails.cost = troopCost;
@@ -5988,7 +6164,11 @@ namespace hist_mmorpg
 
             {
                 ProtoRecruit recruitDetails = new ProtoRecruit();
-                recruitDetails.armyID = thisArmy.armyID;
+                if (armyExists)
+                {
+                    recruitDetails.armyID = thisArmy.armyID;
+                }
+                
                 recruitDetails.ResponseType = DisplayMessages.Success;
                 recruitDetails.MessageFields = new string[] { troopsRecruited.ToString(), troopCost.ToString() };
                 return recruitDetails;

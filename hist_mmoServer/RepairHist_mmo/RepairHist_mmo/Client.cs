@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lidgren.Network;
+using System.ComponentModel;
+using System.Threading.Tasks;
+using System.Threading;
+
 namespace hist_mmorpg
 {
     /// <summary>
@@ -64,13 +68,22 @@ namespace hist_mmorpg
         /// Holds the algorithm to be used during encryption and decryption. Alg is generated using the peer and a key obtained from the client 
         /// </summary>
         public NetAESEncryption alg = null;
+
+        /// <summary>
+        /// TEMP- Client's message queue
+        /// </summary>
+        public List<ProtoMessage> MessageQueue
+        {
+            get; set;
+        }
+
+        public CancellationTokenSource cts { get; set; }
+        public EventWaitHandle eventWaiter { get; set; }
         public Client(String user, String pcID)
         {
             // set username associated with client
             this.user = user;
 
-            // register client as observer
-            Globals_Game.RegisterObserver(this);
 
             // get playercharacter from master list of player characers
             myPlayerCharacter = Globals_Game.pcMasterList[pcID];
@@ -81,7 +94,9 @@ namespace hist_mmorpg
 
             // set player's character to display
             activeChar = myPlayerCharacter;
-
+            MessageQueue = new List<ProtoMessage>();
+            eventWaiter = new EventWaitHandle(false, EventResetMode.AutoReset);
+            cts = new CancellationTokenSource();
             Globals_Game.userChars.Add(user,myPlayerCharacter);
         }
         /// <summary>
@@ -111,6 +126,120 @@ namespace hist_mmorpg
                 Globals_Server.logEvent("Update " + this.user + ": " + message.ResponseType.ToString());
                 Console.WriteLine("Sending update " + message.ResponseType.ToString() + " to " + this.user);
                 Server.SendViaProto(message, conn, alg);
+            }
+        }
+
+        /// <summary>
+        /// Gets the next message from the server by repeatedly polling the message queue
+        /// </summary>
+        /// <returns>Message from server</returns>
+        private ProtoMessage CheckForMessage(CancellationToken ct)
+        {
+            while (MessageQueue.Count == 0)
+            {
+                eventWaiter.WaitOne();
+                if (ct.IsCancellationRequested)
+                {
+                    return null;
+                }
+                // Allow other threads to execute
+                continue;
+            }
+            ProtoMessage m = MessageQueue[0];
+            MessageQueue.RemoveAt(0);
+            return m;
+        }
+
+        /// <summary>
+        /// Gets the next message recieved from the server
+        /// </summary>
+        /// <returns>Task containing the reply as a result</returns>
+        public async Task<ProtoMessage> GetMessage()
+        {
+            CancellationToken ct = cts.Token;
+            Task<ProtoMessage> t = (Task.Run(() => CheckForMessage(ct)));
+            await t;
+
+            return t.Result;
+        }
+
+
+        public void ActionControllerAsync()
+        {
+            Task<ProtoMessage> GetMessageTask = GetMessage();
+            if (!GetMessageTask.Wait(3000))
+            {
+                // Taken too long after accepting connection request to receive login
+                Server.Disconnect(conn, "Failed to login due to timeout");
+            }
+            Console.WriteLine("SERVER: Got message in async controller");
+            ProtoLogIn LogIn = GetMessageTask.Result as ProtoLogIn;
+            if (LogIn == null||LogIn.ActionType!=Actions.LogIn)
+            {
+                Console.WriteLine("SERVER: was expecting log in, disconnecting");
+                // Error- expecting LogIn. Disconnect and send message to client
+                Server.Disconnect(conn, "Invalid message sequence-expecting login");
+                return;
+
+            }
+            else
+            {
+                Console.WriteLine("SERVER: Processing log in");
+                // Process LogIn
+                if (!LogInManager.ProcessLogIn(LogIn, this))
+                {
+                    Console.WriteLine("SERVER: Log in fails");
+                    // Error
+                    Server.Disconnect(conn, "Log in failed");
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("SERVER: Log in succeeds");
+                }
+            }
+            // While client is connected
+            while (conn.Status == Lidgren.Network.NetConnectionStatus.Connected)
+            {
+                if (myPlayerCharacter == null || !myPlayerCharacter.isAlive)
+                {
+                    Console.WriteLine("SERVER: client has no valud playercharacter");
+                    ProtoMessage error = new ProtoMessage();
+                    error.ResponseType = DisplayMessages.Error;
+                    Server.SendViaProto(error, conn, alg);
+                    Server.Disconnect(conn,"You have no head of family to play as");
+                    return;
+                }
+                GetMessageTask = GetMessage();
+                // TimeOut after 15 mins of inactivity
+                if (!GetMessageTask.Wait(15 * 60 * 1000) || GetMessageTask.IsCanceled|| GetMessageTask.Result==null)
+                {
+                    Console.WriteLine("SERVER: client times out");
+                    // Session TimeOut or Cancellation
+                    // Disconnect
+                    Server.Disconnect(conn, "You have timed out due to inactivity");
+                    return;
+                }
+                else
+                {
+                    // Need to change
+                    ProtoMessage clientRequest = GetMessageTask.Result;
+                    Console.WriteLine("SERVER: Processing client request for action: " + clientRequest.ActionType);
+                    ProtoMessage reply = Game.ActionController(clientRequest, this);
+                    if (reply == null)
+                    {
+                        Console.WriteLine("SERVER: Invalid message sequence");
+                        ProtoMessage invalid = new ProtoMessage();
+                        invalid.ActionType = clientRequest.ActionType;
+                        invalid.ResponseType = DisplayMessages.ErrorGenericMessageInvalid;
+                        Server.SendViaProto(invalid, conn, alg);
+                    }
+                    else
+                    {
+                        reply.ActionType = clientRequest.ActionType;
+                        Server.SendViaProto(reply, conn, alg);
+                    }
+                }
             }
         }
     }
