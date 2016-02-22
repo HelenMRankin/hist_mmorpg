@@ -320,10 +320,13 @@ namespace hist_mmorpg
             MemoryStream ms = new MemoryStream();
             Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, m, PrefixStyle.Fixed32);
             msg.Write(ms.GetBuffer());
+            string s = "unencrypted";
             if(alg!=null)
             {
+                s = "encrypted";
                 msg.Encrypt(alg);
             }
+            Console.WriteLine("Server sends "+s+" message with action: " + m.ActionType + " and response: " + m.ResponseType);
             server.SendMessage(msg, conn, NetDeliveryMethod.ReliableOrdered);
             server.FlushSendQueue();
         }

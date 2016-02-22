@@ -13,7 +13,6 @@ namespace hist_mmorpg.Tests
         public void LogInTestValid()
         {
             TestClient s0 = new TestClient();
-            s0.net = (TestClient.Network) null;
             this.LogInTest(s0, Username, Pass, new byte[] { 1,2,3,4,5,6,7,8,9});
             //s0.LogOut();
         }
