@@ -110,16 +110,24 @@ namespace hist_mmorpg.Tests
         {
             TestClient s0 = new TestClient();
             this.LogInTest(s0, Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-            while (!s0.net.GetConnectionStatus().Equals("Connected"))
+            Thread.Sleep(1000);
+            /*while (!s0.net.GetConnectionStatus().Equals("Connected"))
             {
                 Thread.Sleep(0);
-            }
+            }*/
+            s0.ClearMessageQueues();
             s0.SendDummyLogIn("helen", "potato", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, });
+#if SESSIONTYPES
             Task<ProtoMessage> reply = s0.GetReply();
             reply.Wait();
             Assert.AreEqual(DisplayMessages.ErrorGenericMessageInvalid, reply.Result.ResponseType);
+#else
+            Thread.Sleep(1000);
+            Assert.IsTrue(s0.IsConnectedAndLoggedIn() == false);
+#endif
             s0.LogOut();
         }
+
 
         /// <summary>
         /// Tests that a log in will time out correctly

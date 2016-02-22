@@ -709,10 +709,13 @@ namespace hist_mmorpg
                     Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, message, ProtoBuf.PrefixStyle.Fixed32);
 
                     msg.Write(ms.GetBuffer());
+                    string s = "unencrypted";
                     if (alg != null && encrypt)
                     {
                         msg.Encrypt(alg);
+                        s = "encrypted";
                     }
+                    Console.WriteLine("Client sends " + s + " message of type " + message.GetType() + " with Action: " + message.ActionType + " and Response: " + message.ResponseType);
                     client.SendMessage(msg, NetDeliveryMethod.ReliableOrdered);
                     client.FlushSendQueue();
 
@@ -908,6 +911,7 @@ namespace hist_mmorpg
                                         if (m.ResponseType == DisplayMessages.LogInSuccess)
                                         {
                                             loggedIn = true;
+                                            Console.WriteLine("Client is logged in");
                                             messageQueue.Add(m);
                                         }
                                         else

@@ -1,4 +1,11 @@
-Server start
 Server started- host: localhost, port: 8000, appID: test, max connections: 2000
-Total approximate memory: 2924128
-helen logs in from 127.0.0.1:62671
+Total approximate memory: 2891160
+helen logs in from 127.0.0.1:65074
+Run-time error: Error in reading data: System.Security.Cryptography.CryptographicException :The input data is not a complete block.; Stack Trace:    at System.Security.Cryptography.CapiSymmetricAlgorithm.TransformFinalBlock(Byte[] inputBuffer, Int32 inputOffset, Int32 inputCount)
+   at System.Security.Cryptography.CryptoStream.Read(Byte[] buffer, Int32 offset, Int32 count)
+   at Lidgren.Network.NetCryptoProviderBase.Decrypt(NetIncomingMessage msg)
+   at hist_mmorpg.TestClient.Network.read() in E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\TestClient.cs:line 890
+From hist_mmorpg.Client: request = TravelTo, reply = Success
+From hist_mmorpg.Client: request = ExamineArmiesInFief, reply = Armies
+From hist_mmorpg.Client: request = Camp, reply = CharacterCamp
+Client helendisconnects

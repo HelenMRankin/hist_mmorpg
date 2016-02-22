@@ -64,7 +64,6 @@ namespace hist_mmorpg
             p.Dispose();
         }
 
-
         /// <summary>
         /// Test the LogIn functionality
         /// If successful user should be logged in and in Server's client connections
@@ -84,7 +83,7 @@ namespace hist_mmorpg
             GetMemoryUsage(out vMem, out wMem);
             // Use NetPeer to send login to server
             try {
-                client.LogIn(user, pass);
+                client.LogInAndConnect(user, pass);
                 int timeout = 1000;
                 var reply = client.GetReply();
                 if (await Task.WhenAny(reply, Task.Delay(timeout)) == reply)

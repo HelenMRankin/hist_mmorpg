@@ -31,7 +31,6 @@ namespace hist_mmorpg
         private static Dictionary<NetConnection, Client> clientConnections = new Dictionary<NetConnection, Client>();
         static NetServer server;
         public bool isListening = true;
-        public LogInManager logInManager = new LogInManager();
         /******Server Settings (can move to config file) ******/
         private readonly int port=8000;
         private readonly string host_name="localhost";
@@ -41,10 +40,24 @@ namespace hist_mmorpg
         /*******End of settings************/
         private X509Certificate2 ServerCert;
         private RSACryptoServiceProvider rsa;
+
+
+        /// <summary>
+        /// Check if client connections contains a connection- used in testing
+        /// </summary>
+        /// <param name="conn">Connection of client</param>
+        /// <returns></returns>
+        public static bool ContainsConnection(string user)
+        {
+            Client c;
+            Globals_Server.clients.TryGetValue(user, out c);
+            if (c == null) return false;
+            return clientConnections.ContainsValue(c);
+        }
         void initialise()
         {
-            logInManager.StoreNewUser("helen", "potato");
-            logInManager.StoreNewUser("test", "tomato");
+            LogInManager.StoreNewUser("helen", "potato");
+            LogInManager.StoreNewUser("test", "tomato");
             NetPeerConfiguration config = new NetPeerConfiguration(app_identifier);
             config.LocalAddress = NetUtility.Resolve(host_name);
             config.MaximumConnections = max_connections;
@@ -101,7 +114,7 @@ namespace hist_mmorpg
             
             Globals_Server.logEvent("Total approximate memory: " + GC.GetTotalMemory(true));
             byte[] test = new byte[] { 1, 2, 3, 4 };
-            byte[] result = logInManager.ComputeHash(test, test);
+            byte[] result = LogInManager.ComputeHash(test, test);
             Console.WriteLine("Testing hash");
             string hashstring = "";
             foreach (byte b in result)
@@ -184,7 +197,7 @@ namespace hist_mmorpg
                                     im.SenderConnection.Disconnect("Not login");
                                     return;
                                 }
-                                if (logInManager.VerifyUser(c.user, login.userSalt))
+                                if (LogInManager.VerifyUser(c.user, login.userSalt))
                                 {
 
                                     Globals_Server.logEvent(c.user + " logs in from " + im.SenderEndPoint.ToString());
@@ -272,7 +285,7 @@ namespace hist_mmorpg
                                 if (client != null)
                                 {
                                     ProtoLogIn logIn;
-                                    if (!logInManager.AcceptConnection(client, out logIn))
+                                    if (!LogInManager.AcceptConnection(client, out logIn))
                                     {
                                         im.SenderConnection.Deny();
                                     }
@@ -326,8 +339,9 @@ namespace hist_mmorpg
                 s = "encrypted";
                 msg.Encrypt(alg);
             }
-            Console.WriteLine("Server sends "+s+" message with action: " + m.ActionType + " and response: " + m.ResponseType);
-            server.SendMessage(msg, conn, NetDeliveryMethod.ReliableOrdered);
+            var result = server.SendMessage(msg, conn, NetDeliveryMethod.ReliableOrdered);
+
+            Console.WriteLine("Server sends " + s + " message of type: " + m.GetType() + " with action: " + m.ActionType + " and response: " + m.ResponseType+", result of send: "+result.ToString());
             server.FlushSendQueue();
         }
 
