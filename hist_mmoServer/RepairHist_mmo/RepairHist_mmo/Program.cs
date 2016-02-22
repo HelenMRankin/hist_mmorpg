@@ -69,7 +69,7 @@ namespace hist_mmorpg
                     {
                         //TestSuite testSuite = new TestSuite();
                         TestClient client = new TestClient();
-                        client.LogIn("helen", "potato");
+                        client.LogInAndConnect("helen", "potato");
                     }
                     catch (Exception e)
                     {

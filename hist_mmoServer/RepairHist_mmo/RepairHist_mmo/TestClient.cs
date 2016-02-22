@@ -19,10 +19,9 @@ namespace hist_mmorpg
     public partial class TestClient
     {
         public static List<ProtoMessage> messageQueue = new List<ProtoMessage>();
-        public static List<string> serverMessages = new List<string>(); 
+        public static List<string> serverMessages = new List<string>();
         public Network net;
         public string playerID;
-
         /*************************************
          * General Commands ***
          * **********************************/
@@ -31,18 +30,55 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="user">Username</param>
         /// <param name="pass">Password</param>
-        public void LogIn(string user, string pass, byte[] key = null)
+        public void LogInAndConnect(string user, string pass, byte[] key = null)
         {
             net = new Network(key);
             net.Connect(user, pass);
+            this.playerID = user;
         }
 
+        public void ConnectNoLogin(string user, string pass, byte[] key = null)
+        {
+            this.playerID = user;
+            net = new Network(key);
+            net.autoLogIn = false;
+            net.Connect(user, pass);
+        }
+
+        public void SendDummyLogIn(string user, string pass, byte[] key = null)
+        {
+            ProtoLogIn logIn = new ProtoLogIn();
+            logIn.ActionType = Actions.LogIn;
+            logIn.Key = key;
+            Network.Send(logIn);
+        }
+
+        public bool IsConnectedAndLoggedIn()
+        {
+            if (net.GetConnectionStatus().Equals("Connected") && net.loggedIn)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public void ClearMessageQueues()
+        {
+            messageQueue.Clear();
+            serverMessages.Clear();
+        }
         public void LogOut()
         {
             net.Disconnect();
-            
         }
 
+        public void SendMessage(Actions a, object o)
+        {
+            ProtoMessage msg = new ProtoMessage();
+            msg.ActionType = a;
+            msg.Message = o.ToString();
+            Network.Send(msg, true);
+        }
         /// <summary>
         /// Switch to commanding a different character
         /// </summary>
@@ -134,9 +170,18 @@ namespace hist_mmorpg
             viewChar.Message = charID;
             Network.Send(viewChar);
         }
+
+        protected virtual void Dispose(bool dispose)
+        {
+            net.Dispose();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
-
-
 
     /*************************************
          * Travel-related Commands ***
@@ -181,7 +226,7 @@ namespace hist_mmorpg
         /// <param name="type">One of "Grant"</param>
         /// <param name="role">One of "leader", "bailiff"</param>
         /// <param name="itemID">ID of item to which role will be granted (e.g. armyID)</param>
-        public void GetNPCList(string type, string role=null, string itemID=null)
+        public void GetNPCList(string type, string role = null, string itemID = null)
         {
             ProtoMessage getLeaders = new ProtoMessage();
             getLeaders.ActionType = Actions.GetNPCList;
@@ -219,7 +264,7 @@ namespace hist_mmorpg
     }
 
 
-    
+
 
     /*****************
     **Subterfuge actions***
@@ -305,8 +350,26 @@ namespace hist_mmorpg
         {
             ProtoMessage spy = new ProtoMessage();
             spy.ActionType = Actions.SpyFief;
+            spy.Message = fiefID;
+            spy.MessageFields = new string[] { charID };
+            Network.Send(spy);
+        }
+
+        public void SpyOnCharacter(string charID, string targetID)
+        {
+            ProtoMessage spy = new ProtoMessage();
+            spy.ActionType = Actions.SpyCharacter;
             spy.Message = charID;
-            spy.MessageFields = new string[] { fiefID };
+            spy.MessageFields = new string[] { targetID };
+            Network.Send(spy);
+        }
+
+        public void SpyOnArmy(string charID, string targetID)
+        {
+            ProtoMessage spy = new ProtoMessage();
+            spy.ActionType = Actions.SpyArmy;
+            spy.Message = charID;
+            spy.MessageFields = new string[] { targetID };
             Network.Send(spy);
         }
     }
@@ -419,7 +482,7 @@ namespace hist_mmorpg
         {
             ProtoTransfer transfer = new ProtoTransfer();
             transfer.amount = amount;
-            if(toHome)
+            if (toHome)
             {
                 transfer.fiefFrom = fiefID;
             }
@@ -446,7 +509,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="amount">Amount to send</param>
         /// <param name="playerID">ID/Username of player to transfer to</param>
-        public void TransferFundsToPlayer(int amount, string playerID )
+        public void TransferFundsToPlayer(int amount, string playerID)
         {
             ProtoTransferPlayer transfer = new ProtoTransferPlayer();
             transfer.ActionType = Actions.TransferFundsToPlayer;
@@ -466,12 +529,13 @@ namespace hist_mmorpg
         /// <param name="newInfra">ew Infrastructure spend value</param>
         public void AdjustExpenditure(string fiefID, double newTax, double newOff, double newGarr, double newKeep, double newInfra)
         {
-            
+
             ProtoGenericArray<double> newExpenses = new ProtoGenericArray<double>();
             newExpenses.Message = fiefID;
             newExpenses.fields = new double[] { newTax, newOff, newGarr, newInfra, newKeep };
             newExpenses.ActionType = Actions.AdjustExpenditure;
             Network.Send(newExpenses);
+            Console.WriteLine("CLIENT: sent adjust expenditure message");
         }
 
         /// <summary>
@@ -492,7 +556,7 @@ namespace hist_mmorpg
         /// <param name="fiefID">ID of fief</param>
         /// <param name="charID">ID of character to be barred</param>
         public void BarCharacter(string fiefID, string charID)
-        {            
+        {
             ProtoMessage bar = new ProtoMessage();
             bar.Message = fiefID;
             bar.MessageFields = new string[] { charID };
@@ -539,7 +603,7 @@ namespace hist_mmorpg
     public partial class TestClient
     {
 
-        public class Network
+        public class Network : IDisposable
         {
             RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider();
             HashAlgorithm hash = new SHA256Managed();
@@ -554,10 +618,23 @@ namespace hist_mmorpg
             /// Optional- set encryption key manually for use in testing
             /// </summary>
             private byte[] key;
+            public bool autoLogIn { get; set; }
+            public bool loggedIn { get; set; }
             public Network(byte[] key = null)
             {
+                autoLogIn = true;
                 this.key = key;
                 InitializeClient();
+            }
+
+            public NetConnection GetConnection()
+            {
+                return connection;
+            }
+
+            public NetConnection GetServerConnection()
+            {
+                return client.ServerConnection;
             }
 
             public string GetConnectionStatus()
@@ -600,7 +677,11 @@ namespace hist_mmorpg
 
             public void Disconnect()
             {
-                client.Disconnect("Log out");
+                if (client.ConnectionStatus == NetConnectionStatus.Connected)
+                {
+                    client.Disconnect("Log out");
+                }
+                Dispose();
                 client.Shutdown("Exit");
             }
 
@@ -628,7 +709,7 @@ namespace hist_mmorpg
                     Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, message, ProtoBuf.PrefixStyle.Fixed32);
 
                     msg.Write(ms.GetBuffer());
-                    if (alg != null&&encrypt)
+                    if (alg != null && encrypt)
                     {
                         msg.Encrypt(alg);
                     }
@@ -685,7 +766,7 @@ namespace hist_mmorpg
                     Console.Write(bite.ToString());
                 }
                 Console.WriteLine("\n");
-                Send(response,false);
+                Send(response, false);
             }
 
             /// <summary>
@@ -695,7 +776,7 @@ namespace hist_mmorpg
             /// <param name="login">ProtoLogin containing certificate</param>
             public bool ValidateCertificateAndCreateKey(ProtoLogIn login, out byte[] key)
             {
-                if (login.certificate == null)
+                if (login == null || login.certificate == null)
                 {
                     Console.WriteLine("CLIENT: No certificate");
                     key = null;
@@ -717,7 +798,16 @@ namespace hist_mmorpg
 #if TESTSUITE
                         if (this.key != null)
                         {
-                            alg = new NetAESEncryption(client, this.key, 0, this.key.Length);
+                            Console.WriteLine("Using non-null key");
+                            if (this.key.Length == 0)
+                            {
+                                alg = new NetAESEncryption(client);
+                            }
+                            else
+                            {
+                                alg = new NetAESEncryption(client,
+                                this.key, 0, this.key.Length);
+                            }
                             key = rsa.Encrypt(this.key, false);
                         }
                         else
@@ -735,6 +825,11 @@ namespace hist_mmorpg
                         key = rsa.Encrypt(des.Key, false);
                         // Initialise the algoitm
                         alg = new NetAESEncryption(client, des.Key, 0, des.Key.Length);
+                        Console.WriteLine("CLIENT: my unencrypted key:");
+                        foreach (var bite in des.Key)
+                        {
+                            Console.Write(bite.ToString());
+                        }
 #endif
                         // Validate certificate
                         if (!cert.Verify())
@@ -760,7 +855,7 @@ namespace hist_mmorpg
                     }
                     catch (Exception e)
                     {
-                        Console.Error.WriteLine("A problem occurred when parsing certificate from bytes: \n" + "type: " + e.GetType().FullName + "\n " + e.Message);
+                        Console.Error.WriteLine("A problem occurred when parsing certificate from bytes: \n" + "type: " + e.GetType().FullName + "\n " + ", source: " + e.Source + "\n message: " + e.Message);
                         key = null;
                         return false;
                     }
@@ -783,44 +878,77 @@ namespace hist_mmorpg
                             case NetIncomingMessageType.WarningMessage:
                             case NetIncomingMessageType.VerboseDebugMessage:
                             case NetIncomingMessageType.Data:
-
-
-                                MemoryStream ms = new MemoryStream(im.Data);
+                                Console.WriteLine("Client: Got data message");
                                 try
                                 {
                                     if (alg != null)
                                     {
+                                        Console.WriteLine("Decrypting");
                                         im.Decrypt(alg);
                                     }
-                                    ProtoMessage m = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(ms, PrefixStyle.Fixed32);
+                                    MemoryStream ms = new MemoryStream(im.Data);
+                                    ProtoMessage m = null;
+                                    try
+                                    {
+                                        m = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(ms, PrefixStyle.Fixed32);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        // Attempt to read string and add to message queue
+                                        string s = im.ReadString();
+                                        if (!string.IsNullOrWhiteSpace(s))
+                                        {
+                                            Console.WriteLine("CLIENT: Got message: " + s);
+                                            serverMessages.Add(s);
+                                        }
+                                    }
                                     if (m != null)
                                     {
-                                        messageQueue.Add(m);
-                                        if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
+                                        Console.WriteLine("CLIENT: Got ProtoMessage with ActionType: " + m.ActionType + " and response type: " + m.ResponseType);
+                                        if (m.ResponseType == DisplayMessages.LogInSuccess)
                                         {
-                                            byte[] key = null;
-                                            if (ValidateCertificateAndCreateKey(m as ProtoLogIn, out key))
-                                            {
-                                                Console.WriteLine("CLIENT: Sending hash ahd key1");
-                                                ComputeAndSendHashAndKey(m as ProtoLogIn, key);
-                                                Console.WriteLine("Sent hash");
-                                            }
+                                            loggedIn = true;
+                                            messageQueue.Add(m);
                                         }
                                         else
                                         {
-                                            // Attempt to read string and add to message queue
-                                            string s = im.ReadString();
-                                            if (!string.IsNullOrWhiteSpace(s))
+                                            if (m.ActionType == Actions.Update)
                                             {
-                                                serverMessages.Add(s);
+                                                // Don't do anything at the moment for updates
                                             }
+                                            else
+                                            {
+                                                Console.WriteLine("CLIENT: adding message to message queue");
+                                                messageQueue.Add(m);
+                                                if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
+                                                {
+                                                    byte[] key = null;
+                                                    if (ValidateCertificateAndCreateKey(m as ProtoLogIn, out key))
+                                                    {
+                                                        Console.WriteLine("CLIENT: Sending hash ahd key1");
+                                                        ComputeAndSendHashAndKey(m as ProtoLogIn, key);
+                                                        Console.WriteLine("Sent hash");
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    // Attempt to read string and add to message queue
+                                                    string s = im.ReadString();
+                                                    if (!string.IsNullOrWhiteSpace(s))
+                                                    {
+                                                        serverMessages.Add(s);
+                                                    }
+                                                }
+                                            }
+
                                         }
+
 
                                     }
                                 }
                                 catch (Exception e)
                                 {
-                                    Globals_Server.logError("Error in reading data: "+e.GetType()+ " :"+e.Message+ "; Stack Trace: "+e.StackTrace);
+                                    Globals_Server.logError("Error in reading data: " + e.GetType() + " :" + e.Message + "; Stack Trace: " + e.StackTrace);
                                 }
                                 break;
                             case NetIncomingMessageType.StatusChanged:
@@ -845,9 +973,16 @@ namespace hist_mmorpg
                                                     byte[] key = null;
                                                     if (ValidateCertificateAndCreateKey(m as ProtoLogIn, out key))
                                                     {
-                                                        Console.WriteLine("CLIENT: Sending hash ahd key2");
-                                                        ComputeAndSendHashAndKey(m as ProtoLogIn, key);
-                                                        Console.WriteLine("Sent hash2");
+                                                        if (autoLogIn)
+                                                        {
+                                                            Console.WriteLine("CLIENT: Sending hash ahd key2");
+                                                            ComputeAndSendHashAndKey(m as ProtoLogIn, key);
+                                                            Console.WriteLine("Sent hash2");
+                                                        }
+                                                        else
+                                                        {
+                                                            Console.WriteLine("Allowing log in to time out");
+                                                        }
                                                     }
                                                     else
                                                     {
@@ -872,7 +1007,8 @@ namespace hist_mmorpg
                                     string reason = im.ReadString();
                                     if (!string.IsNullOrEmpty(reason))
                                     {
-                                        //TODO
+                                        serverMessages.Add(reason);
+
                                     }
                                 }
                                 //   string reason = im.ReadString();
@@ -891,6 +1027,19 @@ namespace hist_mmorpg
                     }
                     Thread.Sleep(1);
                 }
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+
+            }
+
+            protected virtual void Dispose(bool dispose)
+            {
+                crypto.Dispose();
+                hash.Dispose();
             }
         }
     }
