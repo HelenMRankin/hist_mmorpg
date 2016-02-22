@@ -554,6 +554,10 @@ namespace hist_mmorpg
             // keep track of total troops lost
             uint troopsLost = 0;
 
+            if (troops == null)
+            {
+                return 0;
+            }
             for (int i = 0; i < this.troops.Length; i++ )
             {
                 uint thisTypeLost = Convert.ToUInt32(this.troops[i] * lossModifier);
@@ -736,7 +740,7 @@ namespace hist_mmorpg
             if (adjustDays)
             {
                 // adjust days
-                myLeader.AdjustDays(daysTaken);
+                if (myLeader != null) myLeader.AdjustDays(daysTaken);
 
                 // calculate possible attrition for army
                 byte attritionChecks = Convert.ToByte(daysTaken / 7);
@@ -774,12 +778,15 @@ namespace hist_mmorpg
 
             // get combat values for that nationality
             uint[] thisCombatValues = Globals_Server.combatValues[troopNationality];
-
-            // get CV for each troop type
-            for (int i = 0; i < this.troops.Length; i++)
+            if (troops != null)
             {
-                cv += this.troops[i] * thisCombatValues[i];
+                // get CV for each troop type
+                for (int i = 0; i < this.troops.Length; i++)
+                {
+                    cv += this.troops[i] * thisCombatValues[i];
+                }
             }
+            
 
             // if calculating defender during keep storm, account for keep level
             // (1000 foot per level)
@@ -808,7 +815,7 @@ namespace hist_mmorpg
                     }
                 }
             }
-
+            Console.WriteLine("COMBAT VALUES: "+cv);
             return cv;
         }
 
@@ -1384,9 +1391,13 @@ namespace hist_mmorpg
             Character attackerLeader = this.GetLeader();
             Character defenderLeader = defender.GetLeader();
 
+            if(attackerLeader!=null) 
             // get leadership values for each army leader
-            attackerLV = attackerLeader.GetLeadershipValue(isSiegeStorm);
-
+                attackerLV = attackerLeader.GetLeadershipValue(isSiegeStorm);
+            else
+            {
+                attackerLV = 4;
+            }
             // defender may not have leader
             if (defenderLeader != null)
             {

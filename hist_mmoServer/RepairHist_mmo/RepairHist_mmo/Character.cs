@@ -1005,7 +1005,7 @@ namespace hist_mmorpg
                             break;
                     }
                 }
-
+                Contract.Assert(headOfFamilyBride!=null&&headOfFamilyGroom!=null&&bride!=null&&groom!=null);
                 // ID
                 uint newEntryID = Globals_Game.GetNextJournalEntryID();
 
@@ -1093,9 +1093,11 @@ namespace hist_mmorpg
             {
                 return this.GetHeadOfFamily();
             }
-            else if (!string.IsNullOrWhiteSpace((this as NonPlayerCharacter).employer))
+            else if (this is NonPlayerCharacter )
             {
-                return (this as NonPlayerCharacter).GetEmployer();
+                var nonPlayerCharacter = this as NonPlayerCharacter;
+                if (nonPlayerCharacter != null && !string.IsNullOrWhiteSpace(nonPlayerCharacter.employer)) return nonPlayerCharacter.GetEmployer();
+                return null;
             }
             else
             {
@@ -1116,7 +1118,8 @@ namespace hist_mmorpg
             // PCs
             if (this is PlayerCharacter)
             {
-                if (!String.IsNullOrWhiteSpace((this as PlayerCharacter).playerID))
+                PlayerCharacter playerCharacter = this as PlayerCharacter;
+                if (playerCharacter != null && !String.IsNullOrWhiteSpace(playerCharacter.playerID))
                 {
                     role = "player";
                 }
@@ -1129,25 +1132,30 @@ namespace hist_mmorpg
             // NPCs
             else
             {
-                if (!String.IsNullOrWhiteSpace((this as NonPlayerCharacter).familyID))
+                NonPlayerCharacter nonPlayerCharacter = this as NonPlayerCharacter;
+                if (nonPlayerCharacter != null)
                 {
-                    if ((this as NonPlayerCharacter).isHeir)
+                    if (!String.IsNullOrWhiteSpace(nonPlayerCharacter.familyID))
                     {
-                        role = "familyHeir";
+                        if (nonPlayerCharacter.isHeir)
+                        {
+                            role = "familyHeir";
+                        }
+                        else
+                        {
+                            role = "family";
+                        }
+                    }
+                    else if (!String.IsNullOrWhiteSpace(nonPlayerCharacter.employer))
+                    {
+                        role = "employee";
                     }
                     else
                     {
-                        role = "family";
+                        role = "NPC";
                     }
                 }
-                else if (!String.IsNullOrWhiteSpace((this as NonPlayerCharacter).employer))
-                {
-                    role = "employee";
-                }
-                else
-                {
-                    role = "NPC";
-                }
+                
             }
 
             // ============== 1. set isAlive = false and if was a captive, release
@@ -1252,12 +1260,12 @@ namespace hist_mmorpg
             else
             {
                 // if is an employee
-                if (!String.IsNullOrWhiteSpace((this as NonPlayerCharacter).employer))
+                var nonPlayerCharacter = this as NonPlayerCharacter;
+                if (nonPlayerCharacter != null && !String.IsNullOrWhiteSpace(nonPlayerCharacter.employer))
                 {
                     // get boss
-                    employer = (this as NonPlayerCharacter).GetEmployer();
+                    employer = nonPlayerCharacter.GetEmployer();
                 }
-
             }
 
             // check to see if is a bailiff.  If so, remove
@@ -1790,6 +1798,7 @@ namespace hist_mmorpg
         /// <param name="deceased">Deceased PlayerCharacter</param>
         public void ProcessInheritance(PlayerCharacter deceased, NonPlayerCharacter inheritor = null)
         {
+            Contract.Requires(deceased!=null);
             if (inheritor != null)
             {
                 Globals_Server.logEvent(deceased.charID + " dies; " + inheritor.charID + " inherits");
@@ -1805,7 +1814,10 @@ namespace hist_mmorpg
             PlayerCharacter promotedNPC = new PlayerCharacter(inheritor, deceased);
 
 			// remove from npcMasterList and mark for addition to pcMasterList
-            Globals_Game.npcMasterList.Remove(inheritor.charID);
+            if (inheritor != null)
+            {
+                Globals_Game.npcMasterList.Remove(inheritor.charID);
+            }
             Globals_Game.pcMasterList.Add(promotedNPC.charID,promotedNPC);
             // TODO ask about whether NPC should be promoted next season
             Globals_Game.promotedNPCs.Add(promotedNPC);
@@ -1911,7 +1923,6 @@ namespace hist_mmorpg
                     promotedNPC.playerID = user;
                     Globals_Server.clients[user].myPlayerCharacter = promotedNPC;
                     //TODO notify user if logged in and write to database
-                    Globals_Server.logEvent("Debug: role is  : "+inheritor.GetFunction(deceased));
                     Client player;
                     Globals_Server.clients.TryGetValue(user, out player);
                     if (player != null)
@@ -2334,6 +2345,7 @@ namespace hist_mmorpg
                 else
                 {
                     // 2. check is an active player
+                    // ReSharper disable once PossibleNullReferenceException
                     if (String.IsNullOrWhiteSpace((this as PlayerCharacter).playerID))
                     {
                         proceed = false;
@@ -2470,7 +2482,7 @@ namespace hist_mmorpg
             PlayerCharacter player = null;
             if (this is PlayerCharacter)
             {
-                if (!string.IsNullOrWhiteSpace((this as PlayerCharacter).playerID))
+                if (!string.IsNullOrWhiteSpace(((PlayerCharacter) this).playerID))
                 {
                     player = this as PlayerCharacter;
                 }
@@ -2481,9 +2493,9 @@ namespace hist_mmorpg
                 {
                     player = this.GetHeadOfFamily();
                 }
-                if (!string.IsNullOrWhiteSpace((this as NonPlayerCharacter).employer))
+                if (!string.IsNullOrWhiteSpace(((NonPlayerCharacter) this).employer))
                 {
-                    player = (this as NonPlayerCharacter).GetEmployer();
+                    player = ((NonPlayerCharacter) this).GetEmployer();
                 }
             }
             // check to see if character is leading a besieging army
@@ -2500,7 +2512,6 @@ namespace hist_mmorpg
                             if (player != null)
                             {
                                 string[] fields = new string[3];
-                                // construct event description to be passed into siegeEnd
                                 fields[0]= thisSiege.GetBesiegingPlayer().firstName + " " + thisSiege.GetBesiegingPlayer().familyName;
                                 fields[1]= thisSiege.GetFief().name;
                                 fields[2] = thisSiege.GetDefendingPlayer().firstName + " " + thisSiege.GetDefendingPlayer().familyName;
@@ -2561,9 +2572,9 @@ namespace hist_mmorpg
                 {
                     player = this.GetHeadOfFamily();
                 }
-                if ((this as NonPlayerCharacter).GetEmployer() != null)
+                if (((NonPlayerCharacter)this).GetEmployer() != null)
                 {
-                    player = (this as NonPlayerCharacter).GetEmployer();
+                    player = ((NonPlayerCharacter) this).GetEmployer();
                 }
             }
             //TODO client side if goTo list not empty and target not first in goTo list confirm is ok to clear destination list
@@ -2587,7 +2598,7 @@ namespace hist_mmorpg
                 // deduct move cost from days left
                 if (this is PlayerCharacter)
                 {
-                    (this as PlayerCharacter).AdjustDays(cost);
+                    ((PlayerCharacter) this).AdjustDays(cost);
                 }
                 else
                 {
@@ -3110,7 +3121,7 @@ namespace hist_mmorpg
                 if (this is NonPlayerCharacter)
                 {
                     // check for naming requirement and, if so, assign regent's first name
-                    (this as NonPlayerCharacter).CheckNeedsNaming();
+                    ((NonPlayerCharacter) this).CheckNeedsNaming();
                 }
 
                 // reset DAYS
@@ -3269,16 +3280,16 @@ namespace hist_mmorpg
                 {
                     if (!String.IsNullOrWhiteSpace(this.familyID))
                     {
-                        concernedPlayer = (this as NonPlayerCharacter).GetHeadOfFamily();
+                        concernedPlayer = ((NonPlayerCharacter) this).GetHeadOfFamily();
                         if (concernedPlayer != null)
                         {
                             tempPersonae.Add(concernedPlayer.charID + "|headOfFamily");
                         }
                     }
 
-                    else if (!String.IsNullOrWhiteSpace((this as NonPlayerCharacter).employer))
+                    else if (!String.IsNullOrWhiteSpace(((NonPlayerCharacter) this).employer))
                     {
-                        concernedPlayer = (this as NonPlayerCharacter).GetEmployer();
+                        concernedPlayer = ((NonPlayerCharacter) this).GetEmployer();
                         if (concernedPlayer != null)
                         {
                             tempPersonae.Add(concernedPlayer.charID + "|employer");
@@ -3296,7 +3307,9 @@ namespace hist_mmorpg
                 fields[1] = "";
                 if (concernedPlayer != null)
                 {
-                    fields[1] = ", your " + (this as NonPlayerCharacter).GetFunction(concernedPlayer) + ", ";
+                    var nonPlayerCharacter = this as NonPlayerCharacter;
+                    if (nonPlayerCharacter != null)
+                        fields[1] = ", your " + nonPlayerCharacter.GetFunction(concernedPlayer) + ", ";
                 }
                 if (healthLoss > 4)
                 {
@@ -3339,9 +3352,9 @@ namespace hist_mmorpg
             {
                 employer = (this as PlayerCharacter);
             }
-            else if (!String.IsNullOrWhiteSpace((this as NonPlayerCharacter).employer))
+            else if (!String.IsNullOrWhiteSpace(((NonPlayerCharacter) this).employer))
             {
-                employer = (this as NonPlayerCharacter).GetEmployer();
+                employer = ((NonPlayerCharacter) this).GetEmployer();
             }
             else if (!String.IsNullOrWhiteSpace(this.familyID))
             {
@@ -3379,7 +3392,7 @@ namespace hist_mmorpg
             }
             else
             {
-                employer = (this as NonPlayerCharacter).GetEmployer();
+                employer = ((NonPlayerCharacter) this).GetEmployer();
             }
 
             if (employer != null)
@@ -3417,7 +3430,7 @@ namespace hist_mmorpg
                 player = this.GetHeadOfFamily();
                 if (player == null)
                 {
-                    player = (this as NonPlayerCharacter).GetEmployer();
+                    player = ((NonPlayerCharacter) this).GetEmployer();
                 }
             }
             
@@ -3457,7 +3470,7 @@ namespace hist_mmorpg
                     // if observer NPC, remove from entourage if necessary
                     if (this is NonPlayerCharacter)
                     {
-                        if ((this as NonPlayerCharacter).inEntourage)
+                        if (((NonPlayerCharacter) this).inEntourage)
                         {
                             player.RemoveFromEntourage(this as NonPlayerCharacter);
                         }
@@ -3504,9 +3517,9 @@ namespace hist_mmorpg
             // player ID
             if (this is PlayerCharacter)
             {
-                if (!String.IsNullOrWhiteSpace((this as PlayerCharacter).playerID))
+                if (!String.IsNullOrWhiteSpace(((PlayerCharacter) this).playerID))
                 {
-                    charText += "Player ID: " + (this as PlayerCharacter).playerID + "\r\n";
+                    charText += "Player ID: " + ((PlayerCharacter) this).playerID + "\r\n";
                 }
             }
 
@@ -3535,11 +3548,11 @@ namespace hist_mmorpg
             if ((this is PlayerCharacter) && (showFullDetails))
             {
                 // home fief
-                Fief homeFief = (this as PlayerCharacter).GetHomeFief();
+                Fief homeFief = ((PlayerCharacter) this).GetHomeFief();
                 charText += "Home fief: " + homeFief.name + " (" + homeFief.id + ")\r\n";
 
                 // ancestral home fief
-                Fief ancHomeFief = (this as PlayerCharacter).GetAncestralHome();
+                Fief ancHomeFief = ((PlayerCharacter) this).GetAncestralHome();
                 charText += "Ancestral Home fief: " + ancHomeFief.name + " (" + ancHomeFief.id + ")\r\n";
             }
 
@@ -3709,12 +3722,12 @@ namespace hist_mmorpg
             {
                 if (showFullDetails)
                 {
-                    charText += (this as PlayerCharacter).DisplayPlayerCharacter();
+                    charText += ((PlayerCharacter) this).DisplayPlayerCharacter();
                 }
             }
             else
             {
-                charText += (this as NonPlayerCharacter).DisplayNonPlayerCharacter(observer);
+                charText += ((NonPlayerCharacter) this).DisplayNonPlayerCharacter(observer);
             }
 
 
@@ -4104,10 +4117,11 @@ namespace hist_mmorpg
            }
            else
            {
+               player = this.GetPlayerCharacter();
                player = this.GetHeadOfFamily();
                if (player == null)
                {
-                   player = (this as NonPlayerCharacter).GetEmployer();
+                   player = ((NonPlayerCharacter) this).GetEmployer();
                }
            }
            // get siege
@@ -4137,13 +4151,14 @@ namespace hist_mmorpg
                else
                {
                    // if is in entourage, remove prior to camping
-                   if ((this as NonPlayerCharacter).inEntourage)
+                   if (((NonPlayerCharacter) this).inEntourage)
                    {
                        if (player!=null)
                        {
                            Globals_Game.UpdatePlayer(player.playerID, DisplayMessages.CharacterRemovedFromEntourage, new string[] { this.firstName + " " + this.familyName });
+                           player.RemoveFromEntourage((this as NonPlayerCharacter));
                        }
-                       player.RemoveFromEntourage((this as NonPlayerCharacter));
+                       
                    }
                }
 
@@ -4160,7 +4175,7 @@ namespace hist_mmorpg
                    // adjust character's days
                    if (this is PlayerCharacter)
                    {
-                       (this as PlayerCharacter).AdjustDays(campDays);
+                       ((PlayerCharacter) this).AdjustDays(campDays);
                    }
                    else
                    {
@@ -4230,15 +4245,18 @@ namespace hist_mmorpg
                    // if not, check for bailiff in entourage
                    else
                    {
-                       for (int i = 0; i < player.myNPCs.Count; i++)
+                       if (player != null)
                        {
-                           if (player.myNPCs[i].inEntourage)
+                           for (int i = 0; i < player.myNPCs.Count; i++)
                            {
-                               if (player.myNPCs[i] != this)
+                               if (player.myNPCs[i].inEntourage)
                                {
-                                   if (player.myNPCs[i] == this.location.bailiff)
+                                   if (player.myNPCs[i] != this)
                                    {
-                                       myBailiff = player.myNPCs[i];
+                                       if (player.myNPCs[i] == this.location.bailiff)
+                                       {
+                                           myBailiff = player.myNPCs[i];
+                                       }
                                    }
                                }
                            }
@@ -4290,15 +4308,15 @@ namespace hist_mmorpg
                player = this.GetHeadOfFamily();
                if (player == null)
                {
-                   player = (this as NonPlayerCharacter).GetEmployer();
+                   player = ((NonPlayerCharacter) this).GetEmployer();
                }
            }
            Queue<Fief> route = new Queue<Fief>();
-
+           Contract.Assert(player!=null);
            // remove from entourage, if necessary
            if (this is NonPlayerCharacter)
            {
-               if ((this as NonPlayerCharacter).inEntourage)
+               if (((NonPlayerCharacter) this).inEntourage)
                {
                    player.RemoveFromEntourage(this as NonPlayerCharacter);
                }
@@ -4363,9 +4381,9 @@ namespace hist_mmorpg
                player = this.GetHeadOfFamily();
                if (player == null)
                {
-                   player = (this as NonPlayerCharacter).GetEmployer();
+                   player = ((NonPlayerCharacter) this).GetEmployer();
                }
-               if ((this as NonPlayerCharacter).inEntourage)
+               if (((NonPlayerCharacter) this).inEntourage)
                {
                    player.RemoveFromEntourage(this as NonPlayerCharacter);
                }

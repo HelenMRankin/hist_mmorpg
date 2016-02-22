@@ -2,12 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Collections;
-using ProtoBuf;
-using ProtoBuf.Meta;
 using System.Diagnostics;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Diagnostics.Contracts;
 
@@ -22,27 +17,6 @@ namespace hist_mmorpg
     /// </summary>
     public class Game
     {
-        /// <summary>
-        /// Used for including all subtypes of ProtoMessage
-        /// </summary>
-      /*  public void initialiseTypes()
-        {
-            List<Type> subMessages = typeof(ProtoMessage).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ProtoMessage))).ToList();
-            int i = 50;
-            RuntimeTypeModel testmodel = new RuntimeTypeModel();
-            foreach (Type message in subMessages)
-            {
-                if (message != typeof(ProtoPlayerCharacter) && message != typeof(ProtoNPC)&& !message.ToString().Contains("GenericArray"))
-                {
-                    
-                    Console.WriteLine("adding type:" + message.ToString());
-                    RuntimeTypeModel.Default.Add(typeof(ProtoMessage), true).AddSubType(i, message);
-                    testmodel.Add(typeof(ProtoMessage), true).AddSubType(i, message);
-                    i++;
-                }
-            }
-            testmodel.Compile("compiledTypeModel", "E:\\");
-        }*/
 
         public Game()
         {
@@ -115,7 +89,7 @@ namespace hist_mmorpg
                     CSVimport.NewGameFromCSV(objectDataFile, mapDataFile, start);
 
                     // initialise Globals_Game.victoryData
-                    this.SynchroniseVictoryData();
+                    SynchroniseVictoryData();
 
                     dataLoaded = true;
                 }
@@ -124,10 +98,10 @@ namespace hist_mmorpg
             if (!dataLoaded)
             {
                 // load objects
-                this.LoadFromCode();
+                LoadFromCode();
 
                 // initialise Globals_Game.victoryData
-                this.SynchroniseVictoryData();
+                SynchroniseVictoryData();
             }
 
             if ((!Globals_Game.loadFromDatabase) || (!dataLoaded))
@@ -225,7 +199,6 @@ namespace hist_mmorpg
 
         public void addTestCharacter()
         {
-            Nationality nat =  Globals_Game.nationalityMasterList["Sco"];
             NonPlayerCharacter proposalChar = new NonPlayerCharacter("Char_626", "Mairi", "Meah", new Tuple<uint, byte>(1162, 3), false, Globals_Game.nationalityMasterList["Sco"], true, 9, 9,new Queue<Fief>(), Globals_Game.languageMasterList["lang_C1"], 90, 9, 9, 9,new Tuple<Trait,int>[0], true, false, "Char_126", null, "Char_126", null, 0, false, false,new List<string>(), null, null,Globals_Game.fiefMasterList["ESW05"]);
             PlayerCharacter pc = Globals_Game.pcMasterList["Char_126"];
             pc.myNPCs.Add(proposalChar);
@@ -242,81 +215,99 @@ namespace hist_mmorpg
 
             // create traits
             // Dictionary of trait effects
-            Dictionary<Globals_Game.Stats, double> effectsCommand = new Dictionary<Globals_Game.Stats, double>();
-            effectsCommand.Add(Globals_Game.Stats.BATTLE, 0.4);
-            effectsCommand.Add(Globals_Game.Stats.SIEGE, 0.4);
-            effectsCommand.Add(Globals_Game.Stats.NPCHIRE, 0.2);
+            Dictionary<Globals_Game.Stats, double> effectsCommand = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.BATTLE, 0.4},
+                {Globals_Game.Stats.SIEGE, 0.4},
+                {Globals_Game.Stats.NPCHIRE, 0.2}
+            };
             // create trait
             Trait command = new Trait("trait_1", "Command", effectsCommand);
             // add to traitCollection
             Globals_Game.traitMasterList.Add(command.id, command);
 
-            Dictionary<Globals_Game.Stats, double> effectsChivalry = new Dictionary<Globals_Game.Stats, double>();
-            effectsChivalry.Add(Globals_Game.Stats.FAMEXPENSE, 0.2);
-            effectsChivalry.Add(Globals_Game.Stats.FIEFEXPENSE, 0.1);
-            effectsChivalry.Add(Globals_Game.Stats.FIEFLOY, 0.2);
-            effectsChivalry.Add(Globals_Game.Stats.NPCHIRE, 0.1);
-            effectsChivalry.Add(Globals_Game.Stats.SIEGE, 0.1);
+            Dictionary<Globals_Game.Stats, double> effectsChivalry = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.FAMEXPENSE, 0.2},
+                {Globals_Game.Stats.FIEFEXPENSE, 0.1},
+                {Globals_Game.Stats.FIEFLOY, 0.2},
+                {Globals_Game.Stats.NPCHIRE, 0.1},
+                {Globals_Game.Stats.SIEGE, 0.1}
+            };
             Trait chivalry = new Trait("trait_2", "Chivalry", effectsChivalry);
             Globals_Game.traitMasterList.Add(chivalry.id, chivalry);
 
-            Dictionary<Globals_Game.Stats, double> effectsAbrasiveness = new Dictionary<Globals_Game.Stats, double>();
-            effectsAbrasiveness.Add(Globals_Game.Stats.BATTLE, 0.15);
-            effectsAbrasiveness.Add(Globals_Game.Stats.DEATH, 0.05);
-            effectsAbrasiveness.Add(Globals_Game.Stats.FIEFEXPENSE, -0.05);
-            effectsAbrasiveness.Add(Globals_Game.Stats.FAMEXPENSE, 0.05);
-            effectsAbrasiveness.Add(Globals_Game.Stats.TIME, 0.05);
-            effectsAbrasiveness.Add(Globals_Game.Stats.SIEGE, -0.1);
+            Dictionary<Globals_Game.Stats, double> effectsAbrasiveness = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.BATTLE, 0.15},
+                {Globals_Game.Stats.DEATH, 0.05},
+                {Globals_Game.Stats.FIEFEXPENSE, -0.05},
+                {Globals_Game.Stats.FAMEXPENSE, 0.05},
+                {Globals_Game.Stats.TIME, 0.05},
+                {Globals_Game.Stats.SIEGE, -0.1}
+            };
             Trait abrasiveness = new Trait("trait_3", "Abrasiveness", effectsAbrasiveness);
             Globals_Game.traitMasterList.Add(abrasiveness.id, abrasiveness);
 
-            Dictionary<Globals_Game.Stats, double> effectsAccountancy = new Dictionary<Globals_Game.Stats, double>();
-            effectsAccountancy.Add(Globals_Game.Stats.TIME, 0.1);
-            effectsAccountancy.Add(Globals_Game.Stats.FIEFEXPENSE, -0.2);
-            effectsAccountancy.Add(Globals_Game.Stats.FAMEXPENSE, -0.2);
-            effectsAccountancy.Add(Globals_Game.Stats.FIEFLOY, -0.05);
+            Dictionary<Globals_Game.Stats, double> effectsAccountancy = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.TIME, 0.1},
+                {Globals_Game.Stats.FIEFEXPENSE, -0.2},
+                {Globals_Game.Stats.FAMEXPENSE, -0.2},
+                {Globals_Game.Stats.FIEFLOY, -0.05}
+            };
             Trait accountancy = new Trait("trait_4", "Accountancy", effectsAccountancy);
             Globals_Game.traitMasterList.Add(accountancy.id, accountancy);
 
-            Dictionary<Globals_Game.Stats, double> effectsStupidity = new Dictionary<Globals_Game.Stats, double>();
-            effectsStupidity.Add(Globals_Game.Stats.BATTLE, -0.4);
-            effectsStupidity.Add(Globals_Game.Stats.DEATH, 0.05);
-            effectsStupidity.Add(Globals_Game.Stats.FIEFEXPENSE, 0.2);
-            effectsStupidity.Add(Globals_Game.Stats.FAMEXPENSE, 0.2);
-            effectsStupidity.Add(Globals_Game.Stats.FIEFLOY, -0.1);
-            effectsStupidity.Add(Globals_Game.Stats.NPCHIRE, -0.1);
-            effectsStupidity.Add(Globals_Game.Stats.TIME, -0.1);
-            effectsStupidity.Add(Globals_Game.Stats.SIEGE, -0.4);
-            effectsStupidity.Add(Globals_Game.Stats.STEALTH, -0.6);
+            Dictionary<Globals_Game.Stats, double> effectsStupidity = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.BATTLE, -0.4},
+                {Globals_Game.Stats.DEATH, 0.05},
+                {Globals_Game.Stats.FIEFEXPENSE, 0.2},
+                {Globals_Game.Stats.FAMEXPENSE, 0.2},
+                {Globals_Game.Stats.FIEFLOY, -0.1},
+                {Globals_Game.Stats.NPCHIRE, -0.1},
+                {Globals_Game.Stats.TIME, -0.1},
+                {Globals_Game.Stats.SIEGE, -0.4},
+                {Globals_Game.Stats.STEALTH, -0.6}
+            };
             Trait stupidity = new Trait("trait_5", "Stupidity", effectsStupidity);
             Globals_Game.traitMasterList.Add(stupidity.id, stupidity);
 
-            Dictionary<Globals_Game.Stats, double> effectsRobust = new Dictionary<Globals_Game.Stats, double>();
-            effectsRobust.Add(Globals_Game.Stats.VIRILITY, 0.2);
-            effectsRobust.Add(Globals_Game.Stats.NPCHIRE, 0.05);
-            effectsRobust.Add(Globals_Game.Stats.FIEFLOY, 0.05);
-            effectsRobust.Add(Globals_Game.Stats.DEATH, -0.2);
+            Dictionary<Globals_Game.Stats, double> effectsRobust = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.VIRILITY, 0.2},
+                {Globals_Game.Stats.NPCHIRE, 0.05},
+                {Globals_Game.Stats.FIEFLOY, 0.05},
+                {Globals_Game.Stats.DEATH, -0.2}
+            };
             Trait robust = new Trait("trait_6", "Robust", effectsRobust);
             Globals_Game.traitMasterList.Add(robust.id, robust);
 
-            Dictionary<Globals_Game.Stats, double> effectsPious = new Dictionary<Globals_Game.Stats, double>();
-            effectsPious.Add(Globals_Game.Stats.VIRILITY, -0.2);
-            effectsPious.Add(Globals_Game.Stats.NPCHIRE, 0.1);
-            effectsPious.Add(Globals_Game.Stats.FIEFLOY, 0.1);
-            effectsPious.Add(Globals_Game.Stats.TIME, -0.1);
+            Dictionary<Globals_Game.Stats, double> effectsPious = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.VIRILITY, -0.2},
+                {Globals_Game.Stats.NPCHIRE, 0.1},
+                {Globals_Game.Stats.FIEFLOY, 0.1},
+                {Globals_Game.Stats.TIME, -0.1}
+            };
             Trait pious = new Trait("trait_7", "Pious", effectsPious);
             Globals_Game.traitMasterList.Add(pious.id, pious);
 
-            Dictionary<Globals_Game.Stats, double> effectsParanoia = new Dictionary<Globals_Game.Stats, double>();
-            effectsParanoia.Add(Globals_Game.Stats.VIRILITY, - 0.3);
-            effectsParanoia.Add(Globals_Game.Stats.PERCEPTION, 0.4);
-            effectsParanoia.Add(Globals_Game.Stats.FIEFLOY, -0.05);
+            Dictionary<Globals_Game.Stats, double> effectsParanoia = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.VIRILITY, -0.3},
+                {Globals_Game.Stats.PERCEPTION, 0.4},
+                {Globals_Game.Stats.FIEFLOY, -0.05}
+            };
             Trait paranoia = new Trait("trait_8", "Paranoia", effectsParanoia);
             Globals_Game.traitMasterList.Add(paranoia.id,paranoia);
             
-            Dictionary<Globals_Game.Stats, double> effectsCunning = new Dictionary<Globals_Game.Stats, double>();
-            effectsCunning.Add(Globals_Game.Stats.PERCEPTION, 0.1);
-            effectsCunning.Add(Globals_Game.Stats.STEALTH, 0.3);
+            Dictionary<Globals_Game.Stats, double> effectsCunning = new Dictionary<Globals_Game.Stats, double>
+            {
+                {Globals_Game.Stats.PERCEPTION, 0.1},
+                {Globals_Game.Stats.STEALTH, 0.3}
+            };
             Trait cunning = new Trait("trait_9", "Cunning", effectsCunning);
             Globals_Game.traitMasterList.Add(cunning.id, cunning);
 
@@ -859,10 +850,8 @@ namespace hist_mmorpg
             // remove Globals_Game.victoryData entries if necessary
             if (toRemove.Count > 0)
             {
-                for (int i = 0; i < toRemove.Count; i++)
-                {
-                    Globals_Game.victoryData.Remove(toRemove[i]);
-                }
+                foreach (var item in toRemove)
+                    Globals_Game.victoryData.Remove(item);
             }
             toRemove.Clear();
 
@@ -1177,11 +1166,13 @@ namespace hist_mmorpg
         {
             if (string.IsNullOrWhiteSpace(user))
             {
-                //TODO error log
+                Globals_Server.logError("Null User detected in switchPlayerCharacter! charID: "+charID);
+                return;
             }
             if (!Globals_Game.userChars.ContainsKey(user))
             {
-                //TODO error log
+                Globals_Server.logError("Invalid User detected in switchPlayerCharacter! charID: " + charID);
+                return;
             }
             else
             {
@@ -1190,6 +1181,7 @@ namespace hist_mmorpg
                 if (string.IsNullOrWhiteSpace(charID))
                 {
                     Globals_Game.UpdatePlayer(user, DisplayMessages.SwitchPlayerErrorNoID);
+                    return;
                 }
                 // Checks that the character is available
                 if (!Globals_Game.pcMasterList.ContainsKey(charID) || Globals_Game.userChars.ContainsValue(Globals_Game.pcMasterList[charID]))
@@ -1648,9 +1640,13 @@ namespace hist_mmorpg
                             pcToMove = charToMove as PlayerCharacter;
                             success = pcToMove.MoveCharacter(fief, travelCost, out error);
                         }
-                        else
+                        else if (charToMove is NonPlayerCharacter)
                         {
                             success = (charToMove as NonPlayerCharacter).MoveCharacter(fief, travelCost, out error);
+                        }
+                        else
+                        {
+                            return Utility_Methods.CharacterUnidentified;
                         }
                         if (success)
                         {
@@ -2125,6 +2121,10 @@ namespace hist_mmorpg
                     f.ResponseType = DisplayMessages.FiefExpenditureAdjusted;
                     return f;
                 }
+                else
+                {
+                    return Utility_Methods.MessageInvalid;
+                }
             }
             if (adjustedValues.Length != 5)
             {
@@ -2584,47 +2584,29 @@ namespace hist_mmorpg
 
         public static async Task<ProtoMessage> RecruitTroops(string armyID, UInt32 amount, Client client)
         {
-            Console.WriteLine("SERVER: In recruit troops...");
             ProtoMessage tryRecruit;
             Army army = null;
             if (string.IsNullOrWhiteSpace(armyID))
             {
-                Console.WriteLine("SERVER: Got null armyID");
-                try
+                if (client.myPlayerCharacter == null)
                 {
-
-                    if (client == null)
-                    {
-                        Console.WriteLine("SERVER: client is null");
-                    }
-                    if (client.myPlayerCharacter == null)
-                    {
-                        Console.WriteLine("SERVER: playercharacter is null");
-                    }
-                    tryRecruit = client.myPlayerCharacter.RecruitTroops(amount, null, false);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("SERVER: Experienced exception in recruit: "+e.ToString());
+                    Globals_Server.logError("No PlayerCharacter in RecruitTroops! Client id: " + client.user);
                     return null;
                 }
-                
+                tryRecruit = client.myPlayerCharacter.RecruitTroops(amount, null, false);
             }
             else
             {
-                Console.WriteLine("SERVER: Not a null armyID");
                 // Get army to recruit into
                 Globals_Game.armyMasterList.TryGetValue(armyID, out army);
                 if (army == null || !client.myPlayerCharacter.myArmies.Contains(army))
                 {
                     ProtoMessage error = new ProtoMessage();
                     error.ResponseType = DisplayMessages.ErrorGenericArmyUnidentified;
-                    Console.WriteLine("SERVER: Unidentified arny");
                     return error;
                 }
                 if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, client.myPlayerCharacter, army))
                 {
-                    Console.WriteLine("SERVER: Permission denied");
                     return Utility_Methods.Unauthorised;
                 }
                 tryRecruit = client.myPlayerCharacter.RecruitTroops(amount, army, false); 
@@ -2632,11 +2614,9 @@ namespace hist_mmorpg
             if (tryRecruit.ResponseType != DisplayMessages.CharacterRecruitInsufficientFunds &&
                 tryRecruit.ResponseType != DisplayMessages.CharacterRecruitOk)
             {
-                Console.WriteLine("SERVER: Recruitment failed- sending error with type: "+tryRecruit.ResponseType.ToString());
                 return tryRecruit;
             }
             Server.SendViaProto(tryRecruit, client.conn, client.alg);
-            Console.WriteLine("SERVER: Sent recruitment details. Awaiting confirmation...");
             Task<ProtoMessage> response = client.GetMessage();
             if (!response.Wait(30000))
             {
@@ -3157,6 +3137,7 @@ namespace hist_mmorpg
         {
             if (string.IsNullOrWhiteSpace(attackerID) || string.IsNullOrWhiteSpace(defenderID))
             {
+                Console.Write("A string is null");
                 return Utility_Methods.MessageInvalid;
             }
             // Get attacker and defender
@@ -3171,11 +3152,30 @@ namespace hist_mmorpg
                 error.ResponseType = DisplayMessages.ErrorGenericArmyUnidentified;
                 return error;
             }
+        
             if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, client.myPlayerCharacter, armyAttacker))
             {
                 ProtoMessage error = new ProtoMessage();
                 error.ResponseType = DisplayMessages.ErrorGenericUnauthorised;
                 return error;
+            }
+            // In the event an army has no troops, return error, log event and clean up
+            if (armyAttacker.troops == null ||armyAttacker.CalcArmySize()==0|| armyDefender.troops == null||armyDefender.CalcArmySize()==0)
+            {
+                Console.WriteLine("Troops are null!");
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.Error;
+                Globals_Server.logError("Found an army with no troops- Performing clean up");
+                if (armyAttacker.troops == null||armyAttacker.CalcArmySize()==0)
+                {
+                    armyAttacker.DisbandArmy();
+                }
+                else
+                {
+                    armyDefender.DisbandArmy();
+                }
+                return error;
+                
             }
             ProtoMessage attackResult = null;
             if (armyAttacker.ChecksBeforeAttack(armyDefender, out attackResult))
@@ -3183,9 +3183,20 @@ namespace hist_mmorpg
                 // TODO refactor battle
                 // GiveBattle returns necessary messages
                 ProtoBattle battleResults = null;
-                bool isVictorious = Battle.GiveBattle(armyAttacker, armyDefender, out battleResults);
-                battleResults.ResponseType = DisplayMessages.BattleResults;
-                return battleResults;
+                Console.WriteLine("About to give battle");
+                try
+                {
+                    bool isVictorious = Battle.GiveBattle(armyAttacker, armyDefender, out battleResults);
+                    battleResults.ResponseType = DisplayMessages.BattleResults;
+                    Console.WriteLine("Battle is complete");
+                    return battleResults;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    return null;
+                }
+                
             }
             else
             {
@@ -3227,6 +3238,34 @@ namespace hist_mmorpg
                 return reply;
             }
         }
+
+        /*
+         * Spy protocol for session types
+         * */
+
+        //global protocol Spy(role Server, role Spy, role Target) {
+        //    SpyRequest(ProtoMessage) from Spy to Server;
+        //    () from Server to Target;
+        //    choice at Server {
+        //        SendSpyChance(ProtoMessage) from Server to Spy;
+        //        choice at Spy {
+        //            DoSpy(ProtoMessage) from Spy to Server;
+        //            choice at Server {
+        //                SendSpyResult(ProtoMessage) from Server to Spy;
+        //                NotifyPlayer(ProtoMessage) from Server to Target;
+        //            }
+        //            or {
+        //                SendError(ProtoMessage) from Server to Spy;
+        //            }
+        //        }
+        //        or {
+        //            CancelSpy(ProtoMessage) from Spy to Server;
+        //        }
+        //    }
+        //    or {
+        //        SendError(ProtoMessage) from Server to Spy;
+        //    }
+        //}
 
         public static ProtoMessage SpyArmy(string armyID, string charID, Client client)
         {
@@ -3405,6 +3444,7 @@ namespace hist_mmorpg
             }
                 
         }
+
 
         public static ProtoMessage SpyFief(string charID, string fiefID, Client client)
         {
@@ -3726,7 +3766,7 @@ namespace hist_mmorpg
         }
         public static ProtoMessage ActionController(ProtoMessage msgIn, Client _client)
         {
-            Contract.Requires(_client == null&&msgIn!=null);
+            Contract.Requires(_client != null&&msgIn!=null);
             switch (msgIn.ActionType)
             {
                 // Switch to using another character (performing actions with NPC
@@ -3909,7 +3949,7 @@ namespace hist_mmorpg
                 // List chars in court, tavern or outside fief
                 case Actions.ListCharsInMeetingPlace:
                 {
-                    if (msgIn.MessageFields == null | msgIn.MessageFields.Length < 1)
+                    if (msgIn.MessageFields == null || msgIn.MessageFields.Length < 1)
                     {
                         return Utility_Methods.MessageInvalid;
                     }
@@ -3918,7 +3958,7 @@ namespace hist_mmorpg
                 // Instruct a character to camp where they are for a number of days
                 case Actions.Camp:
                     {
-                        if (msgIn.MessageFields != null || msgIn.MessageFields.Length > 0)
+                        if (msgIn.MessageFields != null && msgIn.MessageFields.Length > 0)
                         {
                             try
                             {

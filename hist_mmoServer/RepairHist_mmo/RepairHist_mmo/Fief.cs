@@ -612,6 +612,7 @@ namespace hist_mmorpg
                 success.includeAll(this);
                 success.ResponseType = DisplayMessages.FiefExpenditureAdjusted;
                 success.MessageFields = new string[] { toDisplay };
+                Console.WriteLine("Expenditure adjusted");
                 return success;
             }
         }

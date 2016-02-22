@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.IO;
@@ -245,7 +246,7 @@ namespace hist_mmorpg
                     besiegedFief = Globals_Game.fiefMasterList[this.besiegedFief];
                 }
             }
-
+            Contract.Ensures(besiegedFief!=null);
             return besiegedFief;
         }
 
@@ -321,7 +322,7 @@ namespace hist_mmorpg
                     defendingPlyr = Globals_Game.pcMasterList[this.defendingPlayer];
                 }
             }
-
+            Contract.Ensures(defendingPlyr!=null);
             return defendingPlyr;
         }
 
@@ -340,7 +341,7 @@ namespace hist_mmorpg
                     besiegingPlyr = Globals_Game.pcMasterList[this.besiegingPlayer];
                 }
             }
-
+            Contract.Ensures(besiegingPlyr!=null);
             return besiegingPlyr;
         }
 

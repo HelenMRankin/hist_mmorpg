@@ -170,9 +170,18 @@ namespace hist_mmorpg
             viewChar.Message = charID;
             Network.Send(viewChar);
         }
+
+        protected virtual void Dispose(bool dispose)
+        {
+            net.Dispose();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
-
-
 
     /*************************************
          * Travel-related Commands ***
@@ -594,7 +603,7 @@ namespace hist_mmorpg
     public partial class TestClient
     {
 
-        public class Network
+        public class Network : IDisposable
         {
             RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider();
             HashAlgorithm hash = new SHA256Managed();
@@ -672,6 +681,7 @@ namespace hist_mmorpg
                 {
                     client.Disconnect("Log out");
                 }
+                Dispose();
                 client.Shutdown("Exit");
             }
 
@@ -1017,6 +1027,19 @@ namespace hist_mmorpg
                     }
                     Thread.Sleep(1);
                 }
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+                
+            }
+
+            protected virtual void Dispose(bool dispose)
+            {
+                crypto.Dispose();
+                hash.Dispose();
             }
         }
     }

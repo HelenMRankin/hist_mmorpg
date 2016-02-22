@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Bson;
 
 namespace hist_mmorpg
 {
     public partial class TestClient
     {
+        
         /*************************************
          * Battle-related Commands ***
          * **********************************/
@@ -77,6 +79,15 @@ namespace hist_mmorpg
             disband.ActionType = Actions.DisbandArmy;
             disband.Message = armyID;
             Network.Send(disband);
+        }
+
+        public void Attack(string armyID, string targetID)
+        {
+            ProtoMessage attack = new ProtoMessage();
+            attack.ActionType = Actions.Attack;
+            attack.Message = armyID;
+            attack.MessageFields=new string[]{targetID};
+            Network.Send(attack);
         }
 
         /// <summary>
