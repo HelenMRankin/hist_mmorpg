@@ -111,7 +111,6 @@ namespace hist_mmorpg
                         case NetIncomingMessageType.VerboseDebugMessage:
                         case NetIncomingMessageType.Data:
                         {
-                            Console.WriteLine("SERVER: recieved data message");
                                 // Retrieve client data
                                 if (!clientConnections.ContainsKey(im.SenderConnection))
                                 {
@@ -123,7 +122,6 @@ namespace hist_mmorpg
                                 // Decrypt message if appropriate
                                 if(c.alg!= null)
                                 {
-                                    Console.WriteLine("SERVER: decrypting client message");
                                     im.Decrypt(c.alg);
                                 }
                             // Attempt to deserialise message    
@@ -262,7 +260,7 @@ namespace hist_mmorpg
                                     ProtoLogIn logIn;
                                     if (!LogInManager.AcceptConnection(client, out logIn))
                                     {
-                                        im.SenderConnection.Deny();
+                                        im.SenderConnection.Deny("Access denied- you may already be logged in on another machine, or have entered the wrong credentials");
                                     }
                                     else
                                     {
@@ -315,8 +313,10 @@ namespace hist_mmorpg
             {
                 msg.Encrypt(alg);
             }
+
             server.SendMessage(msg, conn, NetDeliveryMethod.ReliableOrdered);
-            Console.WriteLine("Server sent message");
+
+            Console.WriteLine("Server sends message of type " + m.GetType() + " with Action: " + m.ActionType + " and response: " + m.ResponseType);
             server.FlushSendQueue();
         }
 
@@ -368,17 +368,20 @@ namespace hist_mmorpg
         //TODO write all client details to database, remove client from connected list and close connection
         public static void Disconnect(NetConnection conn, string disconnectMsg= "Disconnect")
         {
-            if (clientConnections.ContainsKey(conn))
+            if(conn!= null)
             {
-                // TODO process log out
-                Client client = clientConnections[conn];
-                Globals_Server.logEvent("Client " + client.user + "disconnects");
-                // Cancel awaiting tasks
-                client.cts.Cancel();
-                Globals_Game.RemoveObserver(client);
-                client.conn = null;
-                clientConnections.Remove(conn);
-                conn.Disconnect(disconnectMsg);
+                if (clientConnections.ContainsKey(conn))
+                {
+                    // TODO process log out
+                    Client client = clientConnections[conn];
+                    Globals_Server.logEvent("Client " + client.user + "disconnects");
+                    // Cancel awaiting tasks
+                    client.cts.Cancel();
+                    Globals_Game.RemoveObserver(client);
+                    client.conn = null;
+                    clientConnections.Remove(conn);
+                    conn.Disconnect(disconnectMsg);
+                }
             }
         }
 
@@ -387,6 +390,7 @@ namespace hist_mmorpg
             isListening = false;
             server.Shutdown("Server Shutdown");
         }
+
         public void Test()
         {
             NonPlayerCharacter marry = Globals_Game.npcMasterList["Char_626"];

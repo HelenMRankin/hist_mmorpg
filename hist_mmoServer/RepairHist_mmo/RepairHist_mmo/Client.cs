@@ -12,7 +12,7 @@ namespace hist_mmorpg
     /// <summary>
     /// Represents a connected client
     /// </summary>
-    public class Client
+    public class Client: IEquatable<Client>
     {
         public NetConnection conn { get; set; }
         public string user { get; set; }
@@ -69,6 +69,7 @@ namespace hist_mmorpg
         /// </summary>
         public NetAESEncryption alg = null;
 
+
         /// <summary>
         /// TEMP- Client's message queue
         /// </summary>
@@ -79,6 +80,9 @@ namespace hist_mmorpg
 
         public CancellationTokenSource cts { get; set; }
         public EventWaitHandle eventWaiter { get; set; }
+        private object _lock = new object();
+        public object Lock { get { return _lock; } }
+
         public Client(String user, String pcID)
         {
             // set username associated with client
@@ -135,19 +139,36 @@ namespace hist_mmorpg
         /// <returns>Message from server</returns>
         private ProtoMessage CheckForMessage(CancellationToken ct)
         {
+            ProtoMessage m = null;
+            // If have nothing in the queue need to wait for a message
             while (MessageQueue.Count == 0)
             {
                 eventWaiter.WaitOne();
-                if (ct.IsCancellationRequested)
+                // Lock the queue and try to return the message
+                lock (Lock)
                 {
-                    return null;
+                    if (MessageQueue.Count != 0)
+                    {
+                        m = MessageQueue[0];
+                        MessageQueue.RemoveAt(0);
+                        return m;
+                    }
                 }
-                // Allow other threads to execute
-                continue;
             }
-            ProtoMessage m = MessageQueue[0];
-            MessageQueue.RemoveAt(0);
-            return m;
+            // In the event queue already has items, lock the queue and get the item
+            lock (Lock)
+            {
+                if (MessageQueue.Count != 0)
+                {
+                    m = MessageQueue[0];
+                    MessageQueue.RemoveAt(0);
+                    return m;
+                }
+
+            }
+            // In the odd case that the queue was changed just after checking it was null, recurse
+            // Keeping this outside the lock to prevent locks being held for too long
+            return CheckForMessage(ct);
         }
 
         /// <summary>
@@ -180,7 +201,6 @@ namespace hist_mmorpg
                 // Error- expecting LogIn. Disconnect and send message to client
                 Server.Disconnect(conn, "Invalid message sequence-expecting login");
                 return;
-
             }
             else
             {
@@ -193,13 +213,9 @@ namespace hist_mmorpg
                     Server.Disconnect(conn, "Log in failed");
                     return;
                 }
-                else
-                {
-                    Console.WriteLine("SERVER: Log in succeeds");
-                }
             }
             // While client is connected
-            while (conn.Status == Lidgren.Network.NetConnectionStatus.Connected)
+            while (!cts.IsCancellationRequested&&conn.Status == Lidgren.Network.NetConnectionStatus.Connected)
             {
                 if (myPlayerCharacter == null || !myPlayerCharacter.isAlive)
                 {
@@ -226,21 +242,29 @@ namespace hist_mmorpg
                     ProtoMessage clientRequest = GetMessageTask.Result;
                     Console.WriteLine("SERVER: Processing client request for action: " + clientRequest.ActionType);
                     ProtoMessage reply = Game.ActionController(clientRequest, this);
-                    if (reply == null)
+                    if(!cts.IsCancellationRequested)
                     {
-                        Console.WriteLine("SERVER: Invalid message sequence");
-                        ProtoMessage invalid = new ProtoMessage();
-                        invalid.ActionType = clientRequest.ActionType;
-                        invalid.ResponseType = DisplayMessages.ErrorGenericMessageInvalid;
-                        Server.SendViaProto(invalid, conn, alg);
-                    }
-                    else
-                    {
-                        reply.ActionType = clientRequest.ActionType;
-                        Server.SendViaProto(reply, conn, alg);
+                        if (reply == null)
+                        {
+                            Console.WriteLine("SERVER: Invalid message sequence");
+                            ProtoMessage invalid = new ProtoMessage();
+                            invalid.ActionType = clientRequest.ActionType;
+                            invalid.ResponseType = DisplayMessages.ErrorGenericMessageInvalid;
+                            Server.SendViaProto(invalid, conn, alg);
+                        }
+                        else
+                        {
+                            reply.ActionType = clientRequest.ActionType;
+                            Server.SendViaProto(reply, conn, alg);
+                        }
                     }
                 }
             }
+        }
+
+        public bool Equals(Client other)
+        {
+            return this.user.Equals(other.user);
         }
     }
 

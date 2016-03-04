@@ -23,7 +23,7 @@ namespace hist_mmorpg
             ProtoMessage message = new ProtoMessage();
             message.Message = fiefID;
             message.ActionType = Actions.ExamineArmiesInFief;
-            Network.Send(message);
+            net.Send(message);
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace hist_mmorpg
             recruitDetails.amount = numTroops;
             recruitDetails.isConfirm = isConfirm;
             recruitDetails.ActionType = Actions.RecruitTroops;
-            Network.Send(recruitDetails);
+            net.Send(recruitDetails);
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace hist_mmorpg
             ProtoMessage maintain = new ProtoMessage();
             maintain.ActionType = Actions.MaintainArmy;
             maintain.Message = armyID;
-            Network.Send(maintain);
+            net.Send(maintain);
         }
 
 
@@ -66,7 +66,7 @@ namespace hist_mmorpg
             appoint.Message = armyID;
             appoint.MessageFields = new string[] { charID };
             appoint.ActionType = Actions.AppointLeader;
-            Network.Send(appoint);
+            net.Send(appoint);
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace hist_mmorpg
             ProtoMessage disband = new ProtoMessage();
             disband.ActionType = Actions.DisbandArmy;
             disband.Message = armyID;
-            Network.Send(disband);
+            net.Send(disband);
         }
 
         public void Attack(string armyID, string targetID)
@@ -87,7 +87,7 @@ namespace hist_mmorpg
             attack.ActionType = Actions.Attack;
             attack.Message = armyID;
             attack.MessageFields=new string[]{targetID};
-            Network.Send(attack);
+            net.Send(attack);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace hist_mmorpg
             detachment.leftFor = playerID;
             detachment.troops = troops;
             detachment.ActionType = Actions.DropOffTroops;
-            Network.Send(detachment);
+            net.Send(detachment);
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace hist_mmorpg
             ProtoMessage requestTransferList = new ProtoMessage();
             requestTransferList.Message = armyID;
             requestTransferList.ActionType = Actions.ListDetachments;
-            Network.Send(requestTransferList);
+            net.Send(requestTransferList);
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace hist_mmorpg
             requestPickups.ActionType = Actions.PickUpTroops;
             requestPickups.MessageFields = selectedDetachments;
             requestPickups.Message = armyID;
-            Network.Send(requestPickups);
+            net.Send(requestPickups);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace hist_mmorpg
             newValues.aggression = newAgg;
             newValues.odds = newOdds;
             newValues.ActionType = Actions.AdjustCombatValues;
-            Network.Send(newValues);
+            net.Send(newValues);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace hist_mmorpg
         {
             ProtoMessage siegelist = new ProtoMessage();
             siegelist.ActionType = Actions.SiegeList;
-            Network.Send(siegelist);
+            net.Send(siegelist);
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace hist_mmorpg
             ProtoMessage viewSiege = new ProtoMessage();
             viewSiege.ActionType = Actions.ViewSiege;
             viewSiege.Message = siegeID;
-            Network.Send(viewSiege);
+            net.Send(viewSiege);
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace hist_mmorpg
             ProtoMessage pillage = new ProtoMessage();
             pillage.ActionType = Actions.PillageFief;
             pillage.Message = armyID;
-            Network.Send(pillage);
+            net.Send(pillage);
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace hist_mmorpg
             ProtoMessage besiege = new ProtoMessage();
             besiege.ActionType = Actions.BesiegeFief;
             besiege.Message = armyID;
-            Network.Send(besiege);
+            net.Send(besiege);
         }
 
         /// <summary>
@@ -212,7 +212,7 @@ namespace hist_mmorpg
             ProtoMessage storm = new ProtoMessage();
             storm.ActionType = Actions.SiegeRoundStorm;
             storm.Message = siegeID;
-            Network.Send(storm);
+            net.Send(storm);
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace hist_mmorpg
             ProtoMessage negotiate = new ProtoMessage();
             negotiate.ActionType = Actions.SiegeRoundNegotiate;
             negotiate.Message = siegeID;
-            Network.Send(negotiate);
+            net.Send(negotiate);
         }
 
 
@@ -237,7 +237,7 @@ namespace hist_mmorpg
             ProtoMessage reduce = new ProtoMessage();
             reduce.ActionType = Actions.SiegeRoundReduction;
             reduce.Message = siegeID;
-            Network.Send(reduce);
+            net.Send(reduce);
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace hist_mmorpg
             ProtoMessage end = new ProtoMessage();
             end.ActionType = Actions.EndSiege;
             end.Message = siegeID;
-            Network.Send(end);
+            net.Send(end);
         }
     }
 }

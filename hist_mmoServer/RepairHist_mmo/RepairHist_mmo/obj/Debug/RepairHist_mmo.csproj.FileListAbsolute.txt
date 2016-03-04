@@ -92,7 +92,6 @@ G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\CodeContracts\hist
 G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmoccrefgen.rsp
 G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\hist_mmorpg.exe.CodeAnalysisLog.xml
 G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\hist_mmorpg.exe.lastcodeanalysissucceeded
-G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmo.csprojResolveAssemblyReference.cache
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\hist_mmorpg.exe.config
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.exe
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\hist_mmorpg.exe.manifest
@@ -105,3 +104,4 @@ E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmo.csp
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.exe.manifest
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.application
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.pdb
+G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmo.csprojResolveAssemblyReference.cache

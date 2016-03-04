@@ -1,4 +1,2 @@
-Server start
 Server started- host: localhost, port: 8000, appID: test, max connections: 2000
-Total approximate memory: 2924128
-helen logs in from 127.0.0.1:62671
+Total approximate memory: 2887632

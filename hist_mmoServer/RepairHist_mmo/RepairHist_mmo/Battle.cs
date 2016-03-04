@@ -16,7 +16,6 @@ namespace hist_mmorpg
         /// <param name="circumstance">string indicating circumstance of battle</param>
         public static bool BringToBattle(uint attackerValue, uint defenderValue, string circumstance = "battle")
         {
-            Console.WriteLine("###PROGRESS CHECK 1.1");
             bool battleHasCommenced = false;
             double[] combatOdds = Globals_Server.battleProbabilities["odds"];
             double[] battleChances = Globals_Server.battleProbabilities[circumstance];
@@ -47,7 +46,6 @@ namespace hist_mmorpg
             {
                 battleHasCommenced = true;
             }
-            Console.WriteLine("###PROGRESS CHECK 1.2");
             return battleHasCommenced;
         }
 

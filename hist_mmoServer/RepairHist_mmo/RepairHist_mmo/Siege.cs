@@ -246,8 +246,9 @@ namespace hist_mmorpg
                     besiegedFief = Globals_Game.fiefMasterList[this.besiegedFief];
                 }
             }
-            Contract.Ensures(besiegedFief!=null);
+            
             return besiegedFief;
+            Contract.Ensures(besiegedFief != null);
         }
 
         /// <summary>
@@ -322,8 +323,9 @@ namespace hist_mmorpg
                     defendingPlyr = Globals_Game.pcMasterList[this.defendingPlayer];
                 }
             }
-            Contract.Ensures(defendingPlyr!=null);
+            
             return defendingPlyr;
+            Contract.Ensures(defendingPlyr != null);
         }
 
         /// <summary>
@@ -341,8 +343,9 @@ namespace hist_mmorpg
                     besiegingPlyr = Globals_Game.pcMasterList[this.besiegingPlayer];
                 }
             }
-            Contract.Ensures(besiegingPlyr!=null);
+            
             return besiegingPlyr;
+            Contract.Ensures(besiegingPlyr != null);
         }
 
         /// <summary>

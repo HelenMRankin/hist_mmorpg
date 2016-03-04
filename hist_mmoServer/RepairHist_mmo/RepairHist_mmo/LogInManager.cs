@@ -128,6 +128,12 @@ namespace hist_mmorpg
         /// <returns></returns>
         public static bool AcceptConnection(Client client, out ProtoLogIn response)
         {
+            if (Globals_Game.IsObserver(client))
+            {
+                Console.WriteLine("SERVER: Client is already logged in");
+                response = null;
+                return false;
+            }
             byte[] sessionSalt = GetRandomSalt(32);
             byte[] userSalt = GetUserSalt(client.user);
             if (userSalt == null)
