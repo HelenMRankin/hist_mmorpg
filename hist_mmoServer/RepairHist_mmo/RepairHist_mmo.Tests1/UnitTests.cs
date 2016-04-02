@@ -95,7 +95,6 @@ namespace hist_mmorpg.Tests
         public void LogInTestNullUsername()
         {
             TestClient s0 = new TestClient();
-            s0.net = (TestClient.Network)null;
             this.LogInTest(s0, null, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             s0.LogOut();
         }
@@ -169,9 +168,7 @@ namespace hist_mmorpg.Tests
             s0.LogOut();
            s1.LogOut();
         }
-
-
-
+        
         [TestMethod]
         [TestCategory("LogIn")]
         [Timeout(15000)]
@@ -187,7 +184,35 @@ namespace hist_mmorpg.Tests
             s0.LogOut();
         }
 
-        
+        [TestMethod]
+        [TestCategory("General")]
+        [Timeout(15000)]
+        public void MessageWaitingTest()
+        {
+            while (!client.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            client.ClearMessageQueues();
+            int n = 20;
+            Task<ProtoMessage>[] replyTasks= new Task<ProtoMessage>[n];
+            // Set up reply receivers 
+            for (int i = 0; i < n; i++)
+            {
+                replyTasks[i] = client.GetReply(i.ToString());
+            }
+            // Send messages
+            for (int i = 0; i < n; i++)
+            {
+                client.net.Send(new ProtoMessage() { ActionType = Actions.ViewChar, Message = MyPlayerCharacter.charID });
+            }
+            // Wait on all replies
+            for (int i = 0; i < n; i++)
+            {
+                replyTasks[i].Wait(10000);
+            }
+        }
+
         [TestMethod]
         [TestCategory("AdjustExpenditure")]
         [Timeout(15000)]
@@ -338,6 +363,23 @@ namespace hist_mmorpg.Tests
                 OwnedArmy.GetLeader().location.id = NotOwnedArmy.location;
             }
             this.AttackTest(client, OwnedArmy.armyID, null);
+        }
+
+        [TestMethod]
+        [Timeout(8000)]
+        public void AttackTooFarFromArmy()
+        {
+            while (!client.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            client.ClearMessageQueues();
+            OwnedArmy.location = OwnedFief.id;
+            if (OwnedArmy.GetLeader() != null)
+            {
+                OwnedArmy.GetLeader().location.id = OwnedArmy.location;
+            }
+            this.AttackTest(client, OwnedArmy.armyID, NotOwnedArmy.armyID);
         }
 
         /*
@@ -655,6 +697,28 @@ namespace hist_mmorpg.Tests
                 this.RecruitTroopsTest(client, OwnedArmy.armyID, 50, true);
             }
         }
+        [TestMethod]
+        [Timeout(15000)]
+        public void RecruitTooMany()
+        {
+            while (!client.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            client.ClearMessageQueues();
+            if (OwnedArmy == null)
+            {
+                Console.WriteLine("Do not own an army!");
+                Console.WriteLine("PlayerCharacter " + MyPlayerCharacter.charID + "( " + MyPlayerCharacter.firstName +
+                                  " " + MyPlayerCharacter.familyName + " has " + MyPlayerCharacter.myArmies.Count +
+                                  " armies");
+                this.RecruitTroopsTest(client, null, 50000, true);
+            }
+            else
+            {
+                this.RecruitTroopsTest(client, OwnedArmy.armyID, 50000, true);
+            }
+        }
 
         [TestMethod]
         [Timeout(15000)]
@@ -966,7 +1030,7 @@ namespace hist_mmorpg.Tests
         /// Attempt to spy on a character, then timeout
         /// </summary>
         [TestMethod]
-        [Timeout(15000)]
+        [Timeout(40000)]
         public void SpyCharacterTimeout()
         {
             
@@ -990,6 +1054,88 @@ namespace hist_mmorpg.Tests
             response = responseTask.Result;
 
             Assert.AreEqual(DisplayMessages.Timeout, response.ResponseType);
+        }
+
+        [TestMethod]
+        [Timeout(10000)]
+        public void TravelValid()
+        {
+            while (!client.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            client.ClearMessageQueues();
+            Fief f = MyPlayerCharacter.location;
+            Fief adjacent = Globals_Game.gameMap.GetFief(f, "N");
+            if (adjacent == null)
+            {
+                adjacent = Globals_Game.gameMap.GetFief(f, "S");
+            }
+            if (adjacent == null)
+            {
+                adjacent = Globals_Game.gameMap.GetFief(f, "E");
+            }
+            this.MoveTest(client,MyPlayerCharacter.charID,adjacent.id,null);
+        }
+
+        [TestMethod]
+        [Timeout(10000)]
+        public void TravelSiegeConfirm()
+        {
+            // Forcibly add a siege
+            while (!client.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            client.ClearMessageQueues();
+            Fief f = MyPlayerCharacter.location;
+            Fief adjacent = Globals_Game.gameMap.GetFief(f, "E");
+            Console.WriteLine("TEST: Army id: "+OwnedArmy.armyID);
+            Siege s = Pillage_Siege.SiegeStart(OwnedArmy, NotOwnedFief);
+
+            if (s == null||string.IsNullOrWhiteSpace(OwnedArmy.CheckIfBesieger())||OwnedArmy.GetSiege()==null||MyPlayerCharacter.GetArmy().GetSiege()==null)
+            {
+                Assert.Fail();
+            }
+            client.ClearMessageQueues();
+            this.MoveTest(client,MyPlayerCharacter.charID,f.id,null);
+            client.SendMessage(Actions.TravelTo,true);
+            Thread.Sleep(1000);
+        }
+
+        [TestMethod]
+        [Timeout(10000)]
+        public void TravelSiegeCancel()
+        {
+
+        }
+
+        [TestMethod]
+        [Timeout(10000)]
+        public void TravelTooFar()
+        {
+
+        }
+
+        [TestMethod]
+        [Timeout(10000)]
+        public void TravelBadCharacter()
+        {
+            
+        }
+
+        [TestMethod]
+        [Timeout(10000)]
+        public void TravelNotOwnedCharacter()
+        {
+
+        }
+
+        [TestMethod]
+        [Timeout(10000)]
+        public void TravelBadFief()
+        {
+
         }
     }
 }

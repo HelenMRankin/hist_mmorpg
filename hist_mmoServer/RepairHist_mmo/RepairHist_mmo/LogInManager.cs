@@ -135,7 +135,7 @@ namespace hist_mmorpg
                 return false;
             }
             byte[] sessionSalt = GetRandomSalt(32);
-            byte[] userSalt = GetUserSalt(client.user);
+            byte[] userSalt = GetUserSalt(client.username);
             if (userSalt == null)
             {
                 response = null;
@@ -143,13 +143,13 @@ namespace hist_mmorpg
             }
             response = new ProtoLogIn();
             response.sessionSalt = sessionSalt;
-            if (!sessionSalts.ContainsKey(client.user))
+            if (!sessionSalts.ContainsKey(client.username))
             {
-                sessionSalts.Add(client.user, sessionSalt);
+                sessionSalts.Add(client.username, sessionSalt);
             }
             else
             {
-                sessionSalts[client.user] = sessionSalt;
+                sessionSalts[client.username] = sessionSalt;
             }
             response.userSalt = userSalt;
             response.ActionType = Actions.LogIn;
@@ -230,7 +230,7 @@ namespace hist_mmorpg
 
         public static bool ProcessLogIn(ProtoLogIn login, Client c)
         {
-            if (!VerifyUser(c.user,login.userSalt))
+            if (!VerifyUser(c.username,login.userSalt))
             {
                 // error
                 return false;
@@ -252,7 +252,7 @@ namespace hist_mmorpg
                 ProtoClient clientDetails = new ProtoClient(c);
                 clientDetails.ActionType = Actions.LogIn;
                 clientDetails.ResponseType = DisplayMessages.LogInSuccess;
-                Server.SendViaProto(clientDetails, c.conn, c.alg);
+                Server.SendViaProto(clientDetails, c.connection, c.alg);
                 Globals_Game.RegisterObserver(c);
                 return true;
             }

@@ -14,8 +14,8 @@ namespace hist_mmorpg
     /// </summary>
     public class Client: IEquatable<Client>
     {
-        public NetConnection conn { get; set; }
-        public string user { get; set; }
+        public NetConnection connection { get; set; }
+        public string username { get; set; }
         /// <summary>
         /// Holds PlayerCharacter associated with the player using this client
         /// </summary>
@@ -86,7 +86,7 @@ namespace hist_mmorpg
         public Client(String user, String pcID)
         {
             // set username associated with client
-            this.user = user;
+            this.username = user;
 
 
             // get playercharacter from master list of player characers
@@ -101,7 +101,9 @@ namespace hist_mmorpg
             MessageQueue = new List<ProtoMessage>();
             eventWaiter = new EventWaitHandle(false, EventResetMode.AutoReset);
             cts = new CancellationTokenSource();
-            Globals_Game.userChars.Add(user,myPlayerCharacter);
+            Globals_Game.ownedPlayerCharacters.Add(user,myPlayerCharacter);
+            Globals_Server.client_keys
+            Globals_Server.Clients.Add(user, this);
         }
         /// <summary>
         /// Updates the client
@@ -114,22 +116,22 @@ namespace hist_mmorpg
             m.ActionType = Actions.Update;
             m.ResponseType = type;
             m.MessageFields = fields;
-            if (conn != null)
+            if (connection != null)
             {
-                Globals_Server.logEvent("Update " + this.user + ": " + type.ToString());
-                Console.WriteLine("Sending update " + type.ToString() + " to " + this.user);
-                Server.SendViaProto(m, conn,alg);
+                Globals_Server.logEvent("Update " + this.username + ": " + type.ToString());
+                Console.WriteLine("Sending update " + type.ToString() + " to " + this.username);
+                Server.SendViaProto(m, connection,alg);
             }
         }
 
         public void Update(ProtoMessage message)
         {
             message.ActionType = Actions.Update;
-            if (conn != null)
+            if (connection != null)
             {
-                Globals_Server.logEvent("Update " + this.user + ": " + message.ResponseType.ToString());
-                Console.WriteLine("Sending update " + message.ResponseType.ToString() + " to " + this.user);
-                Server.SendViaProto(message, conn, alg);
+                Globals_Server.logEvent("Update " + this.username + ": " + message.ResponseType.ToString());
+                Console.WriteLine("Sending update " + message.ResponseType.ToString() + " to " + this.username);
+                Server.SendViaProto(message, connection, alg);
             }
         }
 
@@ -139,11 +141,14 @@ namespace hist_mmorpg
         /// <returns>Message from server</returns>
         private ProtoMessage CheckForMessage(CancellationToken ct)
         {
+            Console.WriteLine("SERVER: in CheckForMessage");
             ProtoMessage m = null;
             // If have nothing in the queue need to wait for a message
             while (MessageQueue.Count == 0)
             {
+                Console.WriteLine("SERVER: CheckForMessage queue is empty- waiting...");
                 eventWaiter.WaitOne();
+                Console.WriteLine("SERVER: Event received!");
                 // Lock the queue and try to return the message
                 lock (Lock)
                 {
@@ -158,8 +163,10 @@ namespace hist_mmorpg
             // In the event queue already has items, lock the queue and get the item
             lock (Lock)
             {
+                
                 if (MessageQueue.Count != 0)
                 {
+                    Console.WriteLine("SERVER: Queue not empty- getting message");
                     m = MessageQueue[0];
                     MessageQueue.RemoveAt(0);
                     return m;
@@ -168,6 +175,7 @@ namespace hist_mmorpg
             }
             // In the odd case that the queue was changed just after checking it was null, recurse
             // Keeping this outside the lock to prevent locks being held for too long
+            Console.WriteLine("SERVER: Recursively calling CheckForMessage!");
             return CheckForMessage(ct);
         }
 
@@ -177,10 +185,11 @@ namespace hist_mmorpg
         /// <returns>Task containing the reply as a result</returns>
         public async Task<ProtoMessage> GetMessage()
         {
+            Console.WriteLine("SERVER: Getting next message...");
             CancellationToken ct = cts.Token;
             Task<ProtoMessage> t = (Task.Run(() => CheckForMessage(ct)));
-            await t;
-
+           // await t;
+            t.Wait();
             return t.Result;
         }
 
@@ -191,7 +200,7 @@ namespace hist_mmorpg
             if (!GetMessageTask.Wait(3000))
             {
                 // Taken too long after accepting connection request to receive login
-                Server.Disconnect(conn, "Failed to login due to timeout");
+                Server.Disconnect(connection, "Failed to login due to timeout");
             }
             Console.WriteLine("SERVER: Got message in async controller");
             ProtoLogIn LogIn = GetMessageTask.Result as ProtoLogIn;
@@ -199,7 +208,7 @@ namespace hist_mmorpg
             {
                 Console.WriteLine("SERVER: was expecting log in, disconnecting");
                 // Error- expecting LogIn. Disconnect and send message to client
-                Server.Disconnect(conn, "Invalid message sequence-expecting login");
+                Server.Disconnect(connection, "Invalid message sequence-expecting login");
                 return;
             }
             else
@@ -210,20 +219,20 @@ namespace hist_mmorpg
                 {
                     Console.WriteLine("SERVER: Log in fails");
                     // Error
-                    Server.Disconnect(conn, "Log in failed");
+                    Server.Disconnect(connection, "Log in failed");
                     return;
                 }
             }
             // While client is connected
-            while (!cts.IsCancellationRequested&&conn.Status == Lidgren.Network.NetConnectionStatus.Connected)
+            while (!cts.IsCancellationRequested&&connection.Status == Lidgren.Network.NetConnectionStatus.Connected)
             {
                 if (myPlayerCharacter == null || !myPlayerCharacter.isAlive)
                 {
-                    Console.WriteLine("SERVER: client has no valud playercharacter");
+                    Console.WriteLine("SERVER: client has no valid playercharacter");
                     ProtoMessage error = new ProtoMessage();
                     error.ResponseType = DisplayMessages.Error;
-                    Server.SendViaProto(error, conn, alg);
-                    Server.Disconnect(conn,"You have no head of family to play as");
+                    Server.SendViaProto(error, connection, alg);
+                    Server.Disconnect(connection,"You have no head of family to play as");
                     return;
                 }
                 GetMessageTask = GetMessage();
@@ -233,7 +242,7 @@ namespace hist_mmorpg
                     Console.WriteLine("SERVER: client times out");
                     // Session TimeOut or Cancellation
                     // Disconnect
-                    Server.Disconnect(conn, "You have timed out due to inactivity");
+                    Server.Disconnect(connection, "You have timed out due to inactivity");
                     return;
                 }
                 else
@@ -250,12 +259,12 @@ namespace hist_mmorpg
                             ProtoMessage invalid = new ProtoMessage();
                             invalid.ActionType = clientRequest.ActionType;
                             invalid.ResponseType = DisplayMessages.ErrorGenericMessageInvalid;
-                            Server.SendViaProto(invalid, conn, alg);
+                            Server.SendViaProto(invalid, connection, alg);
                         }
                         else
                         {
                             reply.ActionType = clientRequest.ActionType;
-                            Server.SendViaProto(reply, conn, alg);
+                            Server.SendViaProto(reply, connection, alg);
                         }
                     }
                 }
@@ -264,7 +273,7 @@ namespace hist_mmorpg
 
         public bool Equals(Client other)
         {
-            return this.user.Equals(other.user);
+            return this.username.Equals(other.username);
         }
     }
 
@@ -277,7 +286,7 @@ namespace hist_mmorpg
 
         public Client_Serialized(Client c)
         {
-            this.user = c.user;
+            this.user = c.username;
             this.pcID = c.myPlayerCharacter.charID;
             this.myPastEvents = c.myPastEvents;
             this.activeChar = c.activeChar.charID;
@@ -287,8 +296,9 @@ namespace hist_mmorpg
         {
             Client c = new Client(user, pcID);
             c.myPastEvents = this.myPastEvents;
-            c.myPlayerCharacter = Globals_Game.getCharFromID(pcID) as PlayerCharacter;
-            c.activeChar = Globals_Game.getCharFromID(activeChar);
+            DisplayMessages charErr;
+            c.myPlayerCharacter = Utility_Methods.GetCharacter(pcID,out charErr) as PlayerCharacter;
+            c.activeChar = Utility_Methods.GetCharacter(activeChar,out charErr);
             return c;
         }
     }

@@ -62,7 +62,7 @@ namespace hist_mmorpg
             Pass = "potato";
             BadUsername = "notauser";
             BadPass = "notapass";
-            MyPlayerCharacter = Globals_Game.userChars[Username];
+            MyPlayerCharacter = Globals_Game.ownedPlayerCharacters[Username];
             Dictionary<string, PlayerCharacter>.Enumerator e = Globals_Game.pcMasterList.GetEnumerator();
             e.MoveNext();
             NotMyPlayerCharacter = e.Current.Value;
@@ -284,8 +284,9 @@ namespace hist_mmorpg
         public static void SetUpForDemo()
         {
             // Make Anselm Marshal very sneaky
-            Character Anselm = Globals_Game.getCharFromID("Char_390");
-            Character Bishop = Globals_Game.getCharFromID("Char_391");
+            DisplayMessages charErr;
+            Character Anselm = Utility_Methods.GetCharacter("Char_390",out charErr);
+            Character Bishop = Utility_Methods.GetCharacter("Char_391",out charErr);
             Tuple<Trait, int>[] newTraits = new Tuple<Trait, int>[2];
             newTraits[0] = new Tuple<Trait, int>(Globals_Game.traitMasterList["trait_9"], 9);
             newTraits[1] = new Tuple<Trait, int>(Globals_Game.traitMasterList["trait_8"], 9);
@@ -295,7 +296,8 @@ namespace hist_mmorpg
             newTraits2[0] = new Tuple<Trait, int>(Globals_Game.traitMasterList["trait_5"], 2);
             Bishop.traits = newTraits2;
             // Add funds to home treasury
-            (Globals_Game.getCharFromID("Char_158") as PlayerCharacter).GetHomeFief().AdjustTreasury(100000);
+            // ReSharper disable once PossibleNullReferenceException
+            (Utility_Methods.GetCharacter("Char_158",out charErr) as PlayerCharacter).GetHomeFief().AdjustTreasury(100000);
 
             // create and add army
             uint[] myArmyTroops1 = new uint[] { 8, 10, 0, 30, 60, 100, 220 };
@@ -315,7 +317,8 @@ namespace hist_mmorpg
         }
         public static void testCaptives()
         {
-            Character captive = Globals_Game.getCharFromID("Char_626");
+            DisplayMessages charErr;
+            Character captive = Utility_Methods.GetCharacter("Char_626",out charErr);
             PlayerCharacter captor = Globals_Game.pcMasterList["Char_158"];
             Fief location = Globals_Game.fiefMasterList["EPM02"];
             captor.AddCaptive(captive, location);

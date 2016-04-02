@@ -611,7 +611,8 @@ namespace hist_mmorpg
                 tmpGoTo.Add(item.id);
             }
             this.goTo = tmpGoTo.ToArray();
-            Character captor = Globals_Game.getCharFromID(c.captorID);
+            DisplayMessages captorError;
+            Character captor = Utility_Methods.GetCharacter(c.captorID, out captorError);
             if (captor != null)
             {
                 this.captor = captor.firstName + " " + captor.familyName;
@@ -1036,7 +1037,8 @@ namespace hist_mmorpg
             int i = 0;
             foreach (string cID in f.barredCharacters)
             {
-                Character c = Globals_Game.getCharFromID(cID);
+                DisplayMessages charError;
+                Character c = Utility_Methods.GetCharacter(cID, out charError);
                 if (c != null)
                 {
                     barredCharacters[i] = new ProtoCharacterOverview(c);

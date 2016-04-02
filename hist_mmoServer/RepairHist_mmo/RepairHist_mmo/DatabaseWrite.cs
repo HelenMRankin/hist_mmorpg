@@ -415,7 +415,7 @@ namespace hist_mmorpg
             DatabaseWrite.DatabaseWrite_KeyList(gameID, "siegeKeys", Globals_Game.siegeKeys);
 			Console.WriteLine ("Finished writing sieges");
             // write clients
-            foreach (KeyValuePair<string, Client> pair in Globals_Server.clients)
+            foreach (KeyValuePair<string, Client> pair in Globals_Server.Clients)
             {
                 bool success = DatabaseWrite_Client(gameID, pair.Value);
                 if (success)
@@ -429,19 +429,19 @@ namespace hist_mmorpg
             // ========= write MAP (edges collection)
             DatabaseWrite.DatabaseWrite_MapEdges(gameID, map: Globals_Game.gameMap);
 
-            foreach (KeyValuePair<string, Client> pair in Globals_Server.clients)
+            foreach (KeyValuePair<string, Client> pair in Globals_Server.Clients)
             {
-                DatabaseWrite.DatabaseWrite_Journal(gameID, pair.Value.user+"_journal", pair.Value.myPastEvents);
+                DatabaseWrite.DatabaseWrite_Journal(gameID, pair.Value.username+"_journal", pair.Value.myPastEvents);
                 // Globals_Client.myPlayerCharacter
                 if (pair.Value.myPlayerCharacter != null)
                 {
-                    DatabaseWrite.DatabaseWrite_String(gameID, pair.Value.user+"_playerChar", pair.Value.myPlayerCharacter.charID);
+                    DatabaseWrite.DatabaseWrite_String(gameID, pair.Value.username+"_playerChar", pair.Value.myPlayerCharacter.charID);
                 }
 
                 // Globals_Client.showMessages
-                DatabaseWrite.DatabaseWrite_Bool(gameID, pair.Value.user+"_showMessages", pair.Value.showMessages);
+                DatabaseWrite.DatabaseWrite_Bool(gameID, pair.Value.username+"_showMessages", pair.Value.showMessages);
                 // Globals_Client.showDebugMessages
-                DatabaseWrite.DatabaseWrite_Bool(gameID, pair.Value.user+"_showDebugMessages", pair.Value.showDebugMessages);
+                DatabaseWrite.DatabaseWrite_Bool(gameID, pair.Value.username+"_showDebugMessages", pair.Value.showDebugMessages);
             }
 			Console.WriteLine ("Finished writing map");
 
@@ -576,7 +576,7 @@ namespace hist_mmorpg
         public static bool DatabaseWrite_Client(string gameID, Client client)
         {
             Client_Serialized clientSer = new Client_Serialized(client);
-            var rString = new RiakObject(gameID, client.user, clientSer);
+            var rString = new RiakObject(gameID, client.username, clientSer);
             var putStringResult = Globals_Server.rClient.Put(rString);
             if (!putStringResult.IsSuccess)
             {

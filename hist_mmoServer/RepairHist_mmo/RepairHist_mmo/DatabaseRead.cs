@@ -186,7 +186,7 @@ namespace hist_mmorpg
             foreach (string username in Globals_Server.client_keys)
             {
                 Client c = DatabaseRead_Client(gameID, username);
-                Globals_Server.clients.Add(c.user, c);
+                Globals_Server.Clients.Add(c.username, c);
             }
             // ========= process any CHARACTER goTo QUEUES containing entries
             if (Globals_Game.goToList.Count > 0)
@@ -1373,7 +1373,8 @@ namespace hist_mmorpg
             {
                 foreach (string charID in fs.gaol)
                 {
-                    Character prisoner = Globals_Game.getCharFromID(charID);
+                    DisplayMessages charErr;
+                    Character prisoner = Utility_Methods.GetCharacter(charID,out charErr);
                     if (prisoner != null)
                     {
                         fOut.gaol.Add(prisoner);

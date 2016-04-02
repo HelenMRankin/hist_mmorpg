@@ -1255,6 +1255,12 @@ namespace hist_mmorpg
                             */
                             proceed = false;
                         }
+                        if(!this.location.Equals(targetArmy.location))
+                        {
+                            result = new ProtoMessage();
+                            result.ResponseType = DisplayMessages.ErrorGenericTooFarFromFief;
+                            proceed = false;
+                        }
                     }
                 }
             }

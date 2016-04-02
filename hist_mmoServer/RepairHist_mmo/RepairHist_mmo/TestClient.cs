@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,14 +14,38 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace hist_mmorpg
 {
+    public class ConcurrentQueueWithEvent<T>: ConcurrentQueue<T>
+    {
+        private readonly EventWaitHandle _eventWaiter;
+        public EventWaitHandle eventWaiter {
+            get { return _eventWaiter; }
+        }
+
+        public ConcurrentQueueWithEvent():base()
+        {
+            _eventWaiter = new EventWaitHandle(false,EventResetMode.AutoReset);
+        } 
+        public new void Enqueue(T t)
+        {
+            base.Enqueue(t);
+            eventWaiter.Set();
+        }
+
+    
+}
     public partial class TestClient
     {
         public List<ProtoMessage> messageQueue = new List<ProtoMessage>();
+        public ConcurrentQueueWithEvent<ProtoMessage> messageQueue2 = new ConcurrentQueueWithEvent<ProtoMessage>();
+        
         public List<string> serverMessages = new List<string>();
         public Network net;
         public string playerID;
         private object _lock = new object();
+        private object _stringLock = new object();
+        
         public object MessageLock {get { return _lock; }}
+        public object StringLock { get { return _stringLock;} }
 
         //public static EventWaitHandle eventWaiter { get; set; } = new EventWaitHandle(false, EventResetMode.AutoReset);
         /*************************************
@@ -68,6 +93,9 @@ namespace hist_mmorpg
             lock (MessageLock)
             {
                 messageQueue.Clear();
+            }
+            lock (StringLock)
+            {
                 serverMessages.Clear();
             }
             
@@ -103,36 +131,27 @@ namespace hist_mmorpg
         private ProtoMessage CheckForMessage()
         {
             ProtoMessage m = null;
-            // If have nothing in the queue need to wait for a message
-            while (messageQueue.Count == 0)
+            lock (MessageLock)
             {
-                net.eventWaiter.WaitOne();
-                // Lock the queue and try to return the message
-                lock (MessageLock)
+                Console.WriteLine("CLIENT: In lock for CheckForMessage");
+                // If have nothing in the queue need to wait for a message
+                while (messageQueue.Count == 0)
                 {
-                    if (messageQueue.Count != 0)
+                    messageQueue2.eventWaiter.WaitOne();
+                    Console.WriteLine("CLIENT: CheckForMessage: Got EVENT");
+                    if (!messageQueue2.TryDequeue(out m))
                     {
-                        m = messageQueue[0];
-                        messageQueue.RemoveAt(0);
+                        continue;
+                    }
+                    else
+                    {
                         return m;
                     }
                 }
+                messageQueue2.TryDequeue(out m);
+                Console.WriteLine("CLIENT: CheckForMessage: Dequeuing outside while loop");
+                return m;
             }
-            // In the event queue already has items, lock the queue and get the item
-            lock (MessageLock)
-            {
-                if (messageQueue.Count != 0)
-                {
-                    m = messageQueue[0];
-                    messageQueue.RemoveAt(0);
-                    return m;
-                }
-                
-            }
-            // In the odd case that the queue was changed just after checking it was null, recurse
-            // Keeping this outside the lock to prevent locks being held for too long
-            return CheckForMessage();
-
         }
 
         /// <summary>
@@ -145,7 +164,7 @@ namespace hist_mmorpg
             while (serverMessages.Count == 0)
             {
                 net.stringEventWaiter.WaitOne();
-                lock (MessageLock)
+                lock (StringLock)
                 {
                     if (serverMessages.Count != 0)
                     {
@@ -158,7 +177,7 @@ namespace hist_mmorpg
 
             } 
             // In the event queue already has items, lock the queue and get the item
-            lock (MessageLock)
+            lock (StringLock)
             {
                 if (messageQueue.Count != 0)
                 {
@@ -174,9 +193,10 @@ namespace hist_mmorpg
         /// Gets the next message recieved from the server
         /// </summary>
         /// <returns>Task containing the reply as a result</returns>
-        public async Task<ProtoMessage> GetReply()
+        public async Task<ProtoMessage> GetReply(string id=null)
         {
-            Console.WriteLine("Awaiting reply");
+
+            Console.WriteLine("Awaiting reply: "+id);
 
             ProtoMessage reply = await (Task.Run(() => CheckForMessage()));
             if(reply== null)
@@ -188,6 +208,7 @@ namespace hist_mmorpg
                 Console.WriteLine("####REPLY IS NOT NULL: "+reply.ActionType+ "!!!!!!###");
                 
             }
+            Console.WriteLine("ID: "+id+" got a reply");
             return reply;
         }
 
@@ -677,7 +698,6 @@ namespace hist_mmorpg
             public bool autoLogIn { get; set; }
             public bool loggedIn { get; set; }
             
-            public EventWaitHandle eventWaiter { get; set; }
             
             public EventWaitHandle stringEventWaiter { get; set; }
             public Network(TestClient tc,byte[] key = null)
@@ -685,7 +705,6 @@ namespace hist_mmorpg
                 this.tClient = tc;
                 autoLogIn = true;
                 this.key = key;
-                eventWaiter=new EventWaitHandle(false,EventResetMode.AutoReset);
                 stringEventWaiter = new EventWaitHandle(false, EventResetMode.AutoReset);
                 InitializeClient();
             }
@@ -967,7 +986,7 @@ namespace hist_mmorpg
                                         if (!string.IsNullOrWhiteSpace(s))
                                         {
                                             Console.WriteLine("CLIENT: Got message: " + s);
-                                            lock (tClient.MessageLock)
+                                            lock (tClient.StringLock)
                                             {
                                                 tClient.serverMessages.Add(s);
                                                 stringEventWaiter.Set();
@@ -980,12 +999,7 @@ namespace hist_mmorpg
                                         if (m.ResponseType == DisplayMessages.LogInSuccess)
                                         {
                                             loggedIn = true;
-                                            lock (tClient.MessageLock)
-                                            {
-                                                tClient.messageQueue.Add(m);
-                                                eventWaiter.Set();
-                                            }
-                                            
+                                            tClient.messageQueue2.Enqueue(m);
                                         }
                                         else
                                         {
@@ -1000,11 +1014,7 @@ namespace hist_mmorpg
                                                 {
                                                     Console.WriteLine("#####ADDED NULL MESSAGE####");
                                                 }
-                                                lock (tClient.MessageLock)
-                                                {
-                                                    tClient.messageQueue.Add(m);
-                                                    eventWaiter.Set();
-                                                }
+                                                tClient.messageQueue2.Enqueue(m);
                                                 if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
                                                 {
                                                     byte[] key = null;
@@ -1021,7 +1031,7 @@ namespace hist_mmorpg
                                                     string s = im.ReadString();
                                                     if (!string.IsNullOrWhiteSpace(s))
                                                     {
-                                                        lock (tClient.MessageLock)
+                                                        lock (tClient.StringLock)
                                                         {
                                                             tClient.serverMessages.Add(s);
                                                             stringEventWaiter.Set();
@@ -1056,11 +1066,7 @@ namespace hist_mmorpg
                                             ProtoMessage m = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(ms2, PrefixStyle.Fixed32);
                                             if (m != null)
                                             {
-                                                lock (tClient.MessageLock)
-                                                {
-                                                    eventWaiter.Set();
-                                                    tClient.messageQueue.Add(m);
-                                                }
+                                                tClient.messageQueue2.Enqueue(m);
                                                 if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
                                                 {
                                                     byte[] key = null;
@@ -1100,7 +1106,7 @@ namespace hist_mmorpg
                                     string reason = im.ReadString();
                                     if (!string.IsNullOrEmpty(reason))
                                     {
-                                        lock (tClient.MessageLock)
+                                        lock (tClient.StringLock)
                                         {
                                             Console.WriteLine("CLIENT: Adding string and setting event waiter");
                                             tClient.serverMessages.Add(reason);

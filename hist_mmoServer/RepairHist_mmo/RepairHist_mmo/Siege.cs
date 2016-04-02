@@ -602,7 +602,7 @@ namespace hist_mmorpg
 
             // description
             string siegeDescription = "";
-            if (ResponseType==null)
+            if (ResponseType==DisplayMessages.None)
             {
                 fields = new string[3];
                 fields[0] = besiegingPlayer.firstName + " " + besiegingPlayer.familyName;

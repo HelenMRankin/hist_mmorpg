@@ -1007,7 +1007,8 @@ namespace hist_mmorpg
                     string[] split = persona.Split(new char[]{'|'});
                     if (split[1].Equals("Captive"))
                     {
-                        captive = Globals_Game.getCharFromID(split[0]);
+                        DisplayMessages captiveErr;
+                        captive = Utility_Methods.GetCharacter(split[0],out captiveErr);
                     }
                 }
                 if (captive == null)
@@ -1025,7 +1026,8 @@ namespace hist_mmorpg
                     error.ResponseType = DisplayMessages.RansomCaptiveDead;
                     return false;
                 }
-                captor = Globals_Game.getCharFromID(captive.captorID) as PlayerCharacter;
+                DisplayMessages captorErr;
+                captor = Utility_Methods.GetCharacter(captive.captorID,out captorErr) as PlayerCharacter;
                 if (captor == null)
                 {
                     // Captive does not have a captor

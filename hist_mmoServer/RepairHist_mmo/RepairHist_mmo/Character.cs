@@ -1093,14 +1093,16 @@ namespace hist_mmorpg
             {
                 return this.GetHeadOfFamily();
             }
-            else if (this is NonPlayerCharacter )
+            else 
             {
                 var nonPlayerCharacter = this as NonPlayerCharacter;
-                if (nonPlayerCharacter != null && !string.IsNullOrWhiteSpace(nonPlayerCharacter.employer)) return nonPlayerCharacter.GetEmployer();
-                return null;
-            }
-            else
-            {
+                if (nonPlayerCharacter != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(nonPlayerCharacter.employer))
+                    {
+                        return nonPlayerCharacter.GetEmployer();
+                    }
+                }
                 return null;
             }
         }
@@ -1163,7 +1165,8 @@ namespace hist_mmorpg
             if (this.captorID != null)
             {
                 this.location.gaol.Remove(this);
-                PlayerCharacter captor = Globals_Game.getCharFromID(this.captorID) as PlayerCharacter;
+                DisplayMessages captorErr;
+                PlayerCharacter captor = Utility_Methods.GetCharacter(this.captorID,out captorErr) as PlayerCharacter;
                 if (captor != null)
                 {
                     captor.myCaptives.Remove(this);
@@ -1526,7 +1529,7 @@ namespace hist_mmorpg
                     if (!String.IsNullOrWhiteSpace(this.GetPlayerCharacter().playerID))
                     {
                         Client c;
-                        Globals_Server.clients.TryGetValue(this.GetPlayerCharacter().playerID, out c);
+                        Globals_Server.Clients.TryGetValue(this.GetPlayerCharacter().playerID, out c);
                         if (c != null)
                         {
                             if (c.activeChar == this)
@@ -1917,14 +1920,14 @@ namespace hist_mmorpg
             
             if (user != null)
             {
-                if (Globals_Game.userChars.ContainsKey(user))
+                if (Globals_Game.ownedPlayerCharacters.ContainsKey(user))
                 {
-                    Globals_Game.userChars[deceased.playerID] = promotedNPC;
+                    Globals_Game.ownedPlayerCharacters[deceased.playerID] = promotedNPC;
                     promotedNPC.playerID = user;
-                    Globals_Server.clients[user].myPlayerCharacter = promotedNPC;
+                    Globals_Server.Clients[user].myPlayerCharacter = promotedNPC;
                     //TODO notify user if logged in and write to database
                     Client player;
-                    Globals_Server.clients.TryGetValue(user, out player);
+                    Globals_Server.Clients.TryGetValue(user, out player);
                     if (player != null)
                     {
                         player.myPlayerCharacter = promotedNPC;
@@ -2479,25 +2482,8 @@ namespace hist_mmorpg
         {
             error = null;
             bool proceedWithMove = true;
-            PlayerCharacter player = null;
-            if (this is PlayerCharacter)
-            {
-                if (!string.IsNullOrWhiteSpace(((PlayerCharacter) this).playerID))
-                {
-                    player = this as PlayerCharacter;
-                }
-            }
-            else
-            {
-                if (this.familyID != null)
-                {
-                    player = this.GetHeadOfFamily();
-                }
-                if (!string.IsNullOrWhiteSpace(((NonPlayerCharacter) this).employer))
-                {
-                    player = ((NonPlayerCharacter) this).GetEmployer();
-                }
-            }
+            PlayerCharacter player = this.GetPlayerCharacter();
+            
             // check to see if character is leading a besieging army
             if (siegeCheck)
             {
@@ -2511,14 +2497,8 @@ namespace hist_mmorpg
                             Siege thisSiege = Globals_Game.siegeMasterList[thisSiegeID];
                             if (player != null)
                             {
-                                string[] fields = new string[3];
-                                fields[0]= thisSiege.GetBesiegingPlayer().firstName + " " + thisSiege.GetBesiegingPlayer().familyName;
-                                fields[1]= thisSiege.GetFief().name;
-                                fields[2] = thisSiege.GetDefendingPlayer().firstName + " " + thisSiege.GetDefendingPlayer().familyName;
-
-                                // end siege and set to null
-                                thisSiege.SiegeEnd(false, DisplayMessages.SiegeEndDefault,fields);
-                                thisSiege = null;
+                                proceedWithMove = false;
+                                error = new ProtoMessage(DisplayMessages.CharacterMoveEndSiege);
                             }
                     }
                 }
@@ -2536,10 +2516,8 @@ namespace hist_mmorpg
 
                         if (player != null)
                         {
-                            error = new ProtoMessage();
-                            error.ResponseType = DisplayMessages.CharacterDaysJourney;
+                            error = new ProtoMessage(DisplayMessages.CharacterDaysJourney);
                         }
-
                         proceedWithMove = false;
                     }
                 }
@@ -2561,7 +2539,7 @@ namespace hist_mmorpg
             bool success = this.ChecksBeforeMove(target, cost, out error, siegeCheck);
             if (!success) return false;
             //Holds the playercharacter moving or who initiated NPC move
-            PlayerCharacter player = null;
+            PlayerCharacter player;
             if (this is PlayerCharacter)
             {
                 player = (PlayerCharacter)this;

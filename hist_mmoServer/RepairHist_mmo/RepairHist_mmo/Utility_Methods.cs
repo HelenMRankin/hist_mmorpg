@@ -17,7 +17,7 @@ namespace hist_mmorpg
         public static ProtoMessage PositiveInteger { get { return new ProtoMessage(DisplayMessages.ErrorGenericPositiveInteger); } private set { } }
         public static ProtoMessage CharacterHeldCaptive { get { return new ProtoMessage(DisplayMessages.CharacterHeldCaptive); } private set { } }
         public static ProtoMessage Timeout { get { return new ProtoMessage(DisplayMessages.Timeout); } private set { } }
-        
+
         /// <summary>
         /// Creates a JournalEntry for the attention of the game sysAdmin
         /// </summary>
@@ -634,6 +634,89 @@ namespace hist_mmorpg
             return traitSet;
 
         }
- 
+
+        /// <summary>
+        /// Get Army from ID. Returns the army and Success if armyID is valid and army is in armyMasterList; null and an error if otherwise
+        /// </summary>
+        /// <param name="armyID">ID of army</param>
+        /// <param name="error">Error code on failure</param>
+        /// <returns>Army as indicated by armyID, or null</returns>
+        public static Army GetArmy(string armyID, out DisplayMessages error)
+        {
+            if (string.IsNullOrWhiteSpace(armyID) || !ValidateArmyID((armyID)))
+            {
+                error = DisplayMessages.ErrorGenericMessageInvalid;
+                return null;
+            }
+            Army a;
+            Globals_Game.armyMasterList.TryGetValue(armyID, out a);
+            if (a == null)
+            {
+                error = DisplayMessages.ErrorGenericArmyUnidentified;
+                return null;
+            }
+            error = DisplayMessages.Success;
+            return a;
+        }
+
+        /// <summary>
+        /// Get Fief from ID. Returns the fief and Success if fiefID is not null/empty and fief exists in FiefMasterList; null and an error if otherwise
+        /// </summary>
+        /// <param name="fiefID">ID of Fief</param>
+        /// <param name="error">Error code on failure</param>
+        /// <returns>Fief as indicated by fiefID, or null</returns>
+        public static Fief GetFief(string fiefID, out DisplayMessages error)
+        {
+            if (string.IsNullOrWhiteSpace(fiefID))
+            {
+                error = DisplayMessages.ErrorGenericMessageInvalid;
+                return null;
+            }
+            Fief f;
+            Globals_Game.fiefMasterList.TryGetValue(fiefID, out f);
+            if (f == null)
+            {
+                error = DisplayMessages.ErrorGenericFiefUnidentified;
+                return null;
+            }
+            error = DisplayMessages.Success;
+            return f;
+        }
+
+        /// <summary>
+        /// Get Character (NPC or PC) from ID. Returns the Character and Success if charID is not null/empty and of the correct format, and Character exists in npcMasterList or pcMasterList; null and an error if otherwise
+        /// </summary>
+        /// <param name="charID"></param>
+        /// <param name="error"></param>
+        /// <returns></returns>
+        public static Character GetCharacter(string charID, out DisplayMessages error)
+        {
+            if (string.IsNullOrWhiteSpace(charID) || !ValidateCharacterID(charID))
+            {
+                error = DisplayMessages.ErrorGenericMessageInvalid;
+                return null;
+            }
+            Character c;
+            NonPlayerCharacter npc;
+            PlayerCharacter pc;
+            Globals_Game.npcMasterList.TryGetValue(charID, out npc);
+            if (npc == null)
+            {
+                Globals_Game.pcMasterList.TryGetValue(charID, out pc);
+                if (pc == null)
+                {
+                    error = DisplayMessages.ErrorGenericCharacterUnidentified;
+                    return null;
+                }
+                c = pc;
+            }
+            else
+            {
+                c = npc;
+            }
+            error = DisplayMessages.Success;
+            return c;
+        }
+       
     }
 }

@@ -35,7 +35,6 @@ namespace hist_mmorpg
                     if (s != null && s.Equals("exit"))
                     {
                         Globals_Server.logEvent("Server exits");
-                        server.isListening = false;
                         Globals_Server.server.Shutdown("Server exits");
                     }
                 }
