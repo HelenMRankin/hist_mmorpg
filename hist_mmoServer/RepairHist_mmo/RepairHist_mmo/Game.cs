@@ -32,17 +32,11 @@ namespace hist_mmorpg
                 dir = Directory.GetParent(dir).FullName;
             }*/
 
-            Trace.Listeners.Add(new ConsoleTraceListener(true));
-            Trace.TraceInformation("Test");
             String dir = Directory.GetCurrentDirectory();
             dir = dir.Remove(dir.IndexOf("RepairHist_mmo"));
             String path = Path.Combine(dir,"RepairHist_mmo","CSVs");
-            Trace.WriteLine("Path: " + path);
-            Trace.Flush();
             String gameObjects = Path.Combine(path, "gameObjects.csv");
             String mapData = Path.Combine(path, "map.csv");
-            
-            Trace.WriteLine("Datapath: "+mapData);
 			this.InitGameObjects(gameID: "testBucket", objectDataFile: gameObjects, mapDataFile: mapData,
             start: 1194, king1: "Char_47", king2: "Char_40", herald1: "Char_1", sysAdmin: null);
            // initialiseTypes();

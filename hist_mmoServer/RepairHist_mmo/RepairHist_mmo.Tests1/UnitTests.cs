@@ -186,7 +186,7 @@ namespace hist_mmorpg.Tests
 
         [TestMethod]
         [TestCategory("General")]
-        [Timeout(15000)]
+        [Timeout(30000)]
         public void MessageWaitingTest()
         {
             while (!client.IsConnectedAndLoggedIn())

@@ -11,20 +11,28 @@ using System.Net;
 using System.IO;
 using ProtoBuf;
 using System.Security.Cryptography.X509Certificates;
+using System.Diagnostics;
+using System.Windows.Forms.VisualStyles;
 
 namespace hist_mmorpg
 {
+    /// <summary>
+    /// Extends the ConcurrentQueue to fire an event whenever a new item is enqueued
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class ConcurrentQueueWithEvent<T>: ConcurrentQueue<T>
     {
-        private readonly EventWaitHandle _eventWaiter;
-        public EventWaitHandle eventWaiter {
-            get { return _eventWaiter; }
-        }
+        public EventWaitHandle eventWaiter { get; }
 
         public ConcurrentQueueWithEvent():base()
         {
-            _eventWaiter = new EventWaitHandle(false,EventResetMode.AutoReset);
+            eventWaiter = new EventWaitHandle(false,EventResetMode.AutoReset);
         } 
+
+        /// <summary>
+        /// Add a new item to the queue and set the EventWaitHandle
+        /// </summary>
+        /// <param name="t">Item to be enqueued</param>
         public new void Enqueue(T t)
         {
             base.Enqueue(t);
@@ -35,19 +43,12 @@ namespace hist_mmorpg
 }
     public partial class TestClient
     {
-        public List<ProtoMessage> messageQueue = new List<ProtoMessage>();
-        public ConcurrentQueueWithEvent<ProtoMessage> messageQueue2 = new ConcurrentQueueWithEvent<ProtoMessage>();
-        
-        public List<string> serverMessages = new List<string>();
+        public ConcurrentQueueWithEvent<ProtoMessage> protobufMessageQueue = new ConcurrentQueueWithEvent<ProtoMessage>();
+        public ConcurrentQueueWithEvent<string> stringMessageQueue = new ConcurrentQueueWithEvent<string>(); 
         public Network net;
         public string playerID;
-        private object _lock = new object();
-        private object _stringLock = new object();
-        
-        public object MessageLock {get { return _lock; }}
-        public object StringLock { get { return _stringLock;} }
 
-        //public static EventWaitHandle eventWaiter { get; set; } = new EventWaitHandle(false, EventResetMode.AutoReset);
+
         /*************************************
          * General Commands ***
          * **********************************/
@@ -88,16 +89,16 @@ namespace hist_mmorpg
             return false;
         }
 
+        /// <summary>
+        /// Clear both message queues- used in tests where we don't care about the login messages
+        /// </summary>
         public void ClearMessageQueues()
         {
-            lock (MessageLock)
-            {
-                messageQueue.Clear();
-            }
-            lock (StringLock)
-            {
-                serverMessages.Clear();
-            }
+            // Note- With ConcurrentQueues, it is preferrable to discard the previous queue than to attempt to Dequeue all elements in case the queue is currently being written to
+                protobufMessageQueue = new ConcurrentQueueWithEvent<ProtoMessage>();
+
+                stringMessageQueue=new ConcurrentQueueWithEvent<string>();
+
             
         }
         public void LogOut()
@@ -128,67 +129,30 @@ namespace hist_mmorpg
         /// Gets the next message from the server by repeatedly polling the message queue
         /// </summary>
         /// <returns>Message from server</returns>
-        private ProtoMessage CheckForMessage()
+        private ProtoMessage CheckForProtobufMessage()
         {
             ProtoMessage m = null;
-            lock (MessageLock)
+            while (!protobufMessageQueue.TryDequeue(out m))
             {
-                Console.WriteLine("CLIENT: In lock for CheckForMessage");
-                // If have nothing in the queue need to wait for a message
-                while (messageQueue.Count == 0)
-                {
-                    messageQueue2.eventWaiter.WaitOne();
-                    Console.WriteLine("CLIENT: CheckForMessage: Got EVENT");
-                    if (!messageQueue2.TryDequeue(out m))
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        return m;
-                    }
-                }
-                messageQueue2.TryDequeue(out m);
-                Console.WriteLine("CLIENT: CheckForMessage: Dequeuing outside while loop");
-                return m;
+                protobufMessageQueue.eventWaiter.WaitOne();
             }
+            return m;
         }
 
         /// <summary>
         /// Gets the next message from the server by repeatedly polling the message queue
         /// </summary>
         /// <returns>Message from server</returns>
-        private string CheckForServerMessage()
+        private string CheckForStringMessage()
         {
             string s = null;
-            while (serverMessages.Count == 0)
+            while (!stringMessageQueue.TryDequeue(out s))
             {
-                net.stringEventWaiter.WaitOne();
-                lock (StringLock)
-                {
-                    if (serverMessages.Count != 0)
-                    {
-                        
-                        s = serverMessages[0];
-                        serverMessages.RemoveAt(0);
-                        return s;
-                    }
-                }
-
-            } 
-            // In the event queue already has items, lock the queue and get the item
-            lock (StringLock)
-            {
-                if (messageQueue.Count != 0)
-                {
-                    s = serverMessages[0];
-                    serverMessages.RemoveAt(0);
-                    return s;
-                }
-                
+                stringMessageQueue.eventWaiter.WaitOne();
             }
-            return CheckForServerMessage();
+            return s;
         }
+
         /// <summary>
         /// Gets the next message recieved from the server
         /// </summary>
@@ -196,19 +160,17 @@ namespace hist_mmorpg
         public async Task<ProtoMessage> GetReply(string id=null)
         {
 
-            Console.WriteLine("Awaiting reply: "+id);
-
-            ProtoMessage reply = await (Task.Run(() => CheckForMessage()));
-            if(reply== null)
+            ProtoMessage reply = await (Task.Run(() => CheckForProtobufMessage()));
+#if DEBUG
+            if (reply == null)
             {
-                Console.WriteLine("#######REPLY IS NULL####!");
+                Console.WriteLine("CLIENT: " + id + "got a null reply");
             }
             else
             {
-                Console.WriteLine("####REPLY IS NOT NULL: "+reply.ActionType+ "!!!!!!###");
-                
+                Console.WriteLine("CLIENT: " + id + " got reply with response type :" + reply.ResponseType);
             }
-            Console.WriteLine("ID: "+id+" got a reply");
+#endif
             return reply;
         }
 
@@ -220,7 +182,7 @@ namespace hist_mmorpg
         {
             Console.WriteLine("Awaiting reply");
 
-            string reply = await (Task.Run(() => CheckForServerMessage()));
+            string reply = await (Task.Run(() => CheckForStringMessage()));
 
             return reply;
         }
@@ -699,13 +661,11 @@ namespace hist_mmorpg
             public bool loggedIn { get; set; }
             
             
-            public EventWaitHandle stringEventWaiter { get; set; }
             public Network(TestClient tc,byte[] key = null)
             {
                 this.tClient = tc;
                 autoLogIn = true;
                 this.key = key;
-                stringEventWaiter = new EventWaitHandle(false, EventResetMode.AutoReset);
                 InitializeClient();
             }
 
@@ -791,21 +751,19 @@ namespace hist_mmorpg
                     Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, message, ProtoBuf.PrefixStyle.Fixed32);
 
                     msg.Write(ms.GetBuffer());
-                    string s = "unencrypted";
                     if (alg != null && encrypt)
                     {
                         msg.Encrypt(alg);
-                        s = "encrypted";
                     }
 
                     var result = client.SendMessage(msg, NetDeliveryMethod.ReliableOrdered);
-                    Console.WriteLine("Client sends " + s + " message of type " + message.GetType() + " with Action: " + message.ActionType+" with result: "+result.ToString());
+                    Console.WriteLine("Client sends message of type " + message.GetType() + " with Action: " + message.ActionType+" with result: "+result.ToString());
                     client.FlushSendQueue();
 
                 }
                 catch (Exception e)
                 {
-
+                    Console.WriteLine("CLIENT: Failed to serialise message!");
                 }
 
             }
@@ -986,11 +944,8 @@ namespace hist_mmorpg
                                         if (!string.IsNullOrWhiteSpace(s))
                                         {
                                             Console.WriteLine("CLIENT: Got message: " + s);
-                                            lock (tClient.StringLock)
-                                            {
-                                                tClient.serverMessages.Add(s);
-                                                stringEventWaiter.Set();
-                                            }
+
+                                                tClient.stringMessageQueue.Enqueue(s);
                                         }
                                     }
                                     if (m != null)
@@ -999,7 +954,7 @@ namespace hist_mmorpg
                                         if (m.ResponseType == DisplayMessages.LogInSuccess)
                                         {
                                             loggedIn = true;
-                                            tClient.messageQueue2.Enqueue(m);
+                                            tClient.protobufMessageQueue.Enqueue(m);
                                         }
                                         else
                                         {
@@ -1014,7 +969,7 @@ namespace hist_mmorpg
                                                 {
                                                     Console.WriteLine("#####ADDED NULL MESSAGE####");
                                                 }
-                                                tClient.messageQueue2.Enqueue(m);
+                                                tClient.protobufMessageQueue.Enqueue(m);
                                                 if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
                                                 {
                                                     byte[] key = null;
@@ -1031,11 +986,9 @@ namespace hist_mmorpg
                                                     string s = im.ReadString();
                                                     if (!string.IsNullOrWhiteSpace(s))
                                                     {
-                                                        lock (tClient.StringLock)
-                                                        {
-                                                            tClient.serverMessages.Add(s);
-                                                            stringEventWaiter.Set();
-                                                        }
+
+                                                            tClient.stringMessageQueue.Enqueue(s);
+       
                                                     }
                                                 }
                                             }
@@ -1066,7 +1019,7 @@ namespace hist_mmorpg
                                             ProtoMessage m = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(ms2, PrefixStyle.Fixed32);
                                             if (m != null)
                                             {
-                                                tClient.messageQueue2.Enqueue(m);
+                                                tClient.protobufMessageQueue.Enqueue(m);
                                                 if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
                                                 {
                                                     byte[] key = null;
@@ -1106,18 +1059,13 @@ namespace hist_mmorpg
                                     string reason = im.ReadString();
                                     if (!string.IsNullOrEmpty(reason))
                                     {
-                                        lock (tClient.StringLock)
-                                        {
-                                            Console.WriteLine("CLIENT: Adding string and setting event waiter");
-                                            tClient.serverMessages.Add(reason);
-                                            stringEventWaiter.Set();
-                                        }
+
+                                            tClient.stringMessageQueue.Enqueue(reason);
+
                                         
 
                                     }
                                 }
-                                //   string reason = im.ReadString();
-                                //     Console.WriteLine(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " " + status + ": " + reason);
                                 if (im.SenderConnection.RemoteHailMessage != null && (NetConnectionStatus)im.ReadByte() == NetConnectionStatus.Connected)
                                 {
 

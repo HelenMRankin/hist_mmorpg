@@ -18,7 +18,7 @@ namespace hist_mmorpg
         /// </summary>
         public static Dictionary<string, Client> Clients = new Dictionary<string, Client>();
         /// <summary>
-        /// Holds all usernames/playerIDs
+        /// Holds all usernames/playerIDs (used in DatabaseRead)
         /// </summary>
         public static List<string> client_keys = new List<string>();
         /// <summary>

@@ -43,7 +43,6 @@ namespace hist_mmorpg
 
         public static bool isAdmin(PlayerCharacter pc, object o = null)
         {
-            Trace.WriteLine("Is admin: " + pc.CheckIsSysAdmin());
             return pc.CheckIsSysAdmin();
         }
         public static bool isKing(PlayerCharacter pc, object o = null)
@@ -142,12 +141,10 @@ namespace hist_mmorpg
             if (character is PlayerCharacter)
             {
                 bool owns = (character as PlayerCharacter) == pc;
-                Trace.WriteLine(owns);
                 return owns;
             }
             else{
                 bool owns =  (character as NonPlayerCharacter).GetHeadOfFamily() == pc || (character as NonPlayerCharacter).GetEmployer() == pc;
-                Trace.WriteLine(owns);
                 return owns;
             }
         }

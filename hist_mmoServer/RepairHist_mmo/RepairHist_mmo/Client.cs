@@ -69,20 +69,12 @@ namespace hist_mmorpg
         /// </summary>
         public NetAESEncryption alg = null;
 
-
         /// <summary>
-        /// TEMP- Client's message queue
+        /// ConcurrentQueue for messages received from client with added EventWaitHandle
         /// </summary>
-        public List<ProtoMessage> MessageQueue
-        {
-            get; set;
-        }
+        public ConcurrentQueueWithEvent<ProtoMessage> protobufMessageQueue { get; set; }
 
         public CancellationTokenSource cts { get; set; }
-        public EventWaitHandle eventWaiter { get; set; }
-        private object _lock = new object();
-        public object Lock { get { return _lock; } }
-
         public Client(String user, String pcID)
         {
             // set username associated with client
@@ -98,11 +90,9 @@ namespace hist_mmorpg
 
             // set player's character to display
             activeChar = myPlayerCharacter;
-            MessageQueue = new List<ProtoMessage>();
-            eventWaiter = new EventWaitHandle(false, EventResetMode.AutoReset);
+            protobufMessageQueue=new ConcurrentQueueWithEvent<ProtoMessage>();
             cts = new CancellationTokenSource();
             Globals_Game.ownedPlayerCharacters.Add(user,myPlayerCharacter);
-            Globals_Server.client_keys
             Globals_Server.Clients.Add(user, this);
         }
         /// <summary>
@@ -139,44 +129,14 @@ namespace hist_mmorpg
         /// Gets the next message from the server by repeatedly polling the message queue
         /// </summary>
         /// <returns>Message from server</returns>
-        private ProtoMessage CheckForMessage(CancellationToken ct)
+        private ProtoMessage CheckForMessage()
         {
-            Console.WriteLine("SERVER: in CheckForMessage");
             ProtoMessage m = null;
-            // If have nothing in the queue need to wait for a message
-            while (MessageQueue.Count == 0)
+            while (!protobufMessageQueue.TryDequeue(out m))
             {
-                Console.WriteLine("SERVER: CheckForMessage queue is empty- waiting...");
-                eventWaiter.WaitOne();
-                Console.WriteLine("SERVER: Event received!");
-                // Lock the queue and try to return the message
-                lock (Lock)
-                {
-                    if (MessageQueue.Count != 0)
-                    {
-                        m = MessageQueue[0];
-                        MessageQueue.RemoveAt(0);
-                        return m;
-                    }
-                }
+                protobufMessageQueue.eventWaiter.WaitOne();
             }
-            // In the event queue already has items, lock the queue and get the item
-            lock (Lock)
-            {
-                
-                if (MessageQueue.Count != 0)
-                {
-                    Console.WriteLine("SERVER: Queue not empty- getting message");
-                    m = MessageQueue[0];
-                    MessageQueue.RemoveAt(0);
-                    return m;
-                }
-
-            }
-            // In the odd case that the queue was changed just after checking it was null, recurse
-            // Keeping this outside the lock to prevent locks being held for too long
-            Console.WriteLine("SERVER: Recursively calling CheckForMessage!");
-            return CheckForMessage(ct);
+            return m;
         }
 
         /// <summary>
@@ -187,10 +147,10 @@ namespace hist_mmorpg
         {
             Console.WriteLine("SERVER: Getting next message...");
             CancellationToken ct = cts.Token;
-            Task<ProtoMessage> t = (Task.Run(() => CheckForMessage(ct)));
-           // await t;
-            t.Wait();
-            return t.Result;
+            ProtoMessage reply = await (Task.Run(() => CheckForMessage(),ct));
+
+
+            return reply;
         }
 
 
@@ -202,7 +162,6 @@ namespace hist_mmorpg
                 // Taken too long after accepting connection request to receive login
                 Server.Disconnect(connection, "Failed to login due to timeout");
             }
-            Console.WriteLine("SERVER: Got message in async controller");
             ProtoLogIn LogIn = GetMessageTask.Result as ProtoLogIn;
             if (LogIn == null||LogIn.ActionType!=Actions.LogIn)
             {

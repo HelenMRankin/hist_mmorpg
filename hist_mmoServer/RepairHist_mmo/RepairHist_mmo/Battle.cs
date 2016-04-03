@@ -110,7 +110,6 @@ namespace hist_mmorpg
             {
                 highCasualtyRate = 0.1;
             }
-            Console.WriteLine("High casualty rate: "+highCasualtyRate);
             // determine base casualty rate for army with smallest battle value
             double smallestModifier = Utility_Methods.GetRandomDouble(highCasualtyRate, min: 0.1);
 
@@ -178,8 +177,6 @@ namespace hist_mmorpg
                 else
                 {
                     battleCasualties[1] = smallestModifier / 2;
-                    Console.WriteLine("SmallestMod: "+smallestModifier+", Casualties: "+battleCasualties[1]+", defenderTroops: "+defenderTroops+ ", largeArmyModifier: "+largeArmyModifier);
-                    Console.WriteLine("Value: " + (defenderTroops * battleCasualties[1]) * largeArmyModifier);
                     uint largeArmyLosses = Convert.ToUInt32((defenderTroops * battleCasualties[1]) * largeArmyModifier);
                     battleCasualties[0] = largeArmyLosses / (double)attackerTroops;
                 }

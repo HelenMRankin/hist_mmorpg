@@ -209,7 +209,6 @@ namespace hist_mmorpg
         public TaggedEdge<Fief, string> CreateEdge(Fief s, Fief t, string tag)
         {
             // create route
-            Trace.WriteLine("The edge tag is: " + tag);
             TaggedEdge<Fief, string> myEdge = new TaggedEdge<Fief, string>(s, t, tag);
             return myEdge;
         }

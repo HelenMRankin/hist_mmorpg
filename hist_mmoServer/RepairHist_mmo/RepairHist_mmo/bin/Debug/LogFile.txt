@@ -1,2 +1,1 @@
 Server started- host: localhost, port: 8000, appID: test, max connections: 2000
-Total approximate memory: 2887632

@@ -399,8 +399,6 @@ namespace hist_mmorpg
 
                         if (thisTrait != null)
                         {
-                            // TODO remove
-                            Console.WriteLine("Adding trait");
                             // add object to masterList
                             traitMasterList.Add(thisTrait.id, thisTrait);
 
@@ -629,7 +627,6 @@ namespace hist_mmorpg
                     JournalEntry importErrorEntry = Utility_Methods.CreateSysAdminJentry();
                     if (importErrorEntry != null)
                     {
-                        Trace.WriteLine("Line " + lineNum + ": " + ide.Message);
                         importErrorEntry.entryDetails.Message= "Line " + lineNum + ": " + ide.Message;
                         Globals_Game.AddPastEvent(importErrorEntry);
                     }
@@ -2044,7 +2041,6 @@ namespace hist_mmorpg
         /// <param name="lineNum">Line number in source file</param>
         public static Trait ImportFromCSV_Trait(string[] traitData, int lineNum)
         {
-            Console.WriteLine("Importing traits from CSV");
             Trait thisTrait = null;
 
             try
@@ -2073,7 +2069,6 @@ namespace hist_mmorpg
                         }
                     }
 
-                    Console.WriteLine("EffStart: " + effStart + ", EffEnd: " + effEnd);
                     // ADD ITEMS to appropriate list
                     // effects
                     if ((effStart > -1) && (effEnd > -1))
