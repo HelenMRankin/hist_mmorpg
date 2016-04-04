@@ -248,14 +248,15 @@ namespace hist_mmorpg
                             {
                                 if (Globals_Game.IsObserver(c))
                                 {
-                                    Console.WriteLine("SERVER: TEST reached");
-                                    readReply(m, im.SenderConnection);
+                                        Console.WriteLine("___TEST: Is logged in");
+                                        readReply(m, im.SenderConnection);
                                     ProtoClient clientDetails = new ProtoClient(c);
                                     clientDetails.ActionType = Actions.Update;
                                     SendViaProto(clientDetails, im.SenderConnection,c.alg);
                                 }
                                 else
                                 {
+                                    Console.WriteLine("___TEST: Not logged in");
                                     im.SenderConnection.Disconnect("Not logged in- Disconnecting");
                                 }
                             }

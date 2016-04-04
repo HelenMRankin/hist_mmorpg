@@ -1,0 +1,90 @@
+Bug: Attacking an army with no troops would cause several overflow exceptions throughout the code
+Detected through: Dynamic testing
+Severity: high
+Chance of happening: Minimal. Armies are created with troops usually and are disbanded when the troop levels get too low
+Fixed by: Detecting troop count before attacking
+
+Bug: Attacking an army without a leader causes several null reference exceptions throughout the Battle class
+Detected through: Dynamic testing
+Severity: high
+Chance of happening: High. Armies can attack without a leader in the currrent implementation
+Fixed by: Most of the problems occurred when creating the output message, which was legacy code. Removed it and implemented checks. The resharper code analyser was useful in indicating where possible null reference exceptions were
+
+Bug/Defect: In original code Server will continue to process and try to send messages after Client logs out
+Detected through: Running test suite/dynamic testing
+Severity: medium/high
+Chance of happening: High
+Comment: While this will not cause any exceptions, it does open up the opportunity for a client to batch send hundreds of messages at a time and then log out. The server will handle each message, try to send the result and fail, wasting memory
+
+Bug: In Disconnect if connection does not exist will throw NullReferenceException
+Detected through: Dynamic testing
+Severity: high
+Chance of happening: high
+
+[Possible null reference exception bugs throughout code]
+Detected through: Resharper's Static analysis
+Severity: high
+Chance of happening: Unknown. It is likely many would have been handled; however this ensures potential bugs will not arise in the future
+Fixed by: Standard null-reference detection and avoidance
+
+Bug: In Send Server will attempt to send message even if connection is closed, cause NullReferenceException
+Detected through: Dynamic testing
+Severity: high
+chance of happening: high
+Fixed through: Making use of CancellationToken to prevent server from reading when disconnected
+
+Bug: Race condition issues when reading from MessageQueue on Client. Can randomly happen (Heisenbug)
+Detected through: Dynamic testing
+Severity: moderate
+Fixed through: Implementing locks on server message queues on both Client and Server
+Important to note that other consistency issues may be present
+
+Bug: Logging in using a different client but same credentials causes server to throw exception
+Detected through: Dynamic testing
+Severity: high
+Chance of happening: high
+Fixed through: Having LogInManager detect whether client is already logged in, implemented IEquatable on Client to ensure comparison checks username
+
+Bug: Encrypting with a bad algorithm will cause the server to throw an exception when it tries to decrypt the message
+Detected through: Dynamic testing
+Severity: high
+Chance of happening: high
+Fixed through: Surrounding decrypt with a try-catch. Note: The documentation for Lidgren is lacking and so I did not realise Decrypt threw an exception
+
+Bug: Armies could attack each other despite not being in the same fief
+Detected through: Dynamic testing
+Severity: low-medium (though bad for game balance)
+Chance of happening: high
+Fixed through: adding additional checks
+
+Defect: In original implementation, log-ins do not time out
+Detected through: Dynamic testing
+Severity: Medium
+Chance of happening: medium
+This has more of an impact on performance than anything else- connection will remain in pool of clients that have connected but not logged in
+
+Defect: In original implementation, there is no inactivity time-out (only a connection time out)
+Detected through: reading code
+Severity: Medium
+Chance of happening high
+Client can stay indefinitely connected without performing any action to keep game alive. Majority of online games have some sort of inactivity time-out to prevent wasting connection pool space/ resources
+
+
+Defect: In original implementation, client is able to perform actions before logging in due to issues in the constructor for Client which added a client to the list of registered observers
+Detected through: dynamic testing
+Severity: High
+Chance of happening: High
+
+
+Bug: In original implementation, recruiting with a null army id causes a crash, whereas it should create a new army
+Detected through: Dynamic testing
+Severity: High
+Chance of happening: high
+
+
+
+Differing behaviour: In Session types implementation a double log in is handled as an invalid message and an error is sent to the client; in the original it is processed as an invalid log in and the client is logged out
+Detected through: Dynamic testing
+Severity: n/a
+Chance of happening: n/a
+Since there was no decided behaviour for what should happen when a client tries to log in twice, neither can be considered to be "incorrect"

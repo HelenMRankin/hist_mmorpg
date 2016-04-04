@@ -1211,6 +1211,7 @@ namespace hist_mmorpg
 
         public static ProtoMessage ActionController(ProtoMessage msgIn, PlayerCharacter pc)
         {
+            
             switch (msgIn.ActionType)
             {
                 // Switch to using another character (performing actions with NPC

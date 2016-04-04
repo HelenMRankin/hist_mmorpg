@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,18 +11,44 @@ using System.Net;
 using System.IO;
 using ProtoBuf;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Windows.Forms;
+using System.Diagnostics;
+using System.Windows.Forms.VisualStyles;
 
 namespace hist_mmorpg
 {
+    /// <summary>
+    /// Extends the ConcurrentQueue to fire an event whenever a new item is enqueued
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class ConcurrentQueueWithEvent<T> : ConcurrentQueue<T>
+    {
+        public EventWaitHandle eventWaiter { get; }
+
+        public ConcurrentQueueWithEvent() : base()
+        {
+            eventWaiter = new EventWaitHandle(false, EventResetMode.AutoReset);
+        }
+
+        /// <summary>
+        /// Add a new item to the queue and set the EventWaitHandle
+        /// </summary>
+        /// <param name="t">Item to be enqueued</param>
+        public new void Enqueue(T t)
+        {
+            base.Enqueue(t);
+            eventWaiter.Set();
+        }
+
+
+    }
     public partial class TestClient
     {
-        public static List<ProtoMessage> messageQueue = new List<ProtoMessage>();
-        public static List<string> serverMessages = new List<string>();
+        public ConcurrentQueueWithEvent<ProtoMessage> protobufMessageQueue = new ConcurrentQueueWithEvent<ProtoMessage>();
+        public ConcurrentQueueWithEvent<string> stringMessageQueue = new ConcurrentQueueWithEvent<string>();
         public Network net;
         public string playerID;
+
+
         /*************************************
          * General Commands ***
          * **********************************/
@@ -32,7 +59,7 @@ namespace hist_mmorpg
         /// <param name="pass">Password</param>
         public void LogInAndConnect(string user, string pass, byte[] key = null)
         {
-            net = new Network(key);
+            net = new Network(this, key);
             net.Connect(user, pass);
             this.playerID = user;
         }
@@ -40,7 +67,7 @@ namespace hist_mmorpg
         public void ConnectNoLogin(string user, string pass, byte[] key = null)
         {
             this.playerID = user;
-            net = new Network(key);
+            net = new Network(this, key);
             net.autoLogIn = false;
             net.Connect(user, pass);
         }
@@ -50,7 +77,7 @@ namespace hist_mmorpg
             ProtoLogIn logIn = new ProtoLogIn();
             logIn.ActionType = Actions.LogIn;
             logIn.Key = key;
-            Network.Send(logIn);
+            net.Send(logIn);
         }
 
         public bool IsConnectedAndLoggedIn()
@@ -62,10 +89,17 @@ namespace hist_mmorpg
             return false;
         }
 
+        /// <summary>
+        /// Clear both message queues- used in tests where we don't care about the login messages
+        /// </summary>
         public void ClearMessageQueues()
         {
-            messageQueue.Clear();
-            serverMessages.Clear();
+            // Note- With ConcurrentQueues, it is preferrable to discard the previous queue than to attempt to Dequeue all elements in case the queue is currently being written to
+            protobufMessageQueue = new ConcurrentQueueWithEvent<ProtoMessage>();
+
+            stringMessageQueue = new ConcurrentQueueWithEvent<string>();
+
+
         }
         public void LogOut()
         {
@@ -77,7 +111,7 @@ namespace hist_mmorpg
             ProtoMessage msg = new ProtoMessage();
             msg.ActionType = a;
             msg.Message = o.ToString();
-            Network.Send(msg, true);
+            net.Send(msg, true);
         }
         /// <summary>
         /// Switch to commanding a different character
@@ -88,22 +122,20 @@ namespace hist_mmorpg
             ProtoMessage message = new ProtoMessage();
             message.ActionType = Actions.UseChar;
             message.Message = charID;
-            Network.Send(message);
+            net.Send(message);
         }
+
         /// <summary>
         /// Gets the next message from the server by repeatedly polling the message queue
         /// </summary>
         /// <returns>Message from server</returns>
-        private static ProtoMessage CheckForMessage()
+        private ProtoMessage CheckForProtobufMessage()
         {
-            while (messageQueue.Count == 0)
+            ProtoMessage m = null;
+            while (!protobufMessageQueue.TryDequeue(out m))
             {
-                // Allow other threads to execute
-                Thread.Sleep((0));
-                continue;
+                protobufMessageQueue.eventWaiter.WaitOne();
             }
-            ProtoMessage m = messageQueue[0];
-            messageQueue.RemoveAt(0);
             return m;
         }
 
@@ -111,28 +143,34 @@ namespace hist_mmorpg
         /// Gets the next message from the server by repeatedly polling the message queue
         /// </summary>
         /// <returns>Message from server</returns>
-        private static string CheckForServerMessage()
+        private string CheckForStringMessage()
         {
-            while (serverMessages.Count == 0)
+            string s = null;
+            while (!stringMessageQueue.TryDequeue(out s))
             {
-                // Allow other threads to execute
-                Thread.Sleep((0));
-                continue;
+                stringMessageQueue.eventWaiter.WaitOne();
             }
-            string s = serverMessages[0];
-            serverMessages.RemoveAt(0);
             return s;
         }
+
         /// <summary>
         /// Gets the next message recieved from the server
         /// </summary>
         /// <returns>Task containing the reply as a result</returns>
-        public async Task<ProtoMessage> GetReply()
+        public async Task<ProtoMessage> GetReply(string id = null)
         {
-            Console.WriteLine("Awaiting reply");
 
-            ProtoMessage reply = await (Task.Run(() => CheckForMessage()));
-
+            ProtoMessage reply = await (Task.Run(() => CheckForProtobufMessage()));
+#if DEBUG
+            if (reply == null)
+            {
+                Console.WriteLine("CLIENT: " + id + "got a null reply");
+            }
+            else
+            {
+                Console.WriteLine("CLIENT: " + id + " got reply with response type :" + reply.ResponseType);
+            }
+#endif
             return reply;
         }
 
@@ -144,7 +182,7 @@ namespace hist_mmorpg
         {
             Console.WriteLine("Awaiting reply");
 
-            string reply = await (Task.Run(() => CheckForServerMessage()));
+            string reply = await (Task.Run(() => CheckForStringMessage()));
 
             return reply;
         }
@@ -152,23 +190,23 @@ namespace hist_mmorpg
         /// <summary>
         /// Request that a season update be performed. Note that this is an admin command
         /// </summary>
-        public static void SeasonUpdate()
+        public void SeasonUpdate()
         {
             ProtoMessage updateRequest = new ProtoMessage();
             updateRequest.ActionType = Actions.SeasonUpdate;
-            Network.Send(updateRequest);
+            net.Send(updateRequest);
         }
 
         /// <summary>
         /// View a character
         /// </summary>
         /// <param name="charID">ID of character to view</param>
-        public static void ViewCharacter(string charID)
+        public void ViewCharacter(string charID)
         {
             ProtoMessage viewChar = new ProtoMessage();
             viewChar.ActionType = Actions.ViewChar;
             viewChar.Message = charID;
-            Network.Send(viewChar);
+            net.Send(viewChar);
         }
 
         protected virtual void Dispose(bool dispose)
@@ -202,7 +240,7 @@ namespace hist_mmorpg
             message.travelTo = location;
             message.ActionType = Actions.TravelTo;
             message.travelVia = travelInstructions;
-            Network.Send(message);
+            net.Send(message);
         }
 
         /// <summary>
@@ -217,7 +255,7 @@ namespace hist_mmorpg
             // Check which character is performing action
             message.Message = charID;
             message.ActionType = Actions.Camp;
-            Network.Send(message);
+            net.Send(message);
         }
 
         /// <summary>
@@ -232,7 +270,7 @@ namespace hist_mmorpg
             getLeaders.ActionType = Actions.GetNPCList;
             getLeaders.Message = type;
             getLeaders.MessageFields = new string[] { role, itemID };
-            Network.Send(getLeaders);
+            net.Send(getLeaders);
         }
 
 
@@ -245,7 +283,7 @@ namespace hist_mmorpg
             ProtoMessage message = new ProtoMessage();
             message.Message = charID;
             message.ActionType = Actions.EnterExitKeep;
-            Network.Send(message);
+            net.Send(message);
         }
 
         /// <summary>
@@ -259,7 +297,7 @@ namespace hist_mmorpg
             message.ActionType = Actions.ListCharsInMeetingPlace;
             message.MessageFields = new string[] { charID };
             message.Message = place;
-            Network.Send(message);
+            net.Send(message);
         }
     }
 
@@ -279,7 +317,7 @@ namespace hist_mmorpg
             ProtoMessage getCaptives = new ProtoMessage();
             getCaptives.ActionType = Actions.ViewCaptives;
             getCaptives.Message = "all";
-            Network.Send(getCaptives);
+            net.Send(getCaptives);
         }
 
         /// <summary>
@@ -291,7 +329,7 @@ namespace hist_mmorpg
             ProtoMessage listCaptives = new ProtoMessage();
             listCaptives.ActionType = Actions.ViewCaptives;
             listCaptives.Message = fiefID;
-            Network.Send(listCaptives);
+            net.Send(listCaptives);
         }
 
         /// <summary>
@@ -303,7 +341,7 @@ namespace hist_mmorpg
             ProtoMessage message = new ProtoMessage();
             message.ActionType = Actions.ViewCaptive;
             message.Message = captiveID;
-            Network.Send(message);
+            net.Send(message);
         }
 
         /// <summary>
@@ -315,7 +353,7 @@ namespace hist_mmorpg
             ProtoMessage message = new ProtoMessage();
             message.ActionType = Actions.ReleaseCaptive;
             message.Message = charID;
-            Network.Send(message);
+            net.Send(message);
         }
 
         /// <summary>
@@ -327,7 +365,7 @@ namespace hist_mmorpg
             ProtoMessage message = new ProtoMessage();
             message.ActionType = Actions.ExecuteCaptive;
             message.Message = charID;
-            Network.Send(message);
+            net.Send(message);
         }
         /// <summary>
         /// Ranson a captive (amount to ransom for is calculated based on character value on server side)
@@ -338,7 +376,7 @@ namespace hist_mmorpg
             ProtoMessage message = new ProtoMessage();
             message.ActionType = Actions.RansomCaptive;
             message.Message = charID;
-            Network.Send(message);
+            net.Send(message);
         }
 
         /// <summary>
@@ -352,7 +390,7 @@ namespace hist_mmorpg
             spy.ActionType = Actions.SpyFief;
             spy.Message = fiefID;
             spy.MessageFields = new string[] { charID };
-            Network.Send(spy);
+            net.Send(spy);
         }
 
         public void SpyOnCharacter(string charID, string targetID)
@@ -361,7 +399,7 @@ namespace hist_mmorpg
             spy.ActionType = Actions.SpyCharacter;
             spy.Message = charID;
             spy.MessageFields = new string[] { targetID };
-            Network.Send(spy);
+            net.Send(spy);
         }
 
         public void SpyOnArmy(string charID, string targetID)
@@ -370,7 +408,7 @@ namespace hist_mmorpg
             spy.ActionType = Actions.SpyArmy;
             spy.Message = charID;
             spy.MessageFields = new string[] { targetID };
-            Network.Send(spy);
+            net.Send(spy);
         }
     }
 
@@ -388,7 +426,7 @@ namespace hist_mmorpg
             ProtoMessage message = new ProtoMessage();
             message.ActionType = Actions.AppointHeir;
             message.Message = charID;
-            Network.Send(message);
+            net.Send(message);
         }
 
         /// <summary>
@@ -402,7 +440,7 @@ namespace hist_mmorpg
             marry.ActionType = Actions.ProposeMarriage;
             marry.Message = groomID;
             marry.MessageFields = new string[] { brideID };
-            Network.Send(marry);
+            net.Send(marry);
         }
 
         /// <summary>
@@ -414,7 +452,7 @@ namespace hist_mmorpg
             ProtoMessage tryForChild = new ProtoMessage();
             tryForChild.ActionType = Actions.TryForChild;
             tryForChild.Message = charID;
-            Network.Send(tryForChild);
+            net.Send(tryForChild);
         }
     }
 
@@ -432,7 +470,7 @@ namespace hist_mmorpg
         {
             ProtoMessage getFiefs = new ProtoMessage();
             getFiefs.ActionType = Actions.ViewMyFiefs;
-            Network.Send(getFiefs);
+            net.Send(getFiefs);
         }
         /// <summary>
         /// View in-depth information about a fief. Amount of information depends on whether player owns fief or not
@@ -443,7 +481,7 @@ namespace hist_mmorpg
             ProtoMessage requestFief = new ProtoMessage();
             requestFief.ActionType = Actions.ViewFief;
             requestFief.Message = fiefID;
-            Network.Send(requestFief);
+            net.Send(requestFief);
         }
 
         /// <summary>
@@ -457,7 +495,7 @@ namespace hist_mmorpg
             appoint.ActionType = Actions.AppointBailiff;
             appoint.Message = fiefID;
             appoint.MessageFields = new string[] { charID };
-            Network.Send(appoint);
+            net.Send(appoint);
         }
 
         /// <summary>
@@ -469,7 +507,7 @@ namespace hist_mmorpg
             ProtoMessage appoint = new ProtoMessage();
             appoint.ActionType = Actions.RemoveBailiff;
             appoint.Message = fiefID;
-            Network.Send(appoint);
+            net.Send(appoint);
         }
 
         /// <summary>
@@ -491,7 +529,7 @@ namespace hist_mmorpg
                 transfer.fiefTo = fiefID;
             }
             transfer.ActionType = Actions.TransferFunds;
-            Network.Send(transfer);
+            net.Send(transfer);
         }
 
         /// <summary>
@@ -501,7 +539,7 @@ namespace hist_mmorpg
         {
             ProtoMessage requestPlayers = new ProtoMessage();
             requestPlayers.ActionType = Actions.GetPlayers;
-            Network.Send(requestPlayers);
+            net.Send(requestPlayers);
         }
 
         /// <summary>
@@ -515,7 +553,7 @@ namespace hist_mmorpg
             transfer.ActionType = Actions.TransferFundsToPlayer;
             transfer.amount = amount;
             transfer.playerTo = playerID;
-            Network.Send(transfer);
+            net.Send(transfer);
         }
 
         /// <summary>
@@ -534,7 +572,7 @@ namespace hist_mmorpg
             newExpenses.Message = fiefID;
             newExpenses.fields = new double[] { newTax, newOff, newGarr, newInfra, newKeep };
             newExpenses.ActionType = Actions.AdjustExpenditure;
-            Network.Send(newExpenses);
+            net.Send(newExpenses);
             Console.WriteLine("CLIENT: sent adjust expenditure message");
         }
 
@@ -547,7 +585,7 @@ namespace hist_mmorpg
             ProtoGenericArray<double> newExpenses = new ProtoGenericArray<double>();
             newExpenses.Message = fiefID;
             newExpenses.ActionType = Actions.AdjustExpenditure;
-            Network.Send(newExpenses);
+            net.Send(newExpenses);
         }
 
         /// <summary>
@@ -561,7 +599,7 @@ namespace hist_mmorpg
             bar.Message = fiefID;
             bar.MessageFields = new string[] { charID };
             bar.ActionType = Actions.BarCharacters;
-            Network.Send(bar);
+            net.Send(bar);
         }
 
         /// <summary>
@@ -575,7 +613,7 @@ namespace hist_mmorpg
             unbarMessage.ActionType = Actions.UnbarCharacters;
             unbarMessage.Message = fiefID;
             unbarMessage.MessageFields = new string[] { charID };
-            Network.Send(unbarMessage);
+            net.Send(unbarMessage);
         }
 
         public void BarNationality(string natID, string fiefID)
@@ -584,7 +622,7 @@ namespace hist_mmorpg
             barMessage.Message = fiefID;
             barMessage.MessageFields = new string[] { natID };
             barMessage.ActionType = Actions.BarNationalities;
-            Network.Send(barMessage);
+            net.Send(barMessage);
         }
 
         public void UnBarNationality(string natID, string fiefID)
@@ -593,7 +631,7 @@ namespace hist_mmorpg
             barMessage.Message = fiefID;
             barMessage.MessageFields = new string[] { natID };
             barMessage.ActionType = Actions.UnbarNationalities;
-            Network.Send(barMessage);
+            net.Send(barMessage);
         }
 
     }
@@ -605,23 +643,27 @@ namespace hist_mmorpg
 
         public class Network : IDisposable
         {
+            private TestClient tClient;
             RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider();
             HashAlgorithm hash = new SHA256Managed();
-            public static NetClient client = null;
+            public NetClient client = null;
             private NetConnection connection;
             private string user;
             private string pass;
             private IPAddress ip = NetUtility.Resolve("localhost");
             private int port = 8000;
-            private static NetEncryption alg;
+            private NetEncryption alg;
             /// <summary>
             /// Optional- set encryption key manually for use in testing
             /// </summary>
             private byte[] key;
             public bool autoLogIn { get; set; }
             public bool loggedIn { get; set; }
-            public Network(byte[] key = null)
+
+
+            public Network(TestClient tc, byte[] key = null)
             {
+                this.tClient = tc;
                 autoLogIn = true;
                 this.key = key;
                 InitializeClient();
@@ -700,29 +742,27 @@ namespace hist_mmorpg
                 return hashcode;
             }
 
-            public static void Send(ProtoMessage message, bool encrypt = true)
+            public void Send(ProtoMessage message, bool encrypt = true)
             {
                 NetOutgoingMessage msg = client.CreateMessage();
                 MemoryStream ms = new MemoryStream();
                 try
                 {
                     Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, message, ProtoBuf.PrefixStyle.Fixed32);
-
+                    
                     msg.Write(ms.GetBuffer());
-                    string s = "unencrypted";
                     if (alg != null && encrypt)
                     {
                         msg.Encrypt(alg);
-                        s = "encrypted";
                     }
-                    Console.WriteLine("Client sends " + s + " message of type " + message.GetType() + " with Action: " + message.ActionType + " and Response: " + message.ResponseType);
-                    client.SendMessage(msg, NetDeliveryMethod.ReliableOrdered);
+                    var result = client.SendMessage(msg, NetDeliveryMethod.ReliableOrdered);
+                    Console.WriteLine("Client sends message of type " + message.GetType() + " with Action: " + message.ActionType + " with result: " + result.ToString());
                     client.FlushSendQueue();
 
                 }
                 catch (Exception e)
                 {
-
+                    Console.WriteLine("CLIENT: Failed to serialise message!");
                 }
 
             }
@@ -894,6 +934,7 @@ namespace hist_mmorpg
                                     try
                                     {
                                         m = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(ms, PrefixStyle.Fixed32);
+
                                     }
                                     catch (Exception e)
                                     {
@@ -902,7 +943,8 @@ namespace hist_mmorpg
                                         if (!string.IsNullOrWhiteSpace(s))
                                         {
                                             Console.WriteLine("CLIENT: Got message: " + s);
-                                            serverMessages.Add(s);
+
+                                            tClient.stringMessageQueue.Enqueue(s);
                                         }
                                     }
                                     if (m != null)
@@ -911,8 +953,7 @@ namespace hist_mmorpg
                                         if (m.ResponseType == DisplayMessages.LogInSuccess)
                                         {
                                             loggedIn = true;
-                                            Console.WriteLine("Client is logged in");
-                                            messageQueue.Add(m);
+                                            tClient.protobufMessageQueue.Enqueue(m);
                                         }
                                         else
                                         {
@@ -922,8 +963,12 @@ namespace hist_mmorpg
                                             }
                                             else
                                             {
-                                                Console.WriteLine("CLIENT: adding message to message queue");
-                                                messageQueue.Add(m);
+                                                Console.WriteLine("CLIENT: adding message to message queue: ");
+                                                if (m == null)
+                                                {
+                                                    Console.WriteLine("#####ADDED NULL MESSAGE####");
+                                                }
+                                                tClient.protobufMessageQueue.Enqueue(m);
                                                 if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
                                                 {
                                                     byte[] key = null;
@@ -940,7 +985,9 @@ namespace hist_mmorpg
                                                     string s = im.ReadString();
                                                     if (!string.IsNullOrWhiteSpace(s))
                                                     {
-                                                        serverMessages.Add(s);
+
+                                                        tClient.stringMessageQueue.Enqueue(s);
+
                                                     }
                                                 }
                                             }
@@ -958,7 +1005,7 @@ namespace hist_mmorpg
                             case NetIncomingMessageType.StatusChanged:
 
                                 NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
-
+                                Console.WriteLine("CLIENT: Status changed to " + status.ToString());
                                 //MemoryStream ms2 = new MemoryStream(im.SenderConnection.RemoteHailMessage.Data);
                                 if (status == NetConnectionStatus.Connected)
                                 {
@@ -971,7 +1018,7 @@ namespace hist_mmorpg
                                             ProtoMessage m = Serializer.DeserializeWithLengthPrefix<ProtoMessage>(ms2, PrefixStyle.Fixed32);
                                             if (m != null)
                                             {
-                                                messageQueue.Add(m);
+                                                tClient.protobufMessageQueue.Enqueue(m);
                                                 if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
                                                 {
                                                     byte[] key = null;
@@ -1007,16 +1054,17 @@ namespace hist_mmorpg
                                 }
                                 else if (status == NetConnectionStatus.Disconnected)
                                 {
-
+                                    Console.WriteLine("CLIENT: In disconnect state");
                                     string reason = im.ReadString();
                                     if (!string.IsNullOrEmpty(reason))
                                     {
-                                        serverMessages.Add(reason);
+
+                                        tClient.stringMessageQueue.Enqueue(reason);
+
+
 
                                     }
                                 }
-                                //   string reason = im.ReadString();
-                                //     Console.WriteLine(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " " + status + ": " + reason);
                                 if (im.SenderConnection.RemoteHailMessage != null && (NetConnectionStatus)im.ReadByte() == NetConnectionStatus.Connected)
                                 {
 
