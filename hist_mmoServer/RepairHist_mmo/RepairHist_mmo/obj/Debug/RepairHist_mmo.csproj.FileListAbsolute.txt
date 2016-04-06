@@ -78,3 +78,4 @@ E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmo.csp
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.exe.manifest
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\hist_mmorpg.application
 E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\Newtonsoft.Json.dll
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\hist_mmorpg.XML

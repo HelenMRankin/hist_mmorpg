@@ -234,7 +234,7 @@ namespace hist_mmorpg.Tests
         }
 
         [TestMethod]
-        [Timeout(8000)]
+        [Timeout(15000)]
         public void AttackValid()
         {
             TestClient s0 = new TestClient();
@@ -715,7 +715,7 @@ namespace hist_mmorpg.Tests
             {
                 leader.location = MyPlayerCharacter.location;
             }
-            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID, true);
+            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
         }
 
         [TestMethod]
@@ -735,7 +735,7 @@ namespace hist_mmorpg.Tests
             {
                 leader.location = MyPlayerCharacter.location;
             }
-            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID, false);
+            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
         }
 
         [TestMethod]
@@ -755,7 +755,7 @@ namespace hist_mmorpg.Tests
             {
                 leader.location = MyPlayerCharacter.location;
             }
-            this.SpyArmyTest(s0, NotMyPlayerCharacter.charID, NotOwnedArmy.armyID, true);
+            this.SpyArmyTest(s0, NotMyPlayerCharacter.charID, NotOwnedArmy.armyID);
         }
 
         [TestMethod]
@@ -769,41 +769,7 @@ namespace hist_mmorpg.Tests
                 Thread.Sleep(0);
             }
             s0.ClearMessageQueues();
-            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID, true);
-        }
-
-        /// <summary>
-        /// Attempt to spy on a character, then timeout
-        /// </summary>
-        [TestMethod]
-        [Timeout(35000)]
-        public void SpyArmyTimeout()
-        {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            // (need to move the character to the same location as the playercharacter)
-            NotOwnedArmy.location = MyPlayerCharacter.location.id;
-            Character leader = NotOwnedArmy.GetLeader();
-            if (leader != null)
-            {
-                leader.location = MyPlayerCharacter.location;
-            }
-            s0.SpyOnArmy(MyPlayerCharacter.charID, NotOwnedArmy.armyID);
-            Thread.Sleep(31000);
-            Task<ProtoMessage> responseTask = s0.GetReply();
-            responseTask.Wait();
-            ProtoMessage response = responseTask.Result;
-            Assert.AreEqual(DisplayMessages.SpyChance, response.ResponseType);
-            responseTask = s0.GetReply();
-            responseTask.Wait();
-            response = responseTask.Result;
-
-            Assert.AreEqual(DisplayMessages.Timeout, response.ResponseType);
+            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
         }
 
         /// <summary>
@@ -824,21 +790,6 @@ namespace hist_mmorpg.Tests
             this.SpyFiefTest(s0, MyPlayerCharacter.charID, NotOwnedFief.id, true);
         }
 
-        [TestMethod]
-        [Timeout(15000)]
-        public void SpyFiefCancel()
-        {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-
-            MyPlayerCharacter.location = NotOwnedFief;
-            this.SpyFiefTest(s0, MyPlayerCharacter.charID, NotOwnedFief.id, false);
-        }
 
         [TestMethod]
         [Timeout(15000)]
@@ -869,34 +820,6 @@ namespace hist_mmorpg.Tests
         }
 
         /// <summary>
-        /// Attempt to spy on a character, then timeout
-        /// </summary>
-        [TestMethod]
-        [Timeout(35000)]
-        public void SpyFiefTimeout()
-        {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            MyPlayerCharacter.location = NotOwnedFief;
-            s0.SpyOnFief(MyPlayerCharacter.charID, NotOwnedFief.id);
-            Thread.Sleep(31000);
-            Task<ProtoMessage> responseTask = s0.GetReply();
-            responseTask.Wait();
-            ProtoMessage response = responseTask.Result;
-            Assert.AreEqual(DisplayMessages.SpyChance, response.ResponseType);
-            responseTask = s0.GetReply();
-            responseTask.Wait();
-            response = responseTask.Result;
-
-            Assert.AreEqual(DisplayMessages.Timeout, response.ResponseType);
-        }
-
-        /// <summary>
         /// Spy on a character
         /// </summary>
         [TestMethod]
@@ -916,22 +839,6 @@ namespace hist_mmorpg.Tests
             this.SpyCharacterTest(s0, MyPlayerCharacter.charID, NotMyFamily.charID, true);
         }
 
-        [TestMethod]
-        [Timeout(15000)]
-        public void SpyCharacterCancel()
-        {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            ProtoMessage ignore = null;
-            // (need to move the character to the same location as the playercharacter)
-            NotMyFamily.MoveTo(MyPlayerCharacter.location.id, out ignore);
-            this.SpyCharacterTest(s0, MyPlayerCharacter.charID, NotMyFamily.charID, false);
-        }
 
         [TestMethod]
         [Timeout(15000)]
@@ -952,6 +859,57 @@ namespace hist_mmorpg.Tests
 
         [TestMethod]
         [Timeout(15000)]
+        public void SpyOnOwnCharacter()
+        {
+            TestClient s0 = new TestClient();
+            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
+            while (!s0.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            s0.ClearMessageQueues();
+            ProtoMessage ignore = null;
+            // (need to move the character to the same location as the playercharacter)
+            MyFamily.MoveTo(MyPlayerCharacter.location.id, out ignore);
+            this.SpyCharacterTest(s0, MyPlayerCharacter.charID, MyFamily.charID, true);
+        }
+
+        [TestMethod]
+        [Timeout(15000)]
+        public void SpyOnOwnFief()
+        {
+            TestClient s0 = new TestClient();
+            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
+            while (!s0.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            s0.ClearMessageQueues();
+            ProtoMessage ignore = null;
+            // (need to move the character to the same location as the playercharacter)
+            MyPlayerCharacter.MoveTo(OwnedFief.id, out ignore);
+            this.SpyFiefTest(s0, MyPlayerCharacter.charID, OwnedFief.id, true);
+        }
+
+        [TestMethod]
+        [Timeout(15000)]
+        public void SpyOnOwnArmy()
+        {
+            TestClient s0 = new TestClient();
+            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
+            while (!s0.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            s0.ClearMessageQueues();
+            ProtoMessage ignore = null;
+            MyPlayerCharacter.MoveTo(OwnedArmy.location, out ignore);
+            // (need to move the character to the same location as the playercharacter)
+            this.SpyArmyTest(s0, MyPlayerCharacter.charID, OwnedArmy.armyID);
+        }
+
+        [TestMethod]
+        [Timeout(15000)]
         public void SpyCharacterTooFar()
         {
             TestClient s0 = new TestClient();
@@ -966,34 +924,6 @@ namespace hist_mmorpg.Tests
             this.SpyCharacterTest(s0, MyPlayerCharacter.charID, NotMyFamily.charID, true);
         }
 
-        /// <summary>
-        /// Attempt to spy on a character, then timeout
-        /// </summary>
-        [TestMethod]
-        [Timeout(15000)]
-        public void SpyCharacterTimeout()
-        {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            ProtoMessage ignore = null;
-            // (need to move the character to the same location as the playercharacter)
-            NotMyFamily.MoveTo(MyPlayerCharacter.location.id, out ignore);
-            s0.SpyOnCharacter(MyPlayerCharacter.charID, NotMyFamily.charID);
-            Thread.Sleep(31000);
-            Task<ProtoMessage> responseTask = s0.GetReply();
-            responseTask.Wait();
-            ProtoMessage response = responseTask.Result;
-            Assert.AreEqual(DisplayMessages.SpyChance, response.ResponseType);
-            responseTask = s0.GetReply();
-            responseTask.Wait();
-            response = responseTask.Result;
-
-            Assert.AreEqual(DisplayMessages.Timeout, response.ResponseType);
-        }
+        
     }
 }

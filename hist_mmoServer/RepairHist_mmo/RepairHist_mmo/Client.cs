@@ -8,7 +8,7 @@ namespace hist_mmorpg
     /// <summary>
     /// Represents a connected client
     /// </summary>
-    public class Client
+    public class Client : IEquatable<Client>
     {
         public NetConnection conn { get; set; }
         public string username { get; set; }
@@ -69,9 +69,6 @@ namespace hist_mmorpg
             // set username associated with client
             this.username = user;
 
-            // register client as observer
-            Globals_Game.RegisterObserver(this);
-
             // get playercharacter from master list of player characers
             myPlayerCharacter = Globals_Game.pcMasterList[pcID];
 
@@ -112,6 +109,11 @@ namespace hist_mmorpg
                 Console.WriteLine("Sending update " + message.ResponseType.ToString() + " to " + this.username);
                 Server.SendViaProto(message, conn, alg);
             }
+        }
+
+        public bool Equals(Client other)
+        {
+            return this.username.Equals(other.username);
         }
     }
 
