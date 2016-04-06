@@ -16,7 +16,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds the usernames and Client objects of connected players
         /// </summary>
-        public static Dictionary<string, Client> clients = new Dictionary<string, Client>();
+        public static Dictionary<string, Client> Clients = new Dictionary<string, Client>();
         /// <summary>
         /// Holds all usernames/playerIDs
         /// </summary>

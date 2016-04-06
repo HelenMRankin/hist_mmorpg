@@ -22,13 +22,28 @@ namespace hist_mmorpg
     /// </summary>
     public enum DisplayMessages
     {
-        None = 0, Success, Error, Armies, Fiefs, Characters, JournalEntries, ArmyMaintainInsufficientFunds, ArmyMaintainCost, ArmyMaintainConfirm, ArmyMaintainedAlready, JournalProposal, JournalProposalReply, JournalMarriage, ChallengeKingSuccess, ChallengeKingFail, ChallengeProvinceSuccess, ChallengeProvinceFail, newEvent,
+        /// <summary>
+        /// Default message; used only when nothing to display
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// Indicates action was successful
+        /// </summary>
+        Success, Error, Armies, Fiefs, Characters, JournalEntries, ArmyMaintainInsufficientFunds, ArmyMaintainCost, ArmyMaintainConfirm, ArmyMaintainedAlready, JournalProposal, JournalProposalReply, JournalMarriage, ChallengeKingSuccess, ChallengeKingFail, ChallengeProvinceSuccess, ChallengeProvinceFail, newEvent,
         SwitchPlayerErrorNoID, SwitchPlayerErrorIDInvalid, ChallengeErrorExists, SiegeNegotiateSuccess, SiegeNegotiateFail, SiegeStormSuccess, SiegeStormFail, SiegeEndDefault, SiegeErrorDays, SiegeRaised, SiegeReduction, ArmyMove,
         ArmyAttritionDebug, ArmyDetachmentArrayWrongLength, ArmyDetachmentNotEnoughTroops, ArmyDetachmentNotSelected, ArmyRetreat, ArmyDisband, ErrorGenericNotEnoughDays, ErrorGenericPoorOrganisation, ErrorGenericUnidentifiedRecipient, ArmyNoLeader, ArmyBesieged,
         ArmyAttackSelf, ArmyPickupsDenied, ArmyPickupsNotEnoughDays, BattleBringSuccess, BattleBringFail, BattleResults, ErrorGenericNotInSameFief, BirthAlreadyPregnant, BirthSiegeSeparation, BirthNotMarried, CharacterMarriageDeath, CharacterDeath, CharacterDeathNoHeir, CharacterEnterArmy,
-        CharacterAlreadyArmy, CharacterNationalityBarred, CharacterBarred, CharacterRoyalGiftPlayer, CharacterRoyalGiftSelf, CharacterNotMale, CharacterNotOfAge, CharacterLeaderLocation, CharacterLeadingArmy, CharacterDaysJourney, CharacterSpousePregnant, CharacterSpouseNotPregnant, CharacterSpouseNeverPregnant,
+        CharacterAlreadyArmy, CharacterNationalityBarred, CharacterBarred, CharacterRoyalGiftPlayer, CharacterRoyalGiftSelf, CharacterNotMale, CharacterNotOfAge, CharacterLeaderLocation, CharacterLeadingArmy,
+        /// <summary>
+        /// Character does not have enough days to make this journey, so their destination has been added to a Go-To list
+        /// </summary>
+        CharacterDaysJourney, CharacterSpousePregnant, CharacterSpouseNotPregnant, CharacterSpouseNeverPregnant,
         CharacterBirthOK, CharacterBirthChildDead, CharacterBirthMumDead, CharacterBirthAllDead, RankTitleTransfer, CharacterCombatInjury, CharacterProposalMan, CharacterProposalUnderage, CharacterProposalEngaged, CharacterProposalMarried, CharacterProposalFamily, CharacterProposalIncest, CharacterProposalAlready, CharacterRemovedFromEntourage, CharacterCamp,
-        CharacterCampAttrition, CharacterBailiffDuty, CharacterInvalidMovement, ErrorGenericFiefUnidentified, CharacterHireNotEmployable, CharacterFireNotEmployee, CharacterOfferLow, CharacterOfferHigh, CharacterOfferOk, CharacterOfferAlmost, CharacterOfferHaggle, CharacterBarredKeep, CharacterRecruitOwn, CharacterRecruitAlready, CharacterLoyaltyLanguage, ErrorGenericInsufficientFunds, CharacterRecruitSiege, CharacterRecruitRebellion, RecruitCancelled,
+        CharacterCampAttrition, CharacterBailiffDuty,
+        /// <summary>
+        /// Character must end siege before moving
+        /// </summary>
+        CharacterMoveEndSiege, MoveCancelled, CharacterInvalidMovement, ErrorGenericFiefUnidentified, CharacterHireNotEmployable, CharacterFireNotEmployee, CharacterOfferLow, CharacterOfferHigh, CharacterOfferOk, CharacterOfferAlmost, CharacterOfferHaggle, CharacterBarredKeep, CharacterRecruitOwn, CharacterRecruitAlready, CharacterLoyaltyLanguage, ErrorGenericInsufficientFunds, CharacterRecruitSiege, CharacterRecruitRebellion, RecruitCancelled,
         CharacterTransferTitle, CharacterTitleOwner, CharacterTitleHighest, CharacterTitleKing, CharacterTitleAncestral, CharacterHeir, PillageInitiateSiege, PillageRetreat, PillageDays, PillageOwnFief, PillageUnderSiege, PillageSiegeAlready, PillageAlready, PillageArmyDefeat, PillageSiegeRebellion, FiefExpenditureAdjustment, FiefExpenditureAdjusted, FiefStatus, FiefOwnershipHome,
         FiefOwnershipNewHome, FiefOwnershipNoFiefs, FiefChangeOwnership, FiefQuellRebellionFail, FiefEjectCharacter, FiefNoCaptives, ProvinceAlreadyOwn, KingdomAlreadyKing, KingdomOwnershipChallenge, ProvinceOwnershipChallenge, ErrorGenericCharacterUnidentified, ErrorGenericUnauthorised, ErrorGenericMessageInvalid, ErrorGenericTooFarFromFief, FiefNoBailiff, FiefCouldNotBar, FiefCouldNotUnbar,
         ErrorGenericBarOwnNationality, ErrorGenericPositiveInteger, GenericReceivedFunds, ErrorGenericNoHomeFief, CharacterRecruitInsufficientFunds, CharacterRecruitOk, SiegeNotBesieger, JournalEntryUnrecognised, JournalEntryNotProposal, ErrorGenericArmyUnidentified, ErrorGenericSiegeUnidentified, ErrorSpyDead, ErrorSpyCaptive, ErrorSpyOwn, SpyChance, SpySuccess, SpyFail, SpySuccessDetected, SpyFailDetected, SpyFailDead, SpyCancelled, EnemySpySuccess, EnemySpyFail, EnemySpyKilled, CharacterHeldCaptive, RansomReceived, RansomPaid, RansonDenied, RansomRepliedAlready, RansomCaptiveDead, RansomAlready, NotCaptive, EntryNotRansom, KidnapOwnCharacter, KidnapDead, KidnapNoPlayer, KidnapSuccess, KidnapSuccessDetected, KidnapFailDetected, KidnapFailDead, KidnapFail, EnemyKidnapSuccess, EnemyKidnapSuccessDetected, EnemyKidnapFail, EnemyKidnapKilled, CharacterExecuted, CharacterReleased, LogInSuccess, LogInFail, YouDied, YouDiedNoHeir, CharacterIsDead, Timeout
@@ -41,7 +56,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Dictionary mapping users to player characters
         /// </summary>
-        public static Dictionary<string, PlayerCharacter> userChars = new Dictionary<string, PlayerCharacter>();
+        public static Dictionary<string, PlayerCharacter> ownedPlayerCharacters = new Dictionary<string, PlayerCharacter>();
         /// <summary>
         /// Holds current challenges for ownership of provinces or kingdoms
         /// </summary>
@@ -551,14 +566,14 @@ namespace hist_mmorpg
                 foreach (PlayerCharacter pc in interestedPlayers)
                 {
                     // If PlayerCharacter is active (assigned to a client)
-                    if (pc.playerID!=null && Globals_Server.clients.ContainsKey(pc.playerID))
+                    if (pc.playerID!=null && Globals_Server.Clients.ContainsKey(pc.playerID))
                     {
                         // call observer's update method to perform the required actions
                         // based on the string passed
                         // Ensure not adding same entry twice in the event that the player has more than one interest in event
-                        if (!Globals_Server.clients[pc.playerID].myPastEvents.entries.ContainsValue(jEvent))
+                        if (!Globals_Server.Clients[pc.playerID].myPastEvents.entries.ContainsValue(jEvent))
                         {
-                            Globals_Server.clients[pc.playerID].myPastEvents.AddNewEntry(jEvent);
+                            Globals_Server.Clients[pc.playerID].myPastEvents.AddNewEntry(jEvent);
                         }
                     }
                 }
@@ -1241,9 +1256,9 @@ namespace hist_mmorpg
             if (string.IsNullOrWhiteSpace(type))
             {
                 // if a user is currently signed in send the message direct to client
-                if (Globals_Server.clients.ContainsKey(player))
+                if (Globals_Server.Clients.ContainsKey(player))
                 {
-                    Globals_Server.clients[player].Update(message, fields);
+                    Globals_Server.Clients[player].Update(message, fields);
                 }
                 // if user is away store message in database to view when user next logs in
                 else
@@ -1254,11 +1269,11 @@ namespace hist_mmorpg
             // Detect whether to send debug message
             else if (type.Equals("DEBUG"))
             {
-                if (Globals_Server.clients.ContainsKey(player))
+                if (Globals_Server.Clients.ContainsKey(player))
                 {
-                    if (Globals_Server.clients[player].showDebugMessages)
+                    if (Globals_Server.Clients[player].showDebugMessages)
                     {
-                        Globals_Server.clients[player].Update(message, fields);
+                        Globals_Server.Clients[player].Update(message, fields);
                     }
                 }
 
@@ -1273,7 +1288,7 @@ namespace hist_mmorpg
         {
             if (string.IsNullOrWhiteSpace(player)) return;
             Client c = null;
-            Globals_Server.clients.TryGetValue(player, out c);
+            Globals_Server.Clients.TryGetValue(player, out c);
             if (c != null)
             {
                 c.Update(message.ResponseType, message.MessageFields);
@@ -1316,7 +1331,7 @@ namespace hist_mmorpg
                 // Check PlayerCharacter is being played
                 if (!string.IsNullOrWhiteSpace(pc.playerID))
                 {
-                    Globals_Server.clients.TryGetValue(pc.playerID, out c);
+                    Globals_Server.Clients.TryGetValue(pc.playerID, out c);
                 }
                 // If PlayerCharacter belongs to a client and client iscurrently playing
                 if (c!=null && registeredObservers.Contains(c))

@@ -11,7 +11,7 @@ namespace hist_mmorpg
     public class Client
     {
         public NetConnection conn { get; set; }
-        public string user { get; set; }
+        public string username { get; set; }
         /// <summary>
         /// Holds PlayerCharacter associated with the player using this client
         /// </summary>
@@ -67,7 +67,7 @@ namespace hist_mmorpg
         public Client(String user, String pcID)
         {
             // set username associated with client
-            this.user = user;
+            this.username = user;
 
             // register client as observer
             Globals_Game.RegisterObserver(this);
@@ -82,7 +82,7 @@ namespace hist_mmorpg
             // set player's character to display
             activeChar = myPlayerCharacter;
 
-            Globals_Game.userChars.Add(user,myPlayerCharacter);
+            Globals_Game.ownedPlayerCharacters.Add(user,myPlayerCharacter);
         }
         /// <summary>
         /// Updates the client
@@ -97,8 +97,8 @@ namespace hist_mmorpg
             m.MessageFields = fields;
             if (conn != null)
             {
-                Globals_Server.logEvent("Update " + this.user + ": " + type.ToString());
-                Console.WriteLine("Sending update " + type.ToString() + " to " + this.user);
+                Globals_Server.logEvent("Update " + this.username + ": " + type.ToString());
+                Console.WriteLine("Sending update " + type.ToString() + " to " + this.username);
                 Server.SendViaProto(m, conn,alg);
             }
         }
@@ -108,8 +108,8 @@ namespace hist_mmorpg
             message.ActionType = Actions.Update;
             if (conn != null)
             {
-                Globals_Server.logEvent("Update " + this.user + ": " + message.ResponseType.ToString());
-                Console.WriteLine("Sending update " + message.ResponseType.ToString() + " to " + this.user);
+                Globals_Server.logEvent("Update " + this.username + ": " + message.ResponseType.ToString());
+                Console.WriteLine("Sending update " + message.ResponseType.ToString() + " to " + this.username);
                 Server.SendViaProto(message, conn, alg);
             }
         }
@@ -124,7 +124,7 @@ namespace hist_mmorpg
 
         public Client_Serialized(Client c)
         {
-            this.user = c.user;
+            this.user = c.username;
             this.pcID = c.myPlayerCharacter.charID;
             this.myPastEvents = c.myPastEvents;
             this.activeChar = c.activeChar.charID;

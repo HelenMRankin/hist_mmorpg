@@ -100,6 +100,11 @@ namespace hist_mmorpg
         public ProtoMessage()
         {
         }
+
+        public ProtoMessage(DisplayMessages result)
+        {
+            this.ResponseType = result;
+        }
     }
 
 

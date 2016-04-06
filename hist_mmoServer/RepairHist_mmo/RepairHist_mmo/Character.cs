@@ -1516,7 +1516,7 @@ namespace hist_mmorpg
                     if (!String.IsNullOrWhiteSpace(this.GetPlayerCharacter().playerID))
                     {
                         Client c;
-                        Globals_Server.clients.TryGetValue(this.GetPlayerCharacter().playerID, out c);
+                        Globals_Server.Clients.TryGetValue(this.GetPlayerCharacter().playerID, out c);
                         if (c != null)
                         {
                             if (c.activeChar == this)
@@ -1903,15 +1903,15 @@ namespace hist_mmorpg
             
             if (user != null)
             {
-                if (Globals_Game.userChars.ContainsKey(user))
+                if (Globals_Game.ownedPlayerCharacters.ContainsKey(user))
                 {
-                    Globals_Game.userChars[deceased.playerID] = promotedNPC;
+                    Globals_Game.ownedPlayerCharacters[deceased.playerID] = promotedNPC;
                     promotedNPC.playerID = user;
-                    Globals_Server.clients[user].myPlayerCharacter = promotedNPC;
+                    Globals_Server.Clients[user].myPlayerCharacter = promotedNPC;
                     //TODO notify user if logged in and write to database
                     Globals_Server.logEvent("Debug: role is  : "+inheritor.GetFunction(deceased));
                     Client player;
-                    Globals_Server.clients.TryGetValue(user, out player);
+                    Globals_Server.Clients.TryGetValue(user, out player);
                     if (player != null)
                     {
                         player.myPlayerCharacter = promotedNPC;
@@ -4401,67 +4401,49 @@ namespace hist_mmorpg
        
        
        /// <summary>
-       /// Spy on a fief to obtain information
+       /// Spy on a fief to obtain information. Note: SpyCheck should be performed first
        /// </summary>
        /// <param name="fief">Fief to spy on</param>
        /// <param name="result"> Full details of spy result, including information if successful and spy status</param>
        /// <returns>boolean indicating spy success</returns>
        public bool SpyOn(Fief fief, out ProtoMessage result)
        {
+
            // Booleans indicating result
            bool isSuccessful=false;
            bool wasDetected=false;
            bool wasKilled=false;
-
-           Console.WriteLine("Spying on fief: " + fief.id);
+            
            this.AdjustDays(10);
-           result = null;
+           result = new ProtoMessage();
            // TOOD Move to config
-           // Base chance of success in fief 
-           double baseFiefChance = 40;
            // Threshold under which this character will be detected
            double detectedThreshold = 40;
            // Threshold under which this character will be killed //TODO add capture
            double killThreshold = 30;
 
-           // Calculate stealth bonus
-           double stealth = CalcTraitEffect(Globals_Game.Stats.STEALTH);
-           // Calculate bailiff's percepton
-           double bailiffPerception = 0;
-           if(fief.bailiff!=null) {
-               bailiffPerception = fief.bailiff.CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
-           }
-
-           // Calculate additional success modifier
-           double totalModifier = ((stealth - bailiffPerception) * 100);
            // Get random success and escape chances 
            double successChance= Utility_Methods.GetRandomDouble(85,15);
            double escapeChance = Utility_Methods.GetRandomDouble(75, 25);
 
            // Calculate total chance of success
-           double success = baseFiefChance + totalModifier;
-           Console.WriteLine("Chance: " + successChance + ", Total success rating: " + success);
+           double success = GetSpySuccessChance(fief);
            // Check for success
            if (success > successChance)
            {
-               Console.WriteLine("Successful");
                isSuccessful=true;
            }
            else
            {
-               Console.WriteLine("Not successful");
                isSuccessful=false;
            }
            // Check whether detected or killed
-           Console.WriteLine("Escape chance: " + escapeChance);
            if ((success + escapeChance) / 2 < detectedThreshold)
            {
-               Console.WriteLine("Detected");
                wasDetected = true;
            }
            if ((success + escapeChance) / 2 < killThreshold)
            {
-               Console.WriteLine("Killed");
                wasKilled = true;
                this.ProcessDeath("spy");
            }
@@ -4496,38 +4478,173 @@ namespace hist_mmorpg
            {
                Globals_Game.UpdatePlayer(owner.playerID, DisplayMessages.SpyFail, new string[] { this.firstName + " " + this.familyName,fief.id });
            }
+            result.ResponseType = DisplayMessages.Success;
            return isSuccessful;
        }
 
-       /// <summary>
-       /// Spy on a character to gain additional information
-       /// </summary>
-       /// <param name="character">Character to spy on</param>
-       /// <param name="result">Returns protomessage containing the full spy result and any information gained</param>
-       /// <returns>Bool indicating spy success</returns>
-       public bool SpyOn(Character character, out ProtoMessage result)
+
+        // TODO use values from config
+        public double GetSpySuccessChance(object target)
+        {
+            Type t = target.GetType();
+            double baseChance;
+            Character perceptiveCharacter = null;
+
+            if (t.IsSubclassOf(typeof(Character)))
+            {
+                Character character = target as Character;
+                if (character == null)
+                {
+                    return -1;
+                }
+                baseChance = 40;
+                perceptiveCharacter = character;
+            }
+            else if (t == typeof(Fief))
+            {
+                Fief fief = target as Fief;
+                if (fief == null)
+                {
+                    return -1;
+                }
+                baseChance = 40;
+                if (fief.bailiff != null)
+                {
+                    perceptiveCharacter = fief.bailiff;
+                }
+            }
+            else if (t == typeof(Army))
+            {
+                Army army = target as Army;
+                if (army == null)
+                {
+                    return -1;
+                }
+
+                if (!string.IsNullOrWhiteSpace(army.leader))
+                {
+                    perceptiveCharacter = army.GetLeader();
+                }
+                baseChance = 30;
+            }
+            else
+            {
+                return -1;
+            }
+            double stealth = CalcTraitEffect(Globals_Game.Stats.STEALTH);
+            double enemyPerception = 0;
+            if (perceptiveCharacter != null)
+            {
+                enemyPerception = perceptiveCharacter.CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
+            }
+            return baseChance + ((stealth - enemyPerception) * 100);
+        }
+
+        public bool SpyCheck(Character character, out ProtoMessage result)
+        {
+            result = null;
+            // Cannot spy on captive
+            if (!string.IsNullOrWhiteSpace(character.captorID))
+            {
+                result = new ProtoMessage(DisplayMessages.ErrorSpyCaptive);
+                return false;
+            }
+            // Cannot spy on own character
+            if (character.GetPlayerCharacter() == this.GetPlayerCharacter())
+            {
+                result = new ProtoMessage(DisplayMessages.ErrorSpyOwn);
+                return false;
+            }
+            // Ensure spy is in same location
+            if (!this.location.Equals(character.location))
+            {
+                result = new ProtoMessage(DisplayMessages.ErrorGenericNotInSameFief);
+                return false;
+            }
+            if (this.days < 10)
+            {
+                result= new ProtoMessage(DisplayMessages.ErrorGenericNotEnoughDays);
+                return false;
+            }
+            // Cannot spy on dead character
+            if (!character.isAlive)
+            {
+                result = new ProtoMessage(DisplayMessages.ErrorSpyDead);
+                return false;
+            }
+            return true;
+        }
+
+
+        public bool SpyCheck(Fief fief, out ProtoMessage result)
+        {
+            result = null;
+            // Ensure spy is in same location
+            if (!this.location.Equals(fief))
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotInSameFief;
+                result = error;
+                return false;
+            }
+            // Ensure not trying to spy on own army
+            if (fief.owner == this.GetPlayerCharacter())
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorSpyOwn;
+                error.MessageFields = new string[] { "fief" };
+                result = error;
+                return false;
+            }
+            if (this.days < 10)
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                result = error;
+                return false;
+            }
+            return true;
+        }
+
+        public bool SpyCheck(Army army, out ProtoMessage result)
+        {
+            result = null;
+            // Ensure spy is in same location
+            if (this.location.id != (army.location))
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotInSameFief;
+                result = error;
+                return false;
+            }
+            // Ensure not trying to spy on own army
+            if (army.GetOwner() == this.GetPlayerCharacter())
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorSpyOwn;
+                error.MessageFields = new string[] { "army" };
+                result = error;
+                return false;
+
+            }
+            if (this.days < 10)
+            {
+                ProtoMessage error = new ProtoMessage();
+                error.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
+                result = error;
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Spy on a character to gain additional information. Note: SpyCheck should be performed first
+        /// </summary>
+        /// <param name="character">Character to spy on</param>
+        /// <param name="result">Returns protomessage containing the full spy result and any information gained</param>
+        /// <returns>Bool indicating spy success</returns>
+        public bool SpyOn(Character character, out ProtoMessage result)
        {
-           // Cannot spy on captive
-           if (!string.IsNullOrWhiteSpace(character.captorID))
-           {
-               result = new ProtoMessage();
-               result.ResponseType = DisplayMessages.ErrorSpyCaptive;
-               return false;
-           }
-           // Cannot spy on own character
-           if (character.GetPlayerCharacter() == this.GetPlayerCharacter())
-           {
-               result = new ProtoMessage();
-               result.ResponseType = DisplayMessages.ErrorSpyOwn;
-               return false;
-           }
-           // Cannot spy on dead character
-           if (!character.isAlive)
-           {
-               result = new ProtoMessage();
-               result.ResponseType = DisplayMessages.ErrorSpyDead;
-               return false; 
-           }
            // Booleans indicating result
            bool isSuccessful = false;
            bool wasDetected = false;
@@ -4538,23 +4655,15 @@ namespace hist_mmorpg
            // Threshold under which this character will be killed //TODO add capture
            double killThreshold = 30;
 
-           result = null;
+           result = new ProtoMessage();
            this.AdjustDays(10);
-           // Get own stealth rating and enemy perception rating
-           Console.WriteLine("Calculating trait effect for "+Globals_Game.Stats.STEALTH.ToString());
-           double stealth = this.CalcTraitEffect(Globals_Game.Stats.STEALTH);
-           Console.WriteLine("Stealth: " + stealth);
-           double enemyPerception = character.CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
-
-           double baseCharacterChance = 40;
            // Total chance of success
-           double success = ((stealth - enemyPerception) * 100) + baseCharacterChance;
+           double success = GetSpySuccessChance(character);
            
            // Get random success and escape chances 
            double successChance = Utility_Methods.GetRandomDouble(85, 15);
            double escapeChance = Utility_Methods.GetRandomDouble(75, 25);
-
-           Console.WriteLine("Chance: " + successChance + ", Total success rating: " + success);
+            
            if (success > successChance)
            {
                isSuccessful = true;
@@ -4564,15 +4673,12 @@ namespace hist_mmorpg
                isSuccessful = false;
            }
            // Check whether detected or killed
-           Console.WriteLine("Escape chance: " + escapeChance);
            if ((success + escapeChance) / 2 < detectedThreshold)
            {
-               Console.WriteLine("Detected");
                wasDetected = true;
            }
            if ((success + escapeChance) / 2 < killThreshold)
            {
-               Console.WriteLine("Killed");
                wasKilled = true;
                this.ProcessDeath("spy");
            }
@@ -4638,11 +4744,13 @@ namespace hist_mmorpg
            {
                Globals_Game.UpdatePlayer(owner.playerID, DisplayMessages.SpyFail, new string[] { this.firstName +" "+ this.familyName,character.firstName  + " "+ character.familyName});
            }
+
+            result.ResponseType = DisplayMessages.Success;
            return isSuccessful;
        }
 
         /// <summary>
-        /// Spy on an army to obtain information
+        /// Spy on an army to obtain information. Note: SpyCheck should be performed first
         /// </summary>
         /// <param name="army">Army to spy on</param>
         /// <param name="result">Result of spying, including additional information obtained</param>
@@ -4659,25 +4767,15 @@ namespace hist_mmorpg
            // Threshold under which this character will be killed //TODO add capture
            double killThreshold = 30;
 
-           result = null;
+           result = new ProtoMessage();
            this.AdjustDays(10);
-           // Get own stealth rating and enemy perception rating (if the army has a leader)
-           double stealth = this.CalcTraitEffect(Globals_Game.Stats.STEALTH);
-           double enemyPerception = 0;
-           if (!string.IsNullOrWhiteSpace(army.leader))
-           {
-               enemyPerception=army.GetLeader().CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
-           }
-           
-           double baseArmyChance = 30;
-           // Total chance of success
-           double success = ((stealth - enemyPerception) * 100) + baseArmyChance;
+            // Total chance of success
+            double success = GetSpySuccessChance(army);
 
            // Get random success and escape chances 
            double successChance = Utility_Methods.GetRandomDouble(85, 15);
            double escapeChance = Utility_Methods.GetRandomDouble(75, 25);
-
-           Console.WriteLine("Chance: " + successChance + ", Total success rating: " + success);
+            
            if (success > successChance)
            {
                isSuccessful = true;
@@ -4687,15 +4785,12 @@ namespace hist_mmorpg
                isSuccessful = false;
            }
            // Check whether detected or killed
-           Console.WriteLine("Escape chance: " + escapeChance);
            if ((success + escapeChance) / 2 < detectedThreshold)
            {
-               Console.WriteLine("Detected");
                wasDetected = true;
            }
            if ((success + escapeChance) / 2 < killThreshold)
            {
-               Console.WriteLine("Killed");
                wasKilled = true;
                this.ProcessDeath("spy");
            }
@@ -4734,6 +4829,7 @@ namespace hist_mmorpg
            {
                Globals_Game.UpdatePlayer(owner.playerID, DisplayMessages.SpyFail, new string[] { this.firstName + " " + this.familyName, armyDetails });
            }
+            result.ResponseType = DisplayMessages.Success;
            return isSuccessful;
        }
 

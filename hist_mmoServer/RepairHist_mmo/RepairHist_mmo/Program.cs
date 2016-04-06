@@ -58,7 +58,7 @@ namespace hist_mmorpg
             Pass = "potato";
             BadUsername = "notauser";
             BadPass = "notapass";
-            MyPlayerCharacter = Globals_Game.userChars[Username];
+            MyPlayerCharacter = Globals_Game.ownedPlayerCharacters[Username];
             Dictionary<string, PlayerCharacter>.Enumerator e = Globals_Game.pcMasterList.GetEnumerator();
             e.MoveNext();
             NotMyPlayerCharacter = e.Current.Value;

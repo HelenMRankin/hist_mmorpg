@@ -50,7 +50,7 @@ namespace hist_mmorpg
         public static bool ContainsConnection(string user)
         {
             Client c;
-            Globals_Server.clients.TryGetValue(user, out c);
+            Globals_Server.Clients.TryGetValue(user, out c);
             if (c == null) return false;
             return clientConnections.ContainsValue(c);
         }
@@ -72,9 +72,9 @@ namespace hist_mmorpg
             Globals_Server.server = server;
             Globals_Server.logEvent("Server started- host: " + host_name + ", port: " + port + ", appID: " + app_identifier + ", max connections: " + max_connections);
             Client client = new Client("helen", "Char_158");
-            Globals_Server.clients.Add("helen", client);
+            Globals_Server.Clients.Add("helen", client);
             Client client2 = new Client("test", "Char_126");
-            Globals_Server.clients.Add("test", client2);
+            Globals_Server.Clients.Add("test", client2);
             String dir = Directory.GetCurrentDirectory();
             dir = dir.Remove(dir.IndexOf("RepairHist_mmo"));
             String path = Path.Combine(dir, "RepairHist_mmo", "Certificates");
@@ -197,10 +197,10 @@ namespace hist_mmorpg
                                     im.SenderConnection.Disconnect("Not login");
                                     return;
                                 }
-                                if (LogInManager.VerifyUser(c.user, login.userSalt))
+                                if (LogInManager.VerifyUser(c.username, login.userSalt))
                                 {
 
-                                    Globals_Server.logEvent(c.user + " logs in from " + im.SenderEndPoint.ToString());
+                                    Globals_Server.logEvent(c.username + " logs in from " + im.SenderEndPoint.ToString());
                                         // Decrypt key
 
 
@@ -282,7 +282,7 @@ namespace hist_mmorpg
                             {
                                 string senderID = im.ReadString();
                                 Client client;
-                                Globals_Server.clients.TryGetValue(senderID, out client);
+                                Globals_Server.Clients.TryGetValue(senderID, out client);
                                 if (client != null)
                                 {
                                     ProtoLogIn logIn;
@@ -364,7 +364,7 @@ namespace hist_mmorpg
             }
             else
             {
-                ProtoMessage reply = Game.ActionController(m, pc);
+                ProtoMessage reply = Game.ActionController(m, client);
                 // Set action type to ensure client knows which action invoked response
                 if (reply == null)
                 {
@@ -397,7 +397,7 @@ namespace hist_mmorpg
             {
                 // TODO process log out
                 Client client = clientConnections[conn];
-                Globals_Server.logEvent("Client " + client.user + "disconnects");
+                Globals_Server.logEvent("Client " + client.username + "disconnects");
                 Globals_Game.RemoveObserver(client);
                 client.conn = null;
                 clientConnections.Remove(conn);
