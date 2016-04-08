@@ -206,19 +206,14 @@ namespace hist_mmorpg
 
                                     try
                                         {
-                                            Console.WriteLine("SERVER: decrypting client key");
                                             byte[] key = rsa.Decrypt(login.Key, false);
-                                            Console.WriteLine("SERVER: Key for client1: ");
-                                            foreach (var bite in key)
-                                            {
-                                                Console.Write(bite.ToString());
-                                            }
                                             Console.WriteLine("\n");
                                             c.alg = new NetAESEncryption(server, key, 0, key.Length);
                                             ProtoClient clientDetails = new ProtoClient(c);
                                             clientDetails.ActionType = Actions.LogIn;
                                             clientDetails.ResponseType = DisplayMessages.LogInSuccess;
                                             SendViaProto(clientDetails, im.SenderConnection, c.alg);
+                                            Console.WriteLine("SERVER: registering " + c.username + " as observer");
                                             Globals_Game.RegisterObserver(c);
                                         }
                                         catch(Exception e)

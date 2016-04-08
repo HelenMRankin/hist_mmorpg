@@ -1199,10 +1199,6 @@ namespace hist_mmorpg
             {
                 result = new ProtoMessage();
                 result.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
-                //LEGACY
-                /*
-                Globals_Game.UpdatePlayer(GetOwner().playerID, DisplayMessages.ErrorGenericNotEnoughDays);
-                */
                 proceed = false;
             }
             else
@@ -1214,10 +1210,6 @@ namespace hist_mmorpg
                 {
                     result = new ProtoMessage();
                     result.ResponseType = DisplayMessages.ArmyBesieged;
-                    //LEGACY
-                    /*
-                    Globals_Game.UpdatePlayer(GetOwner().playerID,DisplayMessages.ArmyBesieged);
-                    */
                 }
 
                 else
@@ -1228,10 +1220,6 @@ namespace hist_mmorpg
                     {
                         result = new ProtoMessage();
                         result.ResponseType = DisplayMessages.ArmyBesieged;
-                        //LEGACY
-                        /*
-                        Globals_Game.UpdatePlayer(GetOwner().playerID,DisplayMessages.ArmyBesieged);
-                        */
                         proceed = false;
                     }
 
@@ -1242,10 +1230,6 @@ namespace hist_mmorpg
                         {
                             result = new ProtoMessage();
                             result.ResponseType = DisplayMessages.ArmyAttackSelf;
-                            //LEGACY
-                            /* 
-                            Globals_Game.UpdatePlayer(GetOwner().playerID,DisplayMessages.ArmyAttackSelf);
-                            */
                             proceed = false;
                         }
                     }
@@ -1376,25 +1360,25 @@ namespace hist_mmorpg
         /// <param name="isSiege">bool indicating if the circumstance is a siege storm</param>
         public uint[] CalculateBattleValues(Army defender, int keepLvl = 0, bool isSiegeStorm = false)
         {
+
             uint[] battleValues = new uint[2];
-            double attackerLV = 0;
-            double defenderLV = 0;
+            double attackerLV = 1;
+            double defenderLV = 1;
 
             // get leaders
             Character attackerLeader = this.GetLeader();
             Character defenderLeader = defender.GetLeader();
-
             // get leadership values for each army leader
-            attackerLV = attackerLeader.GetLeadershipValue(isSiegeStorm);
+            if (attackerLeader != null)
+            {
+                attackerLV = attackerLeader.GetLeadershipValue(isSiegeStorm);
+            }
+            
 
             // defender may not have leader
             if (defenderLeader != null)
             {
                 defenderLV = defenderLeader.GetLeadershipValue(isSiegeStorm);
-            }
-            else
-            {
-                defenderLV = 4;
             }
 
             // calculate battle modifier based on LVs

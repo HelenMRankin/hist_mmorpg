@@ -18,7 +18,7 @@ namespace hist_mmorpg.Tests
         public void LogInTestValid()
         {
             TestClient s0 = new TestClient();
-            this.LogInTest(s0, Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            this.LogInTest(s0, OtherUser, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             while (!s0.net.GetConnectionStatus().Equals("Connected"))
             {
                 Thread.Sleep(0);
@@ -32,8 +32,7 @@ namespace hist_mmorpg.Tests
         public void LogOutBeforeLogIn()
         {
             TestClient s0 = new TestClient();
-            s0.net = (TestClient.Network)null;
-            s0.ConnectNoLogin(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
+            s0.ConnectNoLogin(OtherUser, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6 });
             s0.LogOut();
             Assert.IsFalse(Server.ContainsConnection(Username));
         }
@@ -43,8 +42,7 @@ namespace hist_mmorpg.Tests
         public void LogInTestBadPassword()
         {
             TestClient s0 = new TestClient();
-            s0.net = (TestClient.Network)null;
-            this.LogInTest(s0, Username, BadPass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            this.LogInTest(s0, OtherUser,OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             s0.LogOut();
             Assert.IsFalse(Server.ContainsConnection(Username));
         }
@@ -55,7 +53,7 @@ namespace hist_mmorpg.Tests
         {
             TestClient s0 = new TestClient();
             s0.net = (TestClient.Network)null;
-            this.LogInTest(s0, Username, null, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            this.LogInTest(s0, OtherUser, null, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             Assert.IsFalse(Server.ContainsConnection(Username));
             s0.LogOut();
         }
@@ -66,7 +64,7 @@ namespace hist_mmorpg.Tests
         {
             TestClient s0 = new TestClient();
             s0.net = (TestClient.Network)null;
-            this.LogInTest(s0, Username, Pass, new byte[] { });
+            this.LogInTest(s0, OtherUser, OtherPass, new byte[] { });
             Assert.IsFalse(Server.ContainsConnection(Username));
             s0.LogOut();
         }
@@ -77,7 +75,7 @@ namespace hist_mmorpg.Tests
         {
             TestClient s0 = new TestClient();
             s0.net = (TestClient.Network)null;
-            this.LogInTest(s0, BadUsername, Pass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            this.LogInTest(s0, BadUsername, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             Assert.IsFalse(Server.ContainsConnection(BadUsername));
             s0.LogOut();
         }
@@ -108,18 +106,11 @@ namespace hist_mmorpg.Tests
         [Timeout(10000)]
         public void DoubleLogIn()
         {
-            TestClient s0 = new TestClient();
-            this.LogInTest(s0, Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            client.ClearMessageQueues();
+            client.SendDummyLogIn("helen", "potato", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, });
             Thread.Sleep(1000);
-            /*while (!s0.net.GetConnectionStatus().Equals("Connected"))
-            {
-                Thread.Sleep(0);
-            }*/
-            s0.ClearMessageQueues();
-            s0.SendDummyLogIn("helen", "potato", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, });
-            Thread.Sleep(1000);
-            Assert.IsTrue(s0.IsConnectedAndLoggedIn() == false);
-            s0.LogOut();
+            Assert.IsTrue(client.IsConnectedAndLoggedIn() == false);
+            
         }
 
 
@@ -131,7 +122,7 @@ namespace hist_mmorpg.Tests
         public void LogInTimeout()
         {
             TestClient s0 = new TestClient();
-            s0.ConnectNoLogin(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            s0.ConnectNoLogin(OtherUser, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             Task<string> reply = s0.GetServerMessage();
             reply.Wait();
             Assert.AreEqual("Failed to login due to timeout", reply.Result);
@@ -145,7 +136,7 @@ namespace hist_mmorpg.Tests
         public void AdjustExpenditureTestNotLoggedIn()
         {
             TestClient s0 = new TestClient();
-            s0.ConnectNoLogin(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6, 7 });
+            s0.ConnectNoLogin(OtherUser, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7 });
             while (!s0.net.GetConnectionStatus().Equals("Connected"))
             {
                 Thread.Sleep(0);
@@ -159,98 +150,52 @@ namespace hist_mmorpg.Tests
         [Timeout(15000)]
         public void AdjustExpenditureTestBadFief()
         {
-            TestClient s0 = new TestClient();
-            s0.net = (TestClient.Network)null;
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            this.AdjustExpenditureTest(s0, "notafief", 50, 50, 50, 50, 50);
-            s0.LogOut();
+            this.AdjustExpenditureTest(client, "notafief", 50, 50, 50, 50, 50);
+            
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void AdjustExpenditureTestNotOwnedFief()
         {
-            TestClient s0 = new TestClient();
-            s0.net = (TestClient.Network)null;
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            this.AdjustExpenditureTest(s0, NotOwnedFief.id, 50, 50, 50, 50, 50);
-            s0.LogOut();
+            this.AdjustExpenditureTest(client, NotOwnedFief.id, 50, 50, 50, 50, 50);
+            
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void AdjustExpenditureBadData()
         {
-            TestClient s0 = new TestClient();
-            s0.net = (TestClient.Network)null;
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            this.AdjustExpenditureTest(s0, OwnedFief.id, -1, -1, -2, -1, -1);
-            s0.LogOut();
+            this.AdjustExpenditureTest(client, OwnedFief.id, -1, -1, -2, -1, -1);
+            
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void AdjustExpenditureSuccess()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            this.AdjustExpenditureTest(s0, OwnedFief.id, 1, 1, 1, 1, 1);
-            s0.LogOut();
+            this.AdjustExpenditureTest(client, OwnedFief.id, 1, 1, 1, 1, 1);
+            
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void AdjustExpenditureTooMuch()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
-            this.AdjustExpenditureTest(s0, OwnedFief.id, 100000, 1000000, 11000000, 11000000, 11000000);
-            s0.LogOut();
+            this.AdjustExpenditureTest(client, OwnedFief.id, 100000, 1000000, 11000000, 11000000, 11000000);
+            
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void AttackValid()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
             OwnedArmy.location = NotOwnedArmy.location;
             if (OwnedArmy.GetLeader() != null)
             {
                 OwnedArmy.GetLeader().location.id = NotOwnedArmy.location;
             }
-            this.AttackTest(s0, OwnedArmy.armyID, NotOwnedArmy.armyID);
-            s0.LogOut();
+            this.AttackTest(client, OwnedArmy.armyID, NotOwnedArmy.armyID);
         }
 
 
@@ -258,91 +203,55 @@ namespace hist_mmorpg.Tests
         [Timeout(8000)]
         public void AttackNotOwnedArmy()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
             OwnedArmy.location = NotOwnedArmy.location;
             if (OwnedArmy.GetLeader() != null)
             {
                 OwnedArmy.GetLeader().location.id = NotOwnedArmy.location;
             }
-            this.AttackTest(s0, NotOwnedArmy.armyID, OwnedArmy.armyID);
-            s0.LogOut();
+            this.AttackTest(client, NotOwnedArmy.armyID, OwnedArmy.armyID);
         }
 
         [TestMethod]
         [Timeout(8000)]
         public void AttackMyself()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
             OwnedArmy.location = NotOwnedArmy.location;
             if (OwnedArmy.GetLeader() != null)
             {
                 OwnedArmy.GetLeader().location.id = NotOwnedArmy.location;
             }
-            this.AttackTest(s0, OwnedArmy.armyID, OwnedArmy.armyID);
-            s0.LogOut();
+            this.AttackTest(client, OwnedArmy.armyID, OwnedArmy.armyID);
         }
 
         [TestMethod]
         [Timeout(8000)]
         public void AttackBadArmy()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
             OwnedArmy.location = NotOwnedArmy.location;
             if (OwnedArmy.GetLeader() != null)
             {
                 OwnedArmy.GetLeader().location.id = NotOwnedArmy.location;
             }
-            this.AttackTest(s0, OwnedArmy.armyID, "NotanArmyId");
-            s0.LogOut();
+            this.AttackTest(client, OwnedArmy.armyID, "NotanArmyId");
         }
 
         [TestMethod]
         [Timeout(8000)]
         public void AttackNullArmy()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             OwnedArmy.location = NotOwnedArmy.location;
             if (OwnedArmy.GetLeader() != null)
             {
                 OwnedArmy.GetLeader().location.id = NotOwnedArmy.location;
             }
-            this.AttackTest(s0, OwnedArmy.armyID, null);
-            s0.LogOut();
+            this.AttackTest(client, OwnedArmy.armyID, null);
         }
 
         [TestMethod]
-        [Timeout(8000)]
+        [Timeout(30000)]
         public void AttackTooFarFromArmy()
         {
-            while (!client.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            client.ClearMessageQueues();
             OwnedArmy.location = OwnedFief.id;
             if (OwnedArmy.GetLeader() != null)
             {
@@ -623,70 +532,64 @@ namespace hist_mmorpg.Tests
         [Timeout(15000)]
         public void RecruitValidCancel()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             if (OwnedArmy == null)
             {
                 Console.WriteLine("Do not own an army!");
                 Console.WriteLine("PlayerCharacter " + MyPlayerCharacter.charID + "( " + MyPlayerCharacter.firstName +
                                   " " + MyPlayerCharacter.familyName + " has " + MyPlayerCharacter.myArmies.Count +
                                   " armies");
-                this.RecruitTroopsTest(s0, null, 50, false);
+                this.RecruitTroopsTest(client, null, 50, false);
             }
             else
             {
-                this.RecruitTroopsTest(s0, OwnedArmy.armyID, 50, false);
+                this.RecruitTroopsTest(client, OwnedArmy.armyID, 50, false);
             }
 
-            s0.LogOut();
+            
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void RecruitValidConfirm()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             if (OwnedArmy == null)
             {
                 Console.WriteLine("Do not own an army!");
                 Console.WriteLine("PlayerCharacter " + MyPlayerCharacter.charID + "( " + MyPlayerCharacter.firstName +
                                   " " + MyPlayerCharacter.familyName + " has " + MyPlayerCharacter.myArmies.Count +
                                   " armies");
-                this.RecruitTroopsTest(s0, null, 50, true);
+                this.RecruitTroopsTest(client, null, 50, true);
             }
             else
             {
-                this.RecruitTroopsTest(s0, OwnedArmy.armyID, 50, true);
+                this.RecruitTroopsTest(client, OwnedArmy.armyID, 50, true);
             }
 
-            s0.LogOut();
+            
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void RecruitInvalidAlreadyRecruited()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
-            this.RecruitTroopsTest(s0, OwnedArmy.armyID, 50, true);
-            this.RecruitTroopsTest(s0, OwnedArmy.armyID , 50, true); 
-            s0.LogOut();
+            client.ClearMessageQueues();
+            this.RecruitTroopsTest(client, OwnedArmy.armyID, 50, true);
+            this.RecruitTroopsTest(client, OwnedArmy.armyID , 50, true); 
+            
         }
 
 
@@ -697,13 +600,11 @@ namespace hist_mmorpg.Tests
         [Timeout(15000)]
         public void SpyArmyValid()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             if (NotOwnedArmy == null)
             {
                 Assert.Fail("NotOwnedArmy is null");
@@ -715,61 +616,55 @@ namespace hist_mmorpg.Tests
             {
                 leader.location = MyPlayerCharacter.location;
             }
-            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
+            this.SpyArmyTest(client, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void SpyArmyCancel()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             NotOwnedArmy.location = MyPlayerCharacter.location.ToString();
             Character leader = NotOwnedArmy.GetLeader();
             if (leader != null)
             {
                 leader.location = MyPlayerCharacter.location;
             }
-            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
+            this.SpyArmyTest(client, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void SpyArmyNotOwned()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             NotOwnedArmy.location = MyPlayerCharacter.location.ToString();
             Character leader = NotOwnedArmy.GetLeader();
             if (leader != null)
             {
                 leader.location = MyPlayerCharacter.location;
             }
-            this.SpyArmyTest(s0, NotMyPlayerCharacter.charID, NotOwnedArmy.armyID);
+            this.SpyArmyTest(client, NotMyPlayerCharacter.charID, NotOwnedArmy.armyID);
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void SpyArmyTooFar()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
-            this.SpyArmyTest(s0, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
+            client.ClearMessageQueues();
+            this.SpyArmyTest(client, MyPlayerCharacter.charID, NotOwnedArmy.armyID);
         }
 
         /// <summary>
@@ -779,15 +674,13 @@ namespace hist_mmorpg.Tests
         [Timeout(15000)]
         public void SpyFiefValid()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             MyPlayerCharacter.location = NotOwnedFief;
-            this.SpyFiefTest(s0, MyPlayerCharacter.charID, NotOwnedFief.id, true);
+            this.SpyFiefTest(client, MyPlayerCharacter.charID, NotOwnedFief.id, true);
         }
 
 
@@ -795,28 +688,24 @@ namespace hist_mmorpg.Tests
         [Timeout(15000)]
         public void SpyFiefNotOwned()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
-            this.SpyFiefTest(s0, NotMyPlayerCharacter.charID, NotOwnedFief.id, true);
+            client.ClearMessageQueues();
+            this.SpyFiefTest(client, NotMyPlayerCharacter.charID, NotOwnedFief.id, true);
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void SpyFiefTooFar()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
-            this.SpyFiefTest(s0, MyPlayerCharacter.charID, NotOwnedFief.id, true);
+            client.ClearMessageQueues();
+            this.SpyFiefTest(client, MyPlayerCharacter.charID, NotOwnedFief.id, true);
         }
 
         /// <summary>
@@ -826,17 +715,15 @@ namespace hist_mmorpg.Tests
         [Timeout(15000)]
         public void SpyCharacterValid()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             ProtoMessage ignore = null;
             // (need to move the character to the same location as the playercharacter)
             NotMyFamily.MoveTo(MyPlayerCharacter.location.id, out ignore);
-            this.SpyCharacterTest(s0, MyPlayerCharacter.charID, NotMyFamily.charID, true);
+            this.SpyCharacterTest(client, MyPlayerCharacter.charID, NotMyFamily.charID, true);
         }
 
 
@@ -844,84 +731,74 @@ namespace hist_mmorpg.Tests
         [Timeout(15000)]
         public void SpyCharacterNotOwned()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             ProtoMessage ignore = null;
             // (need to move the character to the same location as the playercharacter)
             NotMyFamily.MoveTo(NotMyPlayerCharacter.location.id, out ignore);
-            this.SpyCharacterTest(s0, NotMyPlayerCharacter.charID, NotMyFamily.charID, true);
+            this.SpyCharacterTest(client, NotMyPlayerCharacter.charID, NotMyFamily.charID, true);
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void SpyOnOwnCharacter()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             ProtoMessage ignore = null;
             // (need to move the character to the same location as the playercharacter)
             MyFamily.MoveTo(MyPlayerCharacter.location.id, out ignore);
-            this.SpyCharacterTest(s0, MyPlayerCharacter.charID, MyFamily.charID, true);
+            this.SpyCharacterTest(client, MyPlayerCharacter.charID, MyFamily.charID, true);
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void SpyOnOwnFief()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             ProtoMessage ignore = null;
             // (need to move the character to the same location as the playercharacter)
             MyPlayerCharacter.MoveTo(OwnedFief.id, out ignore);
-            this.SpyFiefTest(s0, MyPlayerCharacter.charID, OwnedFief.id, true);
+            this.SpyFiefTest(client, MyPlayerCharacter.charID, OwnedFief.id, true);
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void SpyOnOwnArmy()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             ProtoMessage ignore = null;
             MyPlayerCharacter.MoveTo(OwnedArmy.location, out ignore);
             // (need to move the character to the same location as the playercharacter)
-            this.SpyArmyTest(s0, MyPlayerCharacter.charID, OwnedArmy.armyID);
+            this.SpyArmyTest(client, MyPlayerCharacter.charID, OwnedArmy.armyID);
         }
 
         [TestMethod]
         [Timeout(15000)]
         public void SpyCharacterTooFar()
         {
-            TestClient s0 = new TestClient();
-            s0.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!s0.IsConnectedAndLoggedIn())
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            s0.ClearMessageQueues();
+            client.ClearMessageQueues();
             ProtoMessage ignore = null;
             // (need to move the character to the same location as the playercharacter)
-            this.SpyCharacterTest(s0, MyPlayerCharacter.charID, NotMyFamily.charID, true);
+            this.SpyCharacterTest(client, MyPlayerCharacter.charID, NotMyFamily.charID, true);
         }
 
         

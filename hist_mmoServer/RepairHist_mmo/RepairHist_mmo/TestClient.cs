@@ -22,7 +22,7 @@ namespace hist_mmorpg
     /// <typeparam name="T"></typeparam>
     public class ConcurrentQueueWithEvent<T> : ConcurrentQueue<T>
     {
-        public EventWaitHandle eventWaiter { get; }
+        public EventWaitHandle eventWaiter { get; set; }
 
         public ConcurrentQueueWithEvent() : base()
         {

@@ -3026,24 +3026,18 @@ namespace hist_mmorpg
 
         public static ProtoMessage Attack(string attackerID, string defenderID, Client client)
         {
-            if (string.IsNullOrWhiteSpace(attackerID) || string.IsNullOrWhiteSpace(defenderID))
-            {
-                Console.Write("A string is null");
-                return new ProtoMessage(DisplayMessages.ErrorGenericMessageInvalid);
-            }
+            DisplayMessages attackerErrorMessage,defenderErrorMessage;
             // Get attacker and defender
-            Army armyAttacker = null;
-            Army armyDefender = null;
-            Globals_Game.armyMasterList.TryGetValue(attackerID, out armyAttacker);
-            Globals_Game.armyMasterList.TryGetValue(defenderID, out armyDefender);
-            if (armyAttacker == null || armyDefender == null)
+            Army armyAttacker = Utility_Methods.GetArmy(attackerID, out attackerErrorMessage );
+            Army armyDefender = Utility_Methods.GetArmy(defenderID, out defenderErrorMessage);
+            if (armyAttacker == null)
             {
-
-                ProtoMessage error = new ProtoMessage();
-                error.ResponseType = DisplayMessages.ErrorGenericArmyUnidentified;
-                return error;
+                return new ProtoMessage(attackerErrorMessage);
             }
-
+            if (armyDefender==null)
+            {
+                return new ProtoMessage(defenderErrorMessage);
+            }
             if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, client.myPlayerCharacter, armyAttacker))
             {
                 ProtoMessage error = new ProtoMessage();
@@ -3053,7 +3047,6 @@ namespace hist_mmorpg
             // In the event an army has no troops, return error, log event and clean up
             if (armyAttacker.troops == null || armyAttacker.CalcArmySize() == 0 || armyDefender.troops == null || armyDefender.CalcArmySize() == 0)
             {
-                Console.WriteLine("Troops are null!");
                 ProtoMessage error = new ProtoMessage();
                 error.ResponseType = DisplayMessages.Error;
                 Globals_Server.logError("Found an army with no troops- Performing clean up");
@@ -3074,12 +3067,10 @@ namespace hist_mmorpg
                 // TODO refactor battle
                 // GiveBattle returns necessary messages
                 ProtoBattle battleResults = null;
-                Console.WriteLine("About to give battle");
                 try
                 {
                     bool isVictorious = Battle.GiveBattle(armyAttacker, armyDefender, out battleResults);
                     battleResults.ResponseType = DisplayMessages.BattleResults;
-                    Console.WriteLine("Battle is complete");
                     return battleResults;
                 }
                 catch (Exception e)

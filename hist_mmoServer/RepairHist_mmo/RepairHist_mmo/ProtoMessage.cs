@@ -1429,43 +1429,89 @@ namespace hist_mmorpg
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoBattle : ProtoMessage
     {
-        // The name of the attacker leader
+        /// <summary>
+        /// Full name of Character leading the attacking Army
+        /// </summary>
         public string attackerLeader;
-        // The name of the attacker owner
+        /// <summary>
+        /// Full name of PlayerCharacter owning the attacking Army
+        /// </summary>
         public string attackerOwner;
-        // The name of the defender leader
+        /// <summary>
+        /// Full name of Character leading the defending Army
+        /// </summary>
         public string defenderLeader;
-        // The name of the defender owner
+        /// <summary>
+        /// Full name of PlayerCharacter owning the defending Army
+        /// </summary>
         public string defenderOwner;
 
-        // ID of fief where battle took place
+        /// <summary>
+        /// ID of Fief where battle took place
+        /// </summary>
         public string battleLocation;
 
-        // Bool indicating whether or not the battle took place
+        /// <summary>
+        /// Boolean indicating whether a battle took place (armies can retreat instead)
+        /// </summary>
         public bool battleTookPlace;
 
-        // Whether or not the attacker was victorious
+        /// <summary>
+        /// Boolean indicating whether the attacker was victorious
+        /// </summary>
         public bool attackerVictorious;
-        // If an army has disbanded put the owner's name in the array
+        /// <summary>
+        /// Holds the names of owners of all disbanded armies
+        /// </summary>
         public string[] disbandedArmies;
-        // If an army has retreated put the owner's name in the array
+        /// <summary>
+        /// Holds the names of owners of all retreated armies
+        /// </summary>
         public string[] retreatedArmies;
-        // If an character has died put the character name in the array
+        /// <summary>
+        /// Holds the full names of all Characters who died as a result of the battle
+        /// </summary>
         public string[] deaths;
-        // If the defender leader during a siege dies, and there is no heir to take over, then even if the defenders win the siege is raised
+        /// <summary>
+        /// If the defender leader during a siege dies, and there is no heir to take over, then even if the defenders win the siege is raised
+        /// </summary>
         public bool DefenderDeadNoHeir;
-        // Checks if the defending army retreats
+        /// <summary>
+        /// Boolean indicating whether the siege was raised
+        /// </summary>
         public bool siegeRaised;
+        /// <summary>
+        /// Number of troop casualties incurred for the defender
+        /// </summary>
         public uint defenderCasualties;
+        /// <summary>
+        /// Number of troop casualties incurred for the attacker
+        /// </summary>
         public uint attackerCasualties;
-
+        /// <summary>
+        /// Boolean indicating whether or not this battle took place as a result of being a siege
+        /// </summary>
         public bool isSiege;
+        /// <summary>
+        /// The full name of the Character besieging
+        /// </summary>
         public string siegeBesieger;
+        /// <summary>
+        /// The full name of the Character defending
+        /// </summary>
         public string siegeDefender;
         /// <summary>
         /// 0 = normal battle, 1 = pillage, 2 = siege
         /// </summary>
         public byte circumstance;
+        /// <summary>
+        /// Indicates how much stature the attacker has gained/lost
+        /// </summary>
+        public double statureChangeAttacker;
+        /// <summary>
+        /// Indicates how much stature the defender has gained/lost
+        /// </summary>
+        public double statureChangeDefender;
         public ProtoBattle()
             : base()
         {

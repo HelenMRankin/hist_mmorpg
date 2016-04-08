@@ -76,6 +76,16 @@ Severity: High
 Chance of happening: High
 
 
+Bug: In original implementation, calculating battle values without an army leader throws NullReferenceException. Since armies are allowed to not have leaders, this is a cause for concern
+Detected through: dynamic testing
+Severity: High
+Chance of happening: High
+
+Bug: GiveBattle will throw NullReferenceException if the army leaders are null
+Detected through: dynamic testing
+Severity: High
+Chance of happening: High
+
 Bug: In original implementation, recruiting with a null army id causes a crash, whereas it should create a new army
 Detected through: Dynamic testing
 Severity: High

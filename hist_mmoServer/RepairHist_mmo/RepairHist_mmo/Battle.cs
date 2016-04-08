@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace hist_mmorpg
@@ -254,6 +256,159 @@ namespace hist_mmorpg
         }
 
         /// <summary>
+        /// Return a string describing the results of a battle
+        /// </summary>
+        /// <param name="battle">Results of battle</param>
+        /// <returns>String description</returns>
+        public static String DisplayBattleResults(ProtoBattle battle)
+        {
+            // Battle introduction
+            string toDisplay = "The fief garrison and militia";
+            if (battle.attackerLeader != null)
+            {
+                toDisplay += ", led by " + battle.attackerLeader + ",";
+            }
+            switch (battle.circumstance)
+            {
+                // Normal battle
+                case 0:
+                {
+                    toDisplay+=" moved to attack ";
+                }
+                    break;
+                // Pillage
+                case 1:
+                {
+                    toDisplay += " sallied forth to bring the pillaging army,";
+                    
+                }
+                    break;
+                // Siege
+                case 2:
+                {
+                    toDisplay += ", sallied forth to bring the besieging army, ";
+                }
+                    break;
+                default:
+                    toDisplay = "Unrecognised circumstance";
+                    break;
+            }
+            if (battle.defenderLeader != null)
+            {
+                toDisplay += " led by " + battle.defenderLeader + " and";
+            }
+            toDisplay += " owned by " + battle.defenderOwner
+                         + ", to battle in the fief of " + Globals_Game.fiefMasterList[battle.battleLocation].name+"."
+                + "\r\n\r\nOutcome: ";
+            if (battle.battleTookPlace)
+            {
+                if (battle.attackerVictorious)
+                {
+                    toDisplay += battle.attackerOwner;
+                }
+                else
+                {
+                    toDisplay += battle.defenderOwner;
+                }
+
+                // Victory status
+                toDisplay += "'s army was victorious.\r\n\r\n";
+
+                // Casualties
+                toDisplay += battle.attackerOwner + "'s army suffered " + battle.attackerCasualties +
+                             " troop casualties.\n";
+                toDisplay += battle.defenderLeader + "'s army suffered " + battle.defenderCasualties +
+                             " troop casualties.\n";
+
+                // Retreats
+                foreach (var retreater in battle.retreatedArmies)
+                {
+                    toDisplay += retreater + "'s army retreated from the fief.\n";
+                }
+
+                // Disbands
+                foreach (var disbander in battle.disbandedArmies)
+                {
+                    toDisplay += disbander + "'s army disbanded due to heavy casualties.\n";
+                }
+
+                toDisplay += string.Join(", ", battle.deaths) + " all died due to injuries received.\n";
+                if (battle.circumstance == 1)
+                {
+                    toDisplay += "The pillage in " + Globals_Game.fiefMasterList[battle.battleLocation].name +
+                                 " has been prevented";
+                }
+
+                // Siege results
+                if (battle.circumstance == 2)
+                {
+                    if (battle.attackerVictorious || battle.retreatedArmies.Contains(battle.attackerOwner))
+                    {
+                        toDisplay += battle.attackerOwner + "'s defenders have defeated the forces of " +
+                                     battle.defenderOwner + ", relieving the siege of " +
+                                     Globals_Game.fiefMasterList[battle.battleLocation].name
+                                     + ". " + battle.defenderOwner +
+                                     " retains ownership of the fief. The siege has been raised.\n";
+
+                    }
+                    else if(battle.DefenderDeadNoHeir)
+                    {
+                        // add to message
+                        toDisplay += "The siege in " + Globals_Game.fiefMasterList[battle.battleLocation].name + " has been raised";
+                        toDisplay += " due to the death of the besieging party, ";
+                        toDisplay += battle.siegeBesieger+ ".";
+                    }
+                }
+            }
+            else
+            {
+                if (battle.circumstance > 0)
+                {
+                    toDisplay += battle.attackerOwner + "'s forces failed to bring their aggressors to battle.\n";
+                }
+                else
+                {
+                    toDisplay += battle.defenderOwner +
+                                 "'s forces successfully refused battle and retreated from the fief.";
+                }
+            }
+            return toDisplay; 
+        }
+
+        /// <summary>
+        /// Display the results of a siege (that has been resolved due to a battle) in a human readable format
+        /// </summary>
+        /// <param name="battle">Results of battle</param>
+        /// <returns>String describing battle</returns>
+        public static String DisplaySiegeResults(ProtoBattle battle)
+        {
+            string siegeDescription = "";
+            if (battle.attackerVictorious || battle.retreatedArmies.Contains(battle.attackerOwner))
+            {
+                siegeDescription = "On this day of Our Lord the forces of ";
+                siegeDescription += battle.siegeDefender;
+                siegeDescription += " have defeated the forces of " + battle.siegeBesieger;
+                siegeDescription += ", relieving the siege of " + Globals_Game.fiefMasterList[battle.battleLocation].name + ".";
+                siegeDescription += " " + battle.siegeDefender;
+                siegeDescription += " retains ownership of the fief.";
+            }
+            if (battle.DefenderDeadNoHeir)
+            {
+                // construct event description to be passed into siegeEnd
+                siegeDescription = "On this day of Our Lord the forces of ";
+                siegeDescription += battle.siegeBesieger;
+                siegeDescription += " attacked the forces of " + battle.siegeDefender;
+                siegeDescription += ", who was killed during the battle.";
+                siegeDescription += "  Thus, despite losing the battle, " + battle.siegeBesieger;
+                siegeDescription += " has succeeded in relieving the siege of " + Globals_Game.fiefMasterList[battle.battleLocation].name + ".";
+                siegeDescription += " " + battle.siegeDefender;
+                siegeDescription += " retains ownership of the fief.";
+            }
+            return siegeDescription;
+
+        }
+
+        /// <summary>
         /// Implements the processes involved in a battle between two armies in the field
         /// </summary>
         /// <returns>bool indicating whether attacking army is victorious</returns>
@@ -269,8 +424,6 @@ namespace hist_mmorpg
         /// <param name="circumstance">string indicating circumstance of battle</param>
         public static bool GiveBattle(Army attacker, Army defender, out ProtoBattle battleResults, string circumstance = "battle")
         {
-            string toDisplay = "";
-            string siegeDescription = "";
             battleResults = new ProtoBattle();
             bool attackerVictorious = false;
             bool battleHasCommenced = false;
@@ -319,47 +472,12 @@ namespace hist_mmorpg
             {
                 case "pillage":
                     battleResults.circumstance = 1;
-                    toDisplay += "The fief garrison and militia, led by " + attackerLeader.firstName
-                        + " " + attackerLeader.familyName + ", sallied forth to bring the pillaging "
-                        + defender.armyID + ",";
-                    if (defenderLeader != null)
-                    {
-                        toDisplay += " led by " + defenderLeader.firstName + " " + defenderLeader.familyName + " and";
-                    }
-                    toDisplay += " owned by " + defender.GetOwner().firstName + " " + defender.GetOwner().familyName
-                        + ", to battle."
-                        + "\r\n\r\nOutcome: ";
                     break;
                 case "siege":
                     battleResults.circumstance = 2;
-                    toDisplay += "The fief garrison and militia, led by " + attackerLeader.firstName
-                        + " " + attackerLeader.familyName + ", sallied forth to bring the besieging "
-                        + defender.armyID + ",";
-                    if (defenderLeader != null)
-                    {
-                        toDisplay += " led by " + defenderLeader.firstName + " " + defenderLeader.familyName + " and";
-                    }
-                    toDisplay += " owned by " + defender.GetOwner().firstName + " " + defender.GetOwner().familyName
-                        + ", to battle."
-                        + "\r\n\r\nOutcome: ";
                     break;
                 default:
                     battleResults.circumstance = 0;
-                    toDisplay += "On this day of our lord " + attacker.armyID + ",";
-                    if (attackerLeader != null)
-                    {
-                        toDisplay += " led by " + attackerLeader.firstName + " " + attackerLeader.familyName + " and";
-                    }
-                    toDisplay += " owned by "
-                        + attacker.GetOwner().firstName + " " + attacker.GetOwner().familyName
-                        + ", moved to attack " + defender.armyID + ",";
-                    if (defenderLeader != null)
-                    {
-                        toDisplay += " led by " + defenderLeader.firstName + " " + defenderLeader.familyName + " and";
-                    }
-                    toDisplay += " owned by " + defender.GetOwner().firstName
-                        + " " + defender.GetOwner().familyName + ", in the fief of " + attacker.GetLocation().name
-                        + "\r\n\r\nOutcome: ";
                     break;
             }
 
@@ -394,12 +512,10 @@ namespace hist_mmorpg
                     // if not, check for battle
                     else
                     {
-                        Console.WriteLine("Bringing to battle");
                         battleHasCommenced = Battle.BringToBattle(battleValues[0], battleValues[1], circumstance);
 
                         if (!battleHasCommenced)
                         {
-                            Console.WriteLine("Defender retreats");
                             defender.ProcessRetreat(1);
                             
                         }
@@ -418,7 +534,6 @@ namespace hist_mmorpg
                 battleHasCommenced = Battle.BringToBattle(battleValues[0], battleValues[1], circumstance);
                 if (!battleHasCommenced)
                 {
-                    Console.WriteLine("Defender retreats");
                     defender.ProcessRetreat(1);
                 }
             }
@@ -433,27 +548,24 @@ namespace hist_mmorpg
                 attackerVictorious = Battle.DecideBattleVictory(battleValues[0], battleValues[1]);
 
                 // UPDATE STATURE
-                // get winner and loser
-                Army winner = null;
-                Army loser = null;
                 if (attackerVictorious)
                 {
-                    winner = attacker;
-                    loser = defender;
+                    statureChange = 0.8 * (defender.CalcArmySize() / Convert.ToDouble(10000));
+                    battleResults.statureChangeAttacker = statureChange;
+                    attacker.GetOwner().AdjustStatureModifier(statureChange);
+                    statureChange = -0.5 * (attacker.CalcArmySize() / Convert.ToDouble(10000));
+                    battleResults.statureChangeDefender = statureChange;
+                    defender.GetOwner().AdjustStatureModifier(statureChange);
                 }
                 else
                 {
-                    winner = defender;
-                    loser = attacker;
+                    statureChange = 0.8 * (attacker.CalcArmySize() / Convert.ToDouble(10000));
+                    battleResults.statureChangeDefender = statureChange;
+                    defender.GetOwner().AdjustStatureModifier(statureChange);
+                    statureChange = -0.5 * (defender.CalcArmySize() / Convert.ToDouble(10000));
+                    battleResults.statureChangeAttacker = statureChange;
+                    attacker.GetOwner().AdjustStatureModifier(statureChange);
                 }
-
-                // calculate and apply winner's stature increase
-                statureChange = 0.8 * (loser.CalcArmySize() / Convert.ToDouble(10000));
-                winner.GetOwner().AdjustStatureModifier(statureChange);
-
-                // calculate and apply loser's stature loss
-                statureChange = -0.5 * (winner.CalcArmySize() / Convert.ToDouble(10000));
-                loser.GetOwner().AdjustStatureModifier(statureChange);
 
                 // CASUALTIES
                 // calculate troop casualties for both sides
@@ -471,7 +583,6 @@ namespace hist_mmorpg
                     {
                         defenderDisbanded = true;
                         disbandedArmies.Add(defender.owner);
-                        Console.WriteLine("Defender added to disbanded armies");
                         totalDefendTroopsLost = defender.CalcArmySize();
                     }
                     // OR apply troop casualties to losing army
@@ -488,7 +599,6 @@ namespace hist_mmorpg
                     if (casualtyModifiers[0] >= 0.5)
                     {
                         attackerDisbanded = true;
-                        Console.WriteLine("Attacker added to disbanded armies");
                         disbandedArmies.Add(attacker.owner);
                         totalAttackTroopsLost = attacker.CalcArmySize();
                     }
@@ -532,7 +642,10 @@ namespace hist_mmorpg
                 // NOTE: don't adjust days if is a siege (will be deducted elsewhere)
                 if (!circumstance.Equals("siege"))
                 {
-                    attackerLeader.AdjustDays(1);
+                    if (attackerLeader != null)
+                    {
+                        attackerLeader.AdjustDays(1);
+                    }
                     // need to check for defender having no leader
                     if (defenderLeader != null)
                     {
@@ -577,13 +690,11 @@ namespace hist_mmorpg
                 // If attacker has retreated add to retreat list
                 if (retreatDistances[0] > 0)
                 {
-                    Console.Write("attacker added to retreats");
                     retreatedArmies.Add(battleResults.attackerOwner);
                 }
                 // If defender retreated add to retreat list
                 if (retreatDistances[1] > 0)
                 {
-                    Console.WriteLine("defender added to retreats");
                     retreatedArmies.Add(battleResults.defenderOwner);
                 }
                 // PC/NPC INJURIES/DEATHS
@@ -613,7 +724,11 @@ namespace hist_mmorpg
                 }
 
                 // check army leader
-                attackerLeaderDead = attackerLeader.CalculateCombatInjury(casualtyModifiers[0]);
+                if (attackerLeader != null)
+                {
+                    attackerLeaderDead = attackerLeader.CalculateCombatInjury(casualtyModifiers[0]);
+                }
+                
 
                 // process death, if applicable
                 if (attackerLeaderDead)
@@ -699,66 +814,8 @@ namespace hist_mmorpg
 
                 battleResults.deaths = deadCharacters.ToArray();
                 battleResults.retreatedArmies = retreatedArmies.ToArray();
-                // UPDATE MESSAGE
-                // who won
-                if (attackerVictorious)
-                {
-                    toDisplay += attacker.armyID;
-                }
-                else
-                {
-                    toDisplay += defender.armyID;
-                }
-                toDisplay += " was victorious.\r\n\r\n";
+                
                 battleResults.attackerVictorious = attackerVictorious;
-                // casualties & retreats - attacker
-                if (attackerDisbanded)
-                {
-
-                    toDisplay += attacker.armyID + " disbanded due to heavy casualties";
-                }
-                else
-                {
-                    toDisplay += attacker.armyID + " suffered a total of " + attackerCasualties + " casualties";
-                    if (retreatDistances[0] > 0)
-                    {
-                        toDisplay += " and retreated from the fief";
-                    }
-                }
-                toDisplay += ".";
-                if ((attackerLeader != null) && (attackerLeaderDead))
-                {
-                    toDisplay += " " + attackerLeader.firstName + " " + attackerLeader.familyName + " died due to injuries received.";
-                }
-                toDisplay += "\r\n\r\n";
-
-                // casualties & retreats - defender
-                if (defenderDisbanded)
-                {
-                    toDisplay += defender.armyID + " disbanded due to heavy casualties";
-                }
-                else
-                {
-                    toDisplay += defender.armyID + " suffered a total of " + defenderCasualties + " casualties";
-                    if (retreatDistances[1] > 0)
-                    {
-                        toDisplay += " and retreated from the fief";
-                    }
-                }
-                toDisplay += ".";
-                if ((defenderLeader != null) && (defenderLeaderDead))
-                {
-                    toDisplay += " " + defenderLeader.firstName + " " + defenderLeader.familyName + " died due to injuries received.";
-                }
-                toDisplay += "\r\n\r\n";
-
-                if (circumstance.Equals("pillage"))
-                {
-                    if (attackerVictorious)
-                    {
-                        toDisplay += "The pillage in " + attacker.GetLocation().name + " has been prevented.";
-                    }
-                }
 
                 // check for SIEGE RELIEF
                 if (thisSiege != null)
@@ -772,16 +829,6 @@ namespace hist_mmorpg
                         // indicate siege raised
                         siegeRaised = true;
                         battleResults.siegeRaised = true;
-                        // construct event description to be passed into siegeEnd
-                        siegeDescription = "On this day of Our Lord the forces of ";
-                        siegeDescription += attacker.GetOwner().firstName + " " + attacker.GetOwner().familyName;
-                        siegeDescription += " have defeated the forces of " + thisSiege.GetBesiegingPlayer().firstName + " " + thisSiege.GetBesiegingPlayer().familyName;
-                        siegeDescription += ", relieving the siege of " + thisSiege.GetFief().name + ".";
-                        siegeDescription += " " + thisSiege.GetDefendingPlayer().firstName + " " + thisSiege.GetDefendingPlayer().familyName;
-                        siegeDescription += " retains ownership of the fief.";
-
-                        // add to message
-                        toDisplay += "The siege in " + thisSiege.GetFief().name + " has been raised.";
                     }
 
                     // check to see if siege raised due to death of siege owner with no heir
@@ -796,37 +843,11 @@ namespace hist_mmorpg
                             // indicate siege raised
                             siegeRaised = true;
 
-                            // construct event description to be passed into siegeEnd
-                            siegeDescription = "On this day of Our Lord the forces of ";
-                            siegeDescription += attacker.GetOwner().firstName + " " + attacker.GetOwner().familyName;
-                            siegeDescription += " attacked the forces of " + thisSiege.GetBesiegingPlayer().firstName + " " + thisSiege.GetBesiegingPlayer().familyName;
-                            siegeDescription += ", who was killed during the battle.";
-                            siegeDescription += "  Thus, despite losing the battle, " + attacker.GetOwner().firstName + " " + attacker.GetOwner().familyName;
-                            siegeDescription += " has succeeded in relieving the siege of " + thisSiege.GetFief().name + ".";
-                            siegeDescription += " " + thisSiege.GetDefendingPlayer().firstName + " " + thisSiege.GetDefendingPlayer().familyName;
-                            siegeDescription += " retains ownership of the fief.";
-
-                            // add to message
-                            toDisplay += "The siege in " + thisSiege.GetFief().name + " has been raised";
-                            toDisplay += " due to the death of the besieging party, ";
-                            toDisplay += thisSiege.GetBesiegingPlayer().firstName + " " + thisSiege.GetBesiegingPlayer().familyName + ".";
                         }
                     }
                 }
 
             }
-            else
-            {
-                if ((circumstance.Equals("pillage")) || circumstance.Equals("siege"))
-                {
-                    toDisplay += attacker.armyID + " was unsuccessfull in bringing " + defender.armyID + " to battle.";
-                }
-                else
-                {
-                    toDisplay += defender.armyID + " successfully refused battle and retreated from the fief.";
-                }
-            }
-
             
             // =================== construct and send JOURNAL ENTRY
             // ID
@@ -847,7 +868,10 @@ namespace hist_mmorpg
             }
             List<string> tempPersonae = new List<string>();
             tempPersonae.Add(defender.GetOwner().charID + defendOwnTag);
-            tempPersonae.Add(attackerLeader.charID + attackLeadTag);
+            if (attackerLeader != null)
+            {
+                tempPersonae.Add(attackerLeader.charID + attackLeadTag);
+            }
             if (defenderLeader != null)
             {
                 tempPersonae.Add(defenderLeader.charID + defendLeadTag);
@@ -863,8 +887,6 @@ namespace hist_mmorpg
             // location
             string battleLocation = attacker.GetLocation().id;
 
-            // use popup text as description
-            string battleDescription = toDisplay;
 
             // put together new journal entry
             JournalEntry battleResult = new JournalEntry(entryID, Globals_Game.clock.currentYear, Globals_Game.clock.currentSeason, battlePersonae, "battle",battleResults, loc: battleLocation);
@@ -888,7 +910,7 @@ namespace hist_mmorpg
             if (siegeRaised)
             {
                 //HACK
-                thisSiege.SiegeEnd(false, DisplayMessages.BattleResults,new string[]{siegeDescription});
+                thisSiege.SiegeEnd(false, DisplayMessages.BattleResults,new string[]{DisplaySiegeResults(battleResults)});
                 thisSiege = null;
 
                 // ensure if siege raised correct value returned to Form1.siegeReductionRound method
@@ -920,14 +942,12 @@ namespace hist_mmorpg
             // process army disbandings (after all other functions completed)
             if (attackerDisbanded)
             {
-                Console.WriteLine("Attacker army has now disbanded");
                 attacker.DisbandArmy();
                 attacker = null;
             }
 
             if (defenderDisbanded)
             {
-                Console.WriteLine("Defender army has now disbanded");
                 defender.DisbandArmy();
                 defender = null;
             }
