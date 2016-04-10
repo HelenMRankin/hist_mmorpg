@@ -4054,18 +4054,15 @@ namespace hist_mmorpg
                 // get travel cost
                 travelCost = this.location.getTravelCost(this.goTo.Peek(), this.armyID);
                 // attempt to move character
-                Console.WriteLine("In multimove, moving character to " + this.goTo.Peek().name);
                 success = this.MoveCharacter(this.goTo.Peek(), travelCost,out error);
                 // if move successfull, remove fief from goTo queue
                 if (success)
                 {
-                    Console.WriteLine("Successful move");
                     this.goTo.Dequeue();
                 }
                 // if not successfull, exit loop
                 else
                 {
-                    Console.WriteLine("unsuccessful move");
                     break;
                 }
            }
@@ -4083,8 +4080,6 @@ namespace hist_mmorpg
 
         }
 
-        //TODO implement confirm
-        //TODO find which character to notify
        /// <summary>
        /// Allows the character to remain in their current location for the specified
        /// number of days, incrementing bailiffDaysInFief if appropriate
@@ -4325,7 +4320,6 @@ namespace hist_mmorpg
                // if target successfully acquired, add to queue
                if (target != null)
                {
-                   Console.WriteLine("Target: " + target.name);
                    route.Enqueue(target);
                }
                // if no target acquired, display message and break

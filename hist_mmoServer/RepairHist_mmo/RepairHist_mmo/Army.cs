@@ -820,7 +820,7 @@ namespace hist_mmorpg
         public uint[] GetTroopsEstimate(Character observer)
         {
             uint[] troopNumbers = new uint[7] {0, 0, 0, 0, 0, 0, 0};
-
+            Console.WriteLine("___TEST: Number of troop types: " + troops.Length +", length in Troops Estimate: "+troopNumbers.Length);
             if (observer != null)
             {
                 // get random int (0-2) to decide whether to over- or under-estimate troop number

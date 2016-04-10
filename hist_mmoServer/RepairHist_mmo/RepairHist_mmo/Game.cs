@@ -1556,17 +1556,11 @@ namespace hist_mmorpg
         {
             // Identify character to move
             Character charToMove = null;
-            if (charID != null)
-            {
-                charToMove = Globals_Game.getCharFromID(charID);
-            }
-            // If not character id specified PC is moving self
-            else {
-                charToMove = client.myPlayerCharacter;
-            }
+            DisplayMessages charError;
+            charToMove = Utility_Methods.GetCharacter(charID, out charError);
             if (charToMove == null)
             {
-                return new ProtoMessage(DisplayMessages.ErrorGenericCharacterUnidentified);
+                return new ProtoMessage(charError);
             }
             else
             {
@@ -1576,7 +1570,7 @@ namespace hist_mmorpg
                     // Identify fief
                     
 
-                    if (fiefID != null)
+                    if (!string.IsNullOrWhiteSpace(fiefID))
                     {
                         DisplayMessages errorMessage;
                         Fief fief = Utility_Methods.GetFief(fiefID, out errorMessage);
@@ -2539,27 +2533,17 @@ namespace hist_mmorpg
 
         public static ProtoMessage MaintainArmy(string armyID, Client client)
         {
-            if (string.IsNullOrWhiteSpace(armyID))
-            {
-                return new ProtoMessage(DisplayMessages.ErrorGenericMessageInvalid);
-            }
-            // get army
-            Army army = null;
-            Globals_Game.armyMasterList.TryGetValue(armyID, out army);
+            DisplayMessages armyErrorMessage;
+            Army army = Utility_Methods.GetArmy(armyID, out armyErrorMessage);
             if (army == null)
             {
-                ProtoMessage error = new ProtoMessage();
-                error.ResponseType = DisplayMessages.ErrorGenericArmyUnidentified;
-                return error;
+                return new ProtoMessage(armyErrorMessage);
             }
             if (!PermissionManager.isAuthorized(PermissionManager.ownsArmyOrAdmin, client.myPlayerCharacter, army))
             {
-                ProtoMessage error = new ProtoMessage();
-                error.ResponseType = DisplayMessages.ErrorGenericUnauthorised;
-                return error;
+                return new ProtoMessage(DisplayMessages.ErrorGenericUnauthorised);
             }
             ProtoMessage result;
-
             army.MaintainArmy(out result);
             return result;
         }
@@ -3064,7 +3048,6 @@ namespace hist_mmorpg
             ProtoMessage attackResult = null;
             if (armyAttacker.ChecksBeforeAttack(armyDefender, out attackResult))
             {
-                // TODO refactor battle
                 // GiveBattle returns necessary messages
                 ProtoBattle battleResults = null;
                 try
