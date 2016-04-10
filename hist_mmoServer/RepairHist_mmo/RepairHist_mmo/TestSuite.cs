@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Lidgren.Network;
 using ProtoBuf;
 using System.IO;
-using System.Diagnostics.Contracts;
 namespace hist_mmorpg
 {
     public class TestSuite
@@ -77,7 +76,6 @@ namespace hist_mmorpg
         /// <returns></returns>
         public async Task TestLogIn(TestClient client, string user, string pass, byte[] key)
         {
-            Contract.Requires(client != null);
             long vMem, wMem;
             // Get initial memory usage
             GetMemoryUsage(out vMem, out wMem);
@@ -88,7 +86,7 @@ namespace hist_mmorpg
                 var reply = client.GetReply();
                 if (await Task.WhenAny(reply, Task.Delay(timeout)) == reply)
                 {
-                    Contract.Assert(reply.Result.GetType() == typeof(ProtoLogIn));
+                  //  Contract.Assert(reply.Result.GetType() == typeof(ProtoLogIn));
                 }
                 else {
                     reply.Dispose();
@@ -97,7 +95,7 @@ namespace hist_mmorpg
                 reply = client.GetReply();
                 if (await Task.WhenAny(reply, Task.Delay(timeout)) == reply)
                 {
-                    Contract.Assert(reply.Result.GetType() == typeof(ProtoClient));
+                  //  Contract.Assert(reply.Result.GetType() == typeof(ProtoClient));
                 }
                 else {
                     reply.Dispose();

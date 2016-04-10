@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Diagnostics.Contracts;
 using QuickGraph.Algorithms.TopologicalSort;
 
 namespace hist_mmorpg
@@ -3456,7 +3455,6 @@ namespace hist_mmorpg
         }
         public static ProtoMessage ActionController(ProtoMessage msgIn, Client _client)
         {
-            Contract.Requires(_client != null && msgIn != null);
             switch (msgIn.ActionType)
             {
                 // Switch to using another character (performing actions with NPC

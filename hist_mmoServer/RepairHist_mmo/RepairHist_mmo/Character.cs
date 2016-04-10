@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Linq;
-using System.Diagnostics;
 namespace hist_mmorpg
 {
     /// <summary>
