@@ -130,8 +130,11 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds fief treasury
         /// </summary>
-        private int Treasury;
-        public int treasury { get { return this.Treasury; } private set { this.Treasury = value; } }
+        private int _treasury;
+        /// <summary>
+        /// Public accessor for the treasury- adjusting the treasury should be done with the "AdjustTreasury" method 
+        /// </summary>
+        public int Treasury { get { return this._treasury; } private set { this._treasury = value; } }
         /// <summary>
         /// Holds armies present in the fief (armyIDs)
         /// </summary>
@@ -200,7 +203,7 @@ namespace hist_mmorpg
         /// <param name="arms">List holding IDs of armies present in fief</param>
         /// <param name="rec">bool indicating whether recruitment has occurred in the fief (current season)</param>
         /// <param name="pil">bool indicating whether pillage has occurred in the fief (current season)</param>
-        /// <param name="trans">Dictionary<string, string[]> containing troop detachments in the fief awaiting transfer</param>
+        /// <param name="trans">Dictionary &lt string, string[] &rt containing troop detachments in the fief awaiting transfer</param>
         /// <param name="sge">String holding siegeID of active siege</param>
         public Fief(String id, String nam, string tiHo, PlayerCharacter own, Rank r, Province prov, int pop, Double fld, Double ind, uint trp, Double tx,
             Double txNxt, uint offNxt, uint garrNxt, uint infraNxt, uint keepNxt, double[] finCurr, double[] finPrev,
@@ -450,7 +453,7 @@ namespace hist_mmorpg
             this.barredCharacters = barChars;
             this.barredNationalities = barNats;
             this.bailiffDaysInFief = bailInF;
-            this.treasury = treas;
+            this.Treasury = treas;
             this.armies = arms;
             this.hasRecruited = rec;
             this.troopTransfers = trans;
@@ -495,7 +498,7 @@ namespace hist_mmorpg
 			this.barredCharacters = fs.barredCharacters;
 			this.barredNationalities = fs.barredNationalities;
             this.bailiffDaysInFief = fs.bailiffDaysInFief;
-            this.treasury = fs.treasury;
+            this.Treasury = fs.treasury;
             this.armies = fs.armies;
             this.hasRecruited = fs.hasRecruited;
             this.troopTransfers = fs.troopTransfers;
@@ -1638,7 +1641,7 @@ namespace hist_mmorpg
             int amountAvail = 0;
 
             // get treasury
-            amountAvail = this.treasury;
+            amountAvail = this.Treasury;
             // deduct family expenses
             amountAvail -= this.CalcFamilyExpenses();
             // deduct overlord taxes
@@ -1759,7 +1762,7 @@ namespace hist_mmorpg
             this.industry = this.CalcNewIndustryLevel();
 
             // update fief treasury with new bottom line
-            this.treasury += Convert.ToInt32(this.keyStatsCurrent[13]);
+            this.Treasury += Convert.ToInt32(this.keyStatsCurrent[13]);
 
             // check for occupation before transfering overlord taxes into overlord's treasury
             if (!this.CheckEnemyOccupation())
@@ -1774,7 +1777,7 @@ namespace hist_mmorpg
                     if (overlordHome != null)
                     {
                         // pay in taxes
-                        overlordHome.treasury += Convert.ToInt32(this.CalcNewOlordTaxes());
+                        overlordHome.Treasury += Convert.ToInt32(this.CalcNewOlordTaxes());
                     }
                 }
             }
@@ -2862,7 +2865,7 @@ namespace hist_mmorpg
             // ensure number is positive
             amount = Math.Abs(amount);
             // check enough for transfer
-            if (this.treasury < amount)
+            if (this.Treasury < amount)
             {
                 error = new ProtoMessage();
                 error.ResponseType = DisplayMessages.ErrorGenericInsufficientFunds;
@@ -2888,7 +2891,7 @@ namespace hist_mmorpg
         {
             lock (treasuryLock)
             {
-                this.treasury += amount;
+                this.Treasury += amount;
             }
         }
         /// <summary>
@@ -3373,7 +3376,7 @@ namespace hist_mmorpg
 			this.barredCharacters = f.barredCharacters;
 			this.barredNationalities = f.barredNationalities;
             this.bailiffDaysInFief = f.bailiffDaysInFief;
-            this.treasury = f.treasury;
+            this.treasury = f.Treasury;
             this.armies = f.armies;
             this.hasRecruited = f.hasRecruited;
             this.troopTransfers = f.troopTransfers;

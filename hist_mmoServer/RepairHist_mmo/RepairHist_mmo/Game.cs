@@ -18,6 +18,9 @@ namespace hist_mmorpg
     public class Game
     {
 
+        /// <summary>
+        /// Create a new game
+        /// </summary>
         public Game()
         {
 
@@ -38,9 +41,6 @@ namespace hist_mmorpg
             String mapData = Path.Combine(path, "map.csv");
             this.InitGameObjects(gameID: "testBucket", objectDataFile: gameObjects, mapDataFile: mapData,
             start: 1194, king1: "Char_47", king2: "Char_40", herald1: "Char_1", sysAdmin: null);
-            // initialiseTypes();
-            // this.ImportFromCSV("gameObjects.csv", bucketID: "fromCSV", synch: true, toDatabase: true);
-            // this.CreateMapArrayFromCSV ("map.csv", bucketID: "fromCSV", toDatabase: true);
         }
         /// <summary>
         /// Initialises all game objects
@@ -189,13 +189,6 @@ namespace hist_mmorpg
             Globals_Game.pcMasterList["Char_196"].ailments.Add(myAilment.ailmentID, myAilment); */
             // =================== END TESTING
 
-        }
-
-        public void addTestCharacter()
-        {
-            NonPlayerCharacter proposalChar = new NonPlayerCharacter("Char_626", "Mairi", "Meah", new Tuple<uint, byte>(1162, 3), false, Globals_Game.nationalityMasterList["Sco"], true, 9, 9, new Queue<Fief>(), Globals_Game.languageMasterList["lang_C1"], 90, 9, 9, 9, new Tuple<Trait, int>[0], true, false, "Char_126", null, "Char_126", null, 0, false, false, new List<string>(), null, null, Globals_Game.fiefMasterList["ESW05"]);
-            PlayerCharacter pc = Globals_Game.pcMasterList["Char_126"];
-            pc.myNPCs.Add(proposalChar);
         }
 
         /// <summary>
@@ -1156,7 +1149,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="user">userID of the player</param>
         /// <param name="charID">characterID of the playercharacter to be switched to</param>
-        public void switchPlayerCharacter(string user, string charID)
+        public void SwitchPlayerCharacter(string user, string charID)
         {
             if (string.IsNullOrWhiteSpace(user))
             {
@@ -1200,7 +1193,7 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// Switch to controlling a different Character
+        /// Processes a client request to switch to controlling a different Character
         /// </summary>
         /// <param name="charID">ID of character to control</param>
         /// <param name="client">Client who wishes to use this character</param>
@@ -1237,7 +1230,7 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// Get a list of all players, including usernames, nationality and PlayerCharacter names
+        /// Processes a client request to get a list of all players, including usernames, nationality and PlayerCharacter names
         /// </summary>
         /// <param name="client">Client who is requesting list of players</param>
         /// <returns>Collection of other players wrapped in a ProtoMessage</returns>
@@ -1262,7 +1255,7 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// View a character. The level of detail varies based on who is viewing which character
+        /// Processes a client request to view a character. The level of detail varies based on who is viewing which character
         /// </summary>
         /// <param name="charID">ID of character to view</param>
         /// <param name="client">Client who wishes to view Character</param>
@@ -1321,7 +1314,7 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// Hire an NPC by bidding
+        /// Processes a client request to hire an NPC by bidding
         /// </summary>
         /// <param name="charID">ID of character to hire</param>
         /// <param name="bid">Amount client wishes to bid</param>
@@ -1335,14 +1328,12 @@ namespace hist_mmorpg
             // Validate character to hire
             if (toHire == null)
             {
-                return new ProtoMessage(DisplayMessages.ErrorGenericCharacterUnidentified);
+                return new ProtoMessage(charErr);
             }
             // Ensure player is near character
             if (!PermissionManager.isAuthorized(PermissionManager.canSeeFiefOrAdmin, client.myPlayerCharacter, toHire.location))
             {
-                ProtoMessage error = new ProtoMessage();
-                error.ResponseType = DisplayMessages.ErrorGenericTooFarFromFief;
-                return error;
+                return new ProtoMessage(DisplayMessages.ErrorGenericTooFarFromFief);
             }
             if (!string.IsNullOrWhiteSpace(client.myPlayerCharacter.captorID))
             {
@@ -1350,9 +1341,7 @@ namespace hist_mmorpg
             }
             if (!toHire.CheckCanHire(client.myPlayerCharacter))
             {
-                ProtoMessage error = new ProtoMessage();
-                error.ResponseType = DisplayMessages.CharacterHireNotEmployable;
-                return error;
+                return new ProtoMessage(DisplayMessages.CharacterHireNotEmployable);
             }
 
             // Send result and updated character detail
@@ -1367,7 +1356,7 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// Fire an NPC
+        /// Processes a client request to fire an NPC
         /// </summary>
         /// <param name="charID">Character ID of character to be fired</param>
         /// <param name="client">Client who wishes to fire NPC</param>
@@ -1386,9 +1375,7 @@ namespace hist_mmorpg
             // if is not npc, or is not employed by player, error
             if (npc == null || npc.GetEmployer() != client.myPlayerCharacter)
             {
-                ProtoMessage error = new ProtoMessage();
-                error.ResponseType = DisplayMessages.CharacterFireNotEmployee;
-                return error;
+                return new ProtoMessage(DisplayMessages.CharacterFireNotEmployee);
             }
             client.myPlayerCharacter.FireNPC(npc);
             ProtoMessage result = new ProtoMessage();
@@ -1399,7 +1386,7 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// View an army. Details will vary based on whether army is owned by client or not
+        /// Processes a client request to view an army. Details will vary based on whether army is owned by client or not
         /// </summary>
         /// <param name="armyID">Army ID of army to view</param>
         /// <param name="client">Client who wishes to view army</param>
@@ -1430,7 +1417,7 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// Disband an army
+        /// Processes a client request to disband an army
         /// </summary>
         /// <param name="armyID">Army ID of army to be disbanded</param>
         /// <param name="client">Client who wishes to disband the army</param>
@@ -1449,12 +1436,17 @@ namespace hist_mmorpg
                 return new ProtoMessage(DisplayMessages.ErrorGenericUnauthorised);
             }
             army.DisbandArmy();
-            ProtoMessage result = new ProtoMessage();
-            result.ResponseType = DisplayMessages.Success;
-            return result;
+            return new ProtoMessage(DisplayMessages.Success);
         }
 
-
+        /// <summary>
+        /// Processes a client request to get a list of all NPCs that meet the given type and role
+        /// </summary>
+        /// <param name="type">Type of NPC grouping: can be Entourage, Grant, Family, Employ or a combination of Family and Employ (for whole household) </param>
+        /// <param name="role">For use with "Grant" type, the role checks what role is to be granted. Presently only "leader" is supported</param>
+        /// <param name="item">Item that is to be granted control of- in this case, as only army leadership is supported, the item will be an army ID</param>
+        /// <param name="client">Client who is performing this action</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage GetNPCList(string type, string role, string item, Client client)
         {
             List<ProtoCharacterOverview> listOfChars = new List<ProtoCharacterOverview>();
@@ -1551,6 +1543,14 @@ namespace hist_mmorpg
             return result;
         }
 
+        /// <summary>
+        /// Processes a client request to travel to another fief
+        /// </summary>
+        /// <param name="charID"></param>
+        /// <param name="fiefID"></param>
+        /// <param name="travelInstructions"></param>
+        /// <param name="client"></param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage TravelTo(string charID, string fiefID, string[] travelInstructions, Client client)
         {
             // Identify character to move
@@ -1567,14 +1567,12 @@ namespace hist_mmorpg
                 if (PermissionManager.isAuthorized(PermissionManager.ownsCharNotCapturedOrAdmin, client.myPlayerCharacter, charToMove) && charToMove.isAlive)
                 {
                     // Identify fief
-                    
 
                     if (!string.IsNullOrWhiteSpace(fiefID))
                     {
                         DisplayMessages errorMessage;
                         Fief fief = Utility_Methods.GetFief(fiefID, out errorMessage);
                         if (fief == null) return new ProtoMessage(errorMessage);
-                        Globals_Game.fiefMasterList.TryGetValue(fiefID, out fief);
                         double travelCost = charToMove.location.getTravelCost(fief, charToMove.armyID);
                         // If successful send details of fief
                         ProtoMessage error;
@@ -1592,8 +1590,7 @@ namespace hist_mmorpg
                         }
                         if (success)
                         {
-                            ProtoFief reply = new ProtoFief(fief);
-                            reply.ResponseType = DisplayMessages.Success;
+                            ProtoFief reply = new ProtoFief(fief) { ResponseType = DisplayMessages.Success };
                             return reply;
                         }
                         else
@@ -1618,25 +1615,27 @@ namespace hist_mmorpg
                     // If fief unidentified return error
                     else
                     {
-                        ProtoMessage msg = new ProtoMessage();
-                        msg.ResponseType = DisplayMessages.ErrorGenericFiefUnidentified;
-                        return msg;
+                        return new ProtoMessage(DisplayMessages.ErrorGenericFiefUnidentified);
                     }
                 }
                 // If unauthorised return error
                 else
                 {
-                    Trace.WriteLine("returning unauthorised");
-                    ProtoMessage unauthorised = new ProtoMessage();
-                    unauthorised.ResponseType = DisplayMessages.ErrorGenericUnauthorised;
-                    return unauthorised;
+                    return new ProtoMessage(DisplayMessages.ErrorGenericUnauthorised);
                 }
             }
         }
 
+        /// <summary>
+        /// Processes a client request to view details of another fief. Amount of information returned depends on whether this fief is owned by the client
+        /// </summary>
+        /// <param name="fiefID">ID of fief to be viewed</param>
+        /// <param name="client">Client who sent the request to view the fief</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage ViewFief(string fiefID, Client client)
         {
             Fief f = null;
+            // A null fief (or sending "home") gets the home fief
             if (fiefID == null || fiefID.Equals("home"))
             {
                 f = client.myPlayerCharacter.GetHomeFief();
@@ -1652,12 +1651,14 @@ namespace hist_mmorpg
             }
             else
             {
+                // If the client owns the fief, include all information
                 ProtoFief fiefToView = new ProtoFief(f);
                 if (client.myPlayerCharacter.ownedFiefs.Contains(f))
                 {
                     fiefToView.includeAll(f);
                     return fiefToView;
                 }
+                // Can only see fief details if have a character in the fief
                 bool hasCharInFief = PermissionManager.isAuthorized(PermissionManager.canSeeFiefOrAdmin, client.myPlayerCharacter, f);
                 if (hasCharInFief)
                 {
@@ -1665,13 +1666,16 @@ namespace hist_mmorpg
                 }
                 else
                 {
-                    ProtoMessage m = new ProtoMessage();
-                    m.ResponseType = DisplayMessages.ErrorGenericTooFarFromFief;
-                    return m;
+                    return new ProtoMessage(DisplayMessages.ErrorGenericTooFarFromFief);
                 }
             }
         }
 
+        /// <summary>
+        /// Processes a client request to view all fiefs they own
+        /// </summary>
+        /// <param name="client">Client who sent the request</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage ViewMyFiefs(Client client)
         {
 
@@ -1686,9 +1690,15 @@ namespace hist_mmorpg
                 i++;
             }
             return fiefList;
-
         }
 
+        /// <summary>
+        /// Processes a client request to appoint a new bailiff to a fief
+        /// </summary>
+        /// <param name="fiefID">The ID of the fief to appoint a bailiff to</param>
+        /// <param name="charID">The ID of the character which will become the new bailiff</param>
+        /// <param name="client">The client who sent the request</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage AppointBailiff(string fiefID, string charID, Client client)
         {
             // Fief
@@ -1714,8 +1724,10 @@ namespace hist_mmorpg
                 ProtoMessage error = null;
                 if (c.ChecksBeforeGranting(client.myPlayerCharacter, "bailiff", false, out error))
                 {
+                    
                     // set bailiff, return fief
                     f.bailiff = c;
+                    f.bailiffDaysInFief = 0;
                     ProtoFief fiefToView = new ProtoFief(f);
                     fiefToView.ResponseType = DisplayMessages.Success;
                     fiefToView.includeAll(f);
@@ -1734,6 +1746,12 @@ namespace hist_mmorpg
             }
         }
 
+        /// <summary>
+        /// Process a client request to remove the current bailiff from a fief
+        /// </summary>
+        /// <param name="fiefID">ID of fief from which to remove the bailiff</param>
+        /// <param name="client">Client who sent the request</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage RemoveBailiff(string fiefID, Client client)
         {
             // Fief
@@ -1761,9 +1779,7 @@ namespace hist_mmorpg
                 // Error- no bailiff
                 else
                 {
-                    ProtoMessage error = new ProtoMessage();
-                    error.ResponseType = DisplayMessages.FiefNoBailiff;
-                    return error;
+                    return new ProtoMessage(DisplayMessages.FiefNoBailiff);
                 }
             }
             // Unauthorised
@@ -1773,11 +1789,19 @@ namespace hist_mmorpg
             }
         }
 
+        /// <summary>
+        /// Process a client request to bar a number of characters from the fief
+        /// </summary>
+        /// <param name="fiefID">ID of fief</param>
+        /// <param name="charIDs">Array of all IDs of characters to be banned</param>
+        /// <param name="client">Client who sent the request</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage BarCharacters(string fiefID, string[] charIDs, Client client)
         {
+            DisplayMessages fiefError;
             // check fief is valid
-            Fief fief = null;
-            Globals_Game.fiefMasterList.TryGetValue(fiefID, out fief);
+            Fief fief = Utility_Methods.GetFief(fiefID,out fiefError);
+            
             if (fief != null)
             {
                 // Check player owns fief
@@ -1809,7 +1833,7 @@ namespace hist_mmorpg
                 }
                 // return fief, along with details of characters that could not be barred
                 ProtoFief fiefToReturn = new ProtoFief(fief);
-
+                // If failed to bar some characters, return the IDs of the characters that could not be barred
                 if (couldNotBar.Count > 0)
                 {
                     fiefToReturn.ResponseType = DisplayMessages.FiefCouldNotBar;
@@ -1821,10 +1845,17 @@ namespace hist_mmorpg
             // if could not identify fief
             else
             {
-                return new ProtoMessage(DisplayMessages.ErrorGenericFiefUnidentified);
+                return new ProtoMessage(fiefError);
             }
         }
 
+        /// <summary>
+        /// Processes a client request to unbar a number of characters from a fief
+        /// </summary>
+        /// <param name="fiefID">ID of fief to unbar the characters from</param>
+        /// <param name="charIDs">List of character IDs of characters to be unbarred</param>
+        /// <param name="client">Client who submitted the request</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage UnbarCharacters(string fiefID, string[] charIDs, Client client)
         {
             // check fief is valid
@@ -1873,11 +1904,17 @@ namespace hist_mmorpg
             }
         }
 
+        /// <summary>
+        /// Bar a number of nationalities from the fief
+        /// </summary>
+        /// <param name="fiefID">ID of fief to bar nationalities from</param>
+        /// <param name="natIDs">List of nationality IDs of nationalities to be banned</param>
+        /// <param name="client">Client who submitted the request</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage BarNationalities(string fiefID, string[] natIDs, Client client)
         {
-            // check fief is valid
-            Fief fief = null;
-            Globals_Game.fiefMasterList.TryGetValue(fiefID, out fief);
+            DisplayMessages fiefError;
+            Fief fief = Utility_Methods.GetFief(fiefID, out fiefError);
             if (fief != null)
             {
                 // Check player owns fief
@@ -1923,15 +1960,22 @@ namespace hist_mmorpg
             // Fief is invalid
             else
             {
-                return new ProtoMessage(DisplayMessages.ErrorGenericFiefUnidentified);
+                return new ProtoMessage(fiefError);
             }
         }
 
+        /// <summary>
+        /// Processes a client request to unbar a number of nationalities from a fief
+        /// </summary>
+        /// <param name="fiefID">ID of fief from which to unbar nationalities</param>
+        /// <param name="natIDs">List of nationality IDs to unbar</param>
+        /// <param name="client">Client who submitted request</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage UnbarNationalities(string fiefID, string[] natIDs, Client client)
         {
+            DisplayMessages fiefError;
             // check fief is valid
-            Fief fief = null;
-            Globals_Game.fiefMasterList.TryGetValue(fiefID, out fief);
+            Fief fief = Utility_Methods.GetFief(fiefID,out fiefError);
             if (fief != null)
             {
                 // Check player owns fief
@@ -1977,22 +2021,25 @@ namespace hist_mmorpg
             // Fief is invalid
             else
             {
-                return new ProtoMessage(DisplayMessages.ErrorGenericFiefUnidentified);
+                return new ProtoMessage(fiefError);
             }
         }
 
+        /// <summary>
+        /// Processes a client request to grant the title of a fief to another character
+        /// </summary>
+        /// <param name="fiefID">ID of fief to grant the title of</param>
+        /// <param name="charID">ID of character who will become the new title holder</param>
+        /// <param name="client">Client who submitted the request</param>
+        /// <returns>Result of request</returns>
         public static ProtoMessage GrantFiefTitle(string fiefID, string charID, Client client)
         {
+            DisplayMessages fiefError;
             // Get fief
-            Fief fief = null;
-            if (string.IsNullOrWhiteSpace(fiefID))
-            {
-                return new ProtoMessage(DisplayMessages.ErrorGenericFiefUnidentified);
-            }
-            Globals_Game.fiefMasterList.TryGetValue(fiefID, out fief);
+            Fief fief = Utility_Methods.GetFief(fiefID,out fiefError);
             if (fief == null)
             {
-                return new ProtoMessage(DisplayMessages.ErrorGenericFiefUnidentified);
+                return new ProtoMessage(fiefError);
             }
 
             // Ensure player has permission to grant title
@@ -2003,8 +2050,8 @@ namespace hist_mmorpg
             // Get Character
             DisplayMessages charErr;
             Character charToGrant = Utility_Methods.GetCharacter(charID, out charErr);
-            if (charToGrant != null)
-            {
+            if (charToGrant == null) return new ProtoMessage(charErr);            
+
                 ProtoMessage error;
                 bool canGrant = charToGrant.ChecksBeforeGranting(client.myPlayerCharacter, "title", false, out error);
                 if (canGrant)
@@ -2028,15 +2075,15 @@ namespace hist_mmorpg
                 {
                     return error;
                 }
-            }
-            // Character not valid
-            else
-            {
-                return new ProtoMessage(charErr);
-            }
         }
 
-
+        /// <summary>
+        /// Processes a client request to adjust the expenditure in a fief
+        /// </summary>
+        /// <param name="fiefID"></param>
+        /// <param name="adjustedValues"></param>
+        /// <param name="client"></param>
+        /// <returns></returns>
         public static ProtoMessage AdjustExpenditure(string fiefID, Double[] adjustedValues, Client client)
         {
             // Get fief

@@ -77,10 +77,10 @@ namespace hist_mmorpg
                     thisLoss = 80;
                 }
                 // apply treasury loss
-                if (f.treasury > 0)
+                if (f.Treasury > 0)
                 {
-                    pillageResult.treasuryLoss = Convert.ToInt32((f.treasury * (thisLoss / 100)));
-                    f.AdjustTreasury(- Convert.ToInt32((f.treasury * (thisLoss / 100))));
+                    pillageResult.treasuryLoss = Convert.ToInt32((f.Treasury * (thisLoss / 100)));
+                    f.AdjustTreasury(- Convert.ToInt32((f.Treasury * (thisLoss / 100))));
                 }
             }
 

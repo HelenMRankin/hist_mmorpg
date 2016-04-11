@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace hist_mmorpg
 {
+    /// <summary>
+    /// Methods used throughout the JominiEngine- includes ID verification and retrieving objects from IDs
+    /// </summary>
     public static class Utility_Methods
     {
         /// <summary>
@@ -62,7 +65,7 @@ namespace hist_mmorpg
         /// Checks that a JournalEntry personae entry is in the correct format
         /// </summary>
         /// <returns>bool indicating whether the personae entry is valid</returns>
-        /// <param name="id">The personae entry to be validated</param>
+        /// <param name="personae">The personae entry to be validated</param>
         public static bool ValidateJentryPersonae(string personae)
         {
             bool isValid = true;
@@ -186,7 +189,7 @@ namespace hist_mmorpg
         /// Checks that a days value is in the correct range
         /// </summary>
         /// <returns>bool indicating whether the value is valid</returns>
-        /// <param name="stat">The value to be validated</param>
+        /// <param name="days">The value to be validated</param>
         public static bool ValidateDays(double days)
         {
             bool isValid = true;

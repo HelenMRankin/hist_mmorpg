@@ -2303,7 +2303,6 @@ namespace hist_mmorpg
         /// <param name="armyID">string containing the army ID (if choosing a leader)</param>
         public bool ChecksBeforeGranting(PlayerCharacter granter, string type, bool priorToList, out ProtoMessage error, string armyID = null)
         {
-            Console.WriteLine("Check before granting " +type+ " to "+this.firstName);
             error = null;
             bool proceed = true;
             // get army if appropriate
@@ -6021,7 +6020,7 @@ namespace hist_mmorpg
                         recruitmentDetails.ResponseType = DisplayMessages.CharacterRecruitOk;
                         recruitmentDetails.amount = Convert.ToUInt32(troopsRecruited);
                         recruitmentDetails.cost = troopCost;
-                        recruitmentDetails.treasury = this.GetHomeFief().treasury;
+                        recruitmentDetails.treasury = this.GetHomeFief().Treasury;
                         recruitmentDetails.MessageFields = new string[] { recruitmentDetails.amount.ToString(), recruitmentDetails.cost.ToString(), recruitmentDetails.treasury.ToString() };
                         return recruitmentDetails;
                     }
@@ -6352,6 +6351,7 @@ namespace hist_mmorpg
         /// <returns>bool indicating success</returns>
         /// <param name="newHolder">The character receiving the title</param>
         /// <param name="titlePlace">The place to which the title refers</param>
+        /// <param name="result">The result of attempting to grant</param>
         public bool GrantTitle(Character newHolder, Place titlePlace, out ProtoMessage result)
         {
             result = null;
@@ -6492,7 +6492,7 @@ namespace hist_mmorpg
 
             foreach (Fief thisFief in this.ownedFiefs)
             {
-                totalFunds += thisFief.treasury;
+                totalFunds += thisFief.Treasury;
             }
 
             return totalFunds;
@@ -6552,6 +6552,10 @@ namespace hist_mmorpg
             }
         }
 
+        /// <summary>
+        /// Kill the specified captive and update the captive's family/employer of the death
+        /// </summary>
+        /// <param name="captive">Captive to be executted</param>
         public void ExecuteCaptive(Character captive)
         {
             captive.location.gaol.Remove(captive);
@@ -6561,6 +6565,10 @@ namespace hist_mmorpg
             
         }
 
+        /// <summary>
+        /// Send a ransom to the family/employer of one of your captives
+        /// </summary>
+        /// <param name="captive">Captive to be ransomed</param>
         public void RansomCaptive(Character captive)
         {
             uint ransom = captive.CalculateRansom();
@@ -6577,6 +6585,10 @@ namespace hist_mmorpg
             Globals_Game.UpdatePlayer(captive.GetPlayerCharacter().playerID, DisplayMessages.RansomReceived, new string[] { captive.firstName + " " + captive.familyName });
         }
 
+        /// <summary>
+        /// Releases one of your captives. The captive will immediately be transported to their employer/family's home fief
+        /// </summary>
+        /// <param name="captive">The captive to be released</param>
         public void ReleaseCaptive(Character captive)
         {
             captive.location.gaol.Remove(captive);

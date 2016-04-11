@@ -409,7 +409,7 @@ namespace hist_mmorpg
 
             foreach (KeyValuePair<string, Fief> fiefEntry in Globals_Game.fiefMasterList)
             {
-                totMoney += fiefEntry.Value.treasury;
+                totMoney += fiefEntry.Value.Treasury;
             }
 
             return totMoney;
