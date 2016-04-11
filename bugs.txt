@@ -98,3 +98,9 @@ Detected through: Dynamic testing
 Severity: n/a
 Chance of happening: n/a
 Since there was no decided behaviour for what should happen when a client tries to log in twice, neither can be considered to be "incorrect"
+
+Potential bug: In the "StatusChanged" message that can be received from the client it may be possible for the client to set the connection status to an invalid value, making the server crash when it attempts to convert this to a NetConnectionStatus
+//////////// THOUGHTS ON CODE CONTRACTS /////////////
+Extremely time consuming to run on a project this size- need to restrict it to only the methods we select
+However, this reduces effectiveness! If a method which has been marked for analysis is called by a method which is not checked for analysis, and that method plainly calls it with wrong parameters, Code Contracts will not pick it up
+While the annotations are easy, viewing and understanding output is not

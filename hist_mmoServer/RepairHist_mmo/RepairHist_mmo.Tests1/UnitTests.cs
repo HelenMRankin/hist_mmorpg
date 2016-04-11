@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using hist_mmorpg;
-using hist_mmorpg.Tests;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace hist_mmorpg.Tests
+namespace hist_mmorpg.Tests1
 {
     public partial class TestClientTest
     {

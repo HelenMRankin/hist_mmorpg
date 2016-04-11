@@ -19,6 +19,7 @@ using System.Net.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Configuration;
+using System.Diagnostics.Contracts;
 using System.Windows.Forms;
 
 namespace hist_mmorpg
@@ -37,10 +38,6 @@ namespace hist_mmorpg
         private readonly int max_connections=2000;
         // Used in the NetPeerConfiguration to identify application
         private readonly string app_identifier = "test";
-        /*******End of settings************/
-        private X509Certificate2 ServerCert;
-        private RSACryptoServiceProvider rsa;
-
 
         /// <summary>
         /// Check if client connections contains a connection- used in testing
@@ -78,54 +75,14 @@ namespace hist_mmorpg
             String dir = Directory.GetCurrentDirectory();
             dir = dir.Remove(dir.IndexOf("RepairHist_mmo"));
             String path = Path.Combine(dir, "RepairHist_mmo", "Certificates");
-            try
-            {
-                Console.WriteLine(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile);
-                path = Path.Combine(path, "ServerCert.pfx");
-                Console.WriteLine("Certificate path: "+path);
-                
-                ServerCert =
-                    new X509Certificate2(path,"zip1020");
-                Console.WriteLine("Verify? "+ServerCert.Verify());
-	            X509Chain chain = new X509Chain();
-                chain.ChainPolicy.RevocationFlag=X509RevocationFlag.EndCertificateOnly;
-                chain.ChainPolicy.RevocationMode=X509RevocationMode.NoCheck;
-                Console.WriteLine("Chain build? "+ chain.Build(ServerCert));
-                foreach (X509ChainStatus stat in chain.ChainStatus) 
-                {
-                    Console.WriteLine("Status: "+stat.Status+" info: "+stat.StatusInformation);
-                }
-                // Set up asymmetric decryption algorithm
-                Console.WriteLine("Private key?: " + ServerCert.HasPrivateKey);
-                
-                rsa = (RSACryptoServiceProvider)ServerCert.PrivateKey;
-                Console.WriteLine("public key: ");
-                foreach (var bite in rsa.ExportParameters(false).Exponent) 
-                {
-                    Console.Write(bite.ToString());
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Type: "+ e.GetType().FullName + " message: " + e.Message);
-                Application.Exit();
-            }
+            LogInManager.InitialiseCertificateAndRSA(path);
             // TEST
             
             Globals_Server.logEvent("Total approximate memory: " + GC.GetTotalMemory(true));
-            byte[] test = new byte[] { 1, 2, 3, 4 };
-            byte[] result = LogInManager.ComputeHash(test, test);
-            Console.WriteLine("Testing hash");
-            string hashstring = "";
-            foreach (byte b in result)
-            {
-                hashstring += b.ToString();
-            }
-            Console.WriteLine(hashstring);
             
         }
 
-
+        [ContractVerification(true)]
         public void listen()
         {
             while (isListening) 
@@ -199,28 +156,11 @@ namespace hist_mmorpg
                                 }
                                 if (LogInManager.VerifyUser(c.username, login.userSalt))
                                 {
-
-                                    Globals_Server.logEvent(c.username + " logs in from " + im.SenderEndPoint.ToString());
-                                        // Decrypt key
-
-
-                                    try
-                                        {
-                                            byte[] key = rsa.Decrypt(login.Key, false);
-                                            Console.WriteLine("\n");
-                                            c.alg = new NetAESEncryption(server, key, 0, key.Length);
-                                            ProtoClient clientDetails = new ProtoClient(c);
-                                            clientDetails.ActionType = Actions.LogIn;
-                                            clientDetails.ResponseType = DisplayMessages.LogInSuccess;
-                                            SendViaProto(clientDetails, im.SenderConnection, c.alg);
-                                            Console.WriteLine("SERVER: registering " + c.username + " as observer");
-                                            Globals_Game.RegisterObserver(c);
-                                        }
-                                        catch(Exception e)
-                                        {
-                                            Console.WriteLine("Failure during decryption: " + e.GetType() + " " + e.Message + ";" + e.StackTrace);
-                                            Application.Exit();
-                                        }
+                                    if (LogInManager.ProcessLogIn(login, c))
+                                    {
+                                        Globals_Server.logEvent(c.username + " logs in from " + im.SenderEndPoint.ToString());
+                                    }
+                                    
                                     
                                 }
                                 else
@@ -290,7 +230,6 @@ namespace hist_mmorpg
                                         NetOutgoingMessage msg = server.CreateMessage();
                                         MemoryStream ms = new MemoryStream();
                                         // Include X509 certificate as bytes for client to validate
-                                        logIn.certificate = ServerCert.GetRawCertData();
                                         Serializer.SerializeWithLengthPrefix<ProtoLogIn>(ms, logIn, PrefixStyle.Fixed32);
                                         msg.Write(ms.GetBuffer());
                                         clientConnections.Add(im.SenderConnection, client);

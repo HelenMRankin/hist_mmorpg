@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using Lidgren.Network;
 namespace hist_mmorpg
 {
@@ -62,8 +63,10 @@ namespace hist_mmorpg
         /// Holds the algorithm to be used during encryption and decryption. Alg is generated using the peer and a key obtained from the client 
         /// </summary>
         public NetAESEncryption alg = null;
+        [ContractVerification(true)]
         public Client(String user, String pcID)
         {
+            Contract.Requires(user!=null);
             // set username associated with client
             this.username = user;
 
