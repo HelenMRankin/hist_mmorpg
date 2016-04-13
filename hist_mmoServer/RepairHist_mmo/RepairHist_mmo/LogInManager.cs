@@ -10,19 +10,42 @@ using System.Diagnostics.Contracts;
 
 namespace hist_mmorpg
 {
+    // NOTE: Verification is expensive! We may not want to verify every class. To turn on verification, compile with V_LOGIN
+#if V_LOGIN
+    /// <summary>
+    /// This class handles all log in tasks, including certificate transmission and password verification.
+    /// It may be possible to turn this class into a stand-alone application in order to create a dedicated log-in server.
+    /// </summary>
+    [ContractVerification(true)]
+#endif
     public static class LogInManager
     {
+        /// <summary>
+        /// Used in generating random salts for use in hashing
+        /// </summary>
         static RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider();
+        /// <summary>
+        /// Hashing algorithm, used for hashing passwords
+        /// </summary>
         static HashAlgorithm hash = new SHA256Managed();
+        /// <summary>
+        /// Dictionary mapping usernames to session salts, used to ensure each user gets their own salt once connected
+        /// </summary>
         private static Dictionary<string, byte[]> sessionSalts = new Dictionary<string, byte[]>();
         /// <summary>
         /// Dictionary mapping player username to password hash and salt- for use during testing, should use database for final. First byte array is hash, second is salt
         /// </summary>
         public static Dictionary<string, Tuple<byte[], byte[]>> users = new Dictionary<string, Tuple<byte[], byte[]>>();
+        /// <summary>
+        /// The server's own X509 certificate, which clients can verify
+        /// </summary>
         public static X509Certificate2 ServerCert
         {
             get; set;
         }
+        /// <summary>
+        /// Performs RSA en/decryption
+        /// </summary>
         private static RSACryptoServiceProvider rsa;
 
         /// <summary>
@@ -30,7 +53,6 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="bytes">size of resulting salt</param>
         /// <returns>salt</returns>
-        [ContractVerification(true)]
         public static byte[] GetRandomSalt(int bytes)
         {
             Contract.Requires(bytes>0);
@@ -46,7 +68,6 @@ namespace hist_mmorpg
         /// <param name="toHash">bytes to be hashed</param>
         /// <param name="salt">salt</param>
         /// <returns>computed hash</returns>
-        [ContractVerification(true)]
         public static byte[] ComputeHash(byte[] toHash, byte[] salt)
         {
             Contract.Requires(toHash!=null&salt!=null);
@@ -63,15 +84,14 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="username">Username</param>
         /// <param name="pass">Password. Note this isn't stored, only the hash and salt are</param>
-        [ContractVerification(true)]
         public static void StoreNewUser(string username, string pass)
         {
             Contract.Requires(username!=null&&pass!=null);
             Contract.Ensures(users.ContainsKey(username));
             byte[] passBytes = Encoding.UTF8.GetBytes(pass);
             byte[] salt = GetRandomSalt(32);
-            byte[] hash = ComputeHash(passBytes, salt);
-            users.Add(username, new Tuple<byte[], byte[]>(hash, salt));
+            byte[] computedHash = ComputeHash(passBytes, salt);
+            users.Add(username, new Tuple<byte[], byte[]>(computedHash, salt));
         }
 
         /// <summary>
@@ -81,6 +101,8 @@ namespace hist_mmorpg
         /// <returns>password hash</returns>
         public static byte[] GetPasswordHash(string username)
         {
+            Contract.Requires(username !=null);
+            Contract.Exists(users, a => a.Key == username);
             Tuple<byte[], byte[]> hashNsalt;
             if (users.TryGetValue(username, out hashNsalt))
             {
@@ -88,7 +110,7 @@ namespace hist_mmorpg
             }
             else
             {
-                return null;
+                throw new InvalidLogInException("The username "+username+ " does not exist in the list of recognised users");
             }
         }
 
@@ -99,6 +121,9 @@ namespace hist_mmorpg
         /// <returns>salt</returns>
         public static byte[] GetUserSalt(string username)
         {
+            Contract.Requires(username!=null);
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            Contract.Exists(users, a=>a.Key == username);
             Tuple<byte[], byte[]> hashNsalt;
             if (users.TryGetValue(username, out hashNsalt))
             {
@@ -106,7 +131,7 @@ namespace hist_mmorpg
             }
             else
             {
-                return null;
+                throw new InvalidLogInException("The username " + username + " does not exist in the list of recognised users");
             }
         }
 
@@ -115,9 +140,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="username">username</param>
         /// <param name="userhash">hash generated by client</param>
-        /// <param name="sessionSalt">this session's salt</param>
         /// <returns></returns>
-        [ContractVerification(true)]
         public static bool VerifyUser(string username, byte[] userhash)
         {
             Contract.Requires(username!=null);
@@ -128,11 +151,8 @@ namespace hist_mmorpg
                 return false;
             }
             byte[] passwordHash = ComputeHash(GetPasswordHash(username), sessionSalt);
-            if(userhash!=null && passwordHash!= null)
-            {
-                return userhash.SequenceEqual(passwordHash);
-            }
-            return false;
+            return userhash.SequenceEqual(passwordHash);
+
         }
         /// <summary>
         /// Determines whether or not to accept the connection based on whether a user's username is recognised, and constructs a ProtoLogIn containing session salt
@@ -142,6 +162,7 @@ namespace hist_mmorpg
         /// <returns></returns>
         public static bool AcceptConnection(Client client, out ProtoLogIn response)
         {
+            Contract.Requires(client!=null);
             byte[] sessionSalt = GetRandomSalt(32);
             byte[] userSalt = GetUserSalt(client.username);
             if (userSalt == null)
@@ -149,8 +170,7 @@ namespace hist_mmorpg
                 response = null;
                 return false;
             }
-            response = new ProtoLogIn();
-            response.sessionSalt = sessionSalt;
+            response = new ProtoLogIn {sessionSalt = sessionSalt};
             if (!sessionSalts.ContainsKey(client.username))
             {
                 sessionSalts.Add(client.username, sessionSalt);
@@ -167,14 +187,18 @@ namespace hist_mmorpg
             }
             return true;
         }
-        [ContractVerification(true)]
+
+        /// <summary>
+        /// Initialise the server certificate, and initialise the RSACryptoServiceProvider to use the server's public and private keys
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static bool InitialiseCertificateAndRSA(string path)
         {
+            Contract.Requires(path!=null);
             try
             {
                 path = Path.Combine(path, "ServerCert.pfx");
-
-
             }
             catch (Exception e)
             {
@@ -183,22 +207,31 @@ namespace hist_mmorpg
             }
             ServerCert =
                     new X509Certificate2(path, "zip1020");
-            X509Chain chain = new X509Chain();
-            chain.ChainPolicy.RevocationFlag = X509RevocationFlag.EndCertificateOnly;
-            chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+            X509Chain chain = new X509Chain
+            {
+                ChainPolicy =
+                {
+                    RevocationFlag = X509RevocationFlag.EndCertificateOnly,
+                    RevocationMode = X509RevocationMode.NoCheck
+                }
+            };
             // Set up asymmetric decryption algorithm
 
             rsa = (RSACryptoServiceProvider)ServerCert.PrivateKey;
             return true;
         }
 
-        [ContractVerification(true)]
+        /// <summary>
+        /// Take a client's log in details, verify them and then choose to either allow the user to log in, or disconnect
+        /// </summary>
+        /// <param name="login">Log in details</param>
+        /// <param name="c">Client who is logging in</param>
+        /// <returns>Boolean indicating whether log in was successful</returns>
         public static bool ProcessLogIn(ProtoLogIn login, Client c)
         {
             Contract.Requires(c!=null&&login!=null);
             if (!VerifyUser(c.username, login.userSalt))
             {
-                // error
                 return false;
             }
             try
@@ -219,8 +252,22 @@ namespace hist_mmorpg
             }
             catch (Exception e)
             {
+#if DEBUG
                 Console.WriteLine("Failure during decryption: " + e.GetType() + " " + e.Message + ";" + e.StackTrace);
+#endif
                 return false;
+            }
+        }
+
+        class InvalidLogInException : Exception
+        {
+
+            InvalidLogInException() : base()
+            {
+            }
+
+            public InvalidLogInException(string p) : base (p)
+            {
             }
         }
     }

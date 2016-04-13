@@ -27,6 +27,9 @@ namespace hist_mmorpg
     /// <summary>
     /// Initialises all server details
     /// </summary>
+#if V_SERVER
+    [ContractVerification(true)]
+#endif
     public class Server
     {
         private static Dictionary<NetConnection, Client> clientConnections = new Dictionary<NetConnection, Client>();
@@ -43,9 +46,10 @@ namespace hist_mmorpg
         /// Check if client connections contains a connection- used in testing
         /// </summary>
         /// <param name="conn">Connection of client</param>
-        /// <returns></returns>
+        /// <returns>True if there is a connection, false if otherwise</returns>
         public static bool ContainsConnection(string user)
         {
+            Contract.Requires(user!=null);
             Client c;
             Globals_Server.Clients.TryGetValue(user, out c);
             if (c == null) return false;
@@ -85,7 +89,7 @@ namespace hist_mmorpg
         [ContractVerification(true)]
         public void listen()
         {
-            while (isListening) 
+            while (server.Status==NetPeerStatus.Running) 
             {
                 NetIncomingMessage im;
                 while ((im = server.ReadMessage()) != null)
@@ -100,7 +104,9 @@ namespace hist_mmorpg
                         case NetIncomingMessageType.VerboseDebugMessage:
                         case NetIncomingMessageType.Data:
                         {
-                            Console.WriteLine("recieved data message");
+#if DEBUG
+                            Console.WriteLine("SERVER: recieved data message");
+#endif
                                 if (!clientConnections.ContainsKey(im.SenderConnection))
                                 {
                                     //error
@@ -122,7 +128,7 @@ namespace hist_mmorpg
                             }
                             catch (Exception e)
                             {
-                                Console.WriteLine(e.Message);
+                                Console.WriteLine("Exception at Server: " + e.ToString());
                             }
                             if (m == null)
                             {
@@ -198,7 +204,12 @@ namespace hist_mmorpg
                         }
                             break;
                         case NetIncomingMessageType.StatusChanged:
-                             NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
+                            byte stat = im.ReadByte();
+                            NetConnectionStatus status = NetConnectionStatus.None;
+                            if (Enum.IsDefined(typeof (NetConnectionStatus), Convert.ToInt32(stat)))
+                            {
+                                status = (NetConnectionStatus) stat;
+                            }
                              string reason = im.ReadString();
                              Console.WriteLine(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " " + status + ": " + reason);
                             if (im.SenderConnection.RemoteHailMessage != null &&status == NetConnectionStatus.Connected)
@@ -207,9 +218,14 @@ namespace hist_mmorpg
                             }
                             else if (status == NetConnectionStatus.Disconnected)
                             {
+                                Console.WriteLine("__SERVER: Disconnection");
                                 if (clientConnections.ContainsKey(im.SenderConnection))
                                 {
                                     Disconnect(im.SenderConnection);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("___TEST: Key unrecognised!");
                                 }
                             }
                             break;
@@ -261,9 +277,10 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="m">Message to be sent</param>
         /// <param name="conn">Connection to send across</param>
-        /// <param name="key">Optional encryption key</param>
+        /// <param name="alg">Optional encryption algorithm</param>
         public static void SendViaProto(ProtoMessage m,NetConnection conn, NetEncryption alg = null)
         {
+            Contract.Requires(m!=null);
             NetOutgoingMessage msg = server.CreateMessage();
             MemoryStream ms = new MemoryStream();
             Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, m, PrefixStyle.Fixed32);
@@ -275,21 +292,28 @@ namespace hist_mmorpg
                 msg.Encrypt(alg);
             }
             var result = server.SendMessage(msg, conn, NetDeliveryMethod.ReliableOrdered);
-
+#if DEBUG
             Console.WriteLine("Server sends " + s + " message of type: " + m.GetType() + " with action: " + m.ActionType + " and response: " + m.ResponseType+", result of send: "+result.ToString());
+#endif
             server.FlushSendQueue();
         }
 
+        /// <summary>
+        /// Read a message, get the relevant reply and send to client
+        /// </summary>
+        /// <param name="m"></param>
+        /// <param name="connection"></param>
         public void readReply(ProtoMessage m, NetConnection connection)
         {
+            Contract.Requires(connection!=null);
             Client client;
-            PlayerCharacter pc;
             clientConnections.TryGetValue(connection, out client);
             if (client == null)
             {
                 //TODO error
+                return;
             }
-            pc = client.myPlayerCharacter;
+            var pc = client.myPlayerCharacter;
             if (pc == null || !pc.isAlive)
             {
                 NetOutgoingMessage msg = server.CreateMessage("You have no valid PlayerCharacter!");
@@ -314,7 +338,6 @@ namespace hist_mmorpg
                 SendViaProto(reply, connection, client.alg);
                 Globals_Server.logEvent("From " + clientConnections[connection] + ": request = " + m.ActionType.ToString() + ", reply = " + reply.ResponseType.ToString());
             }
-            
         }
 
         public Server()
@@ -327,14 +350,17 @@ namespace hist_mmorpg
         //TODO write all client details to database, remove client from connected list and close connection
         void Disconnect(NetConnection conn)
         {
+            Console.WriteLine("___TEST: in disconnect");
             if (clientConnections.ContainsKey(conn))
             {
+                Console.WriteLine("___TEST: Log out process initialised!");
                 // TODO process log out
                 Client client = clientConnections[conn];
                 Globals_Server.logEvent("Client " + client.username + "disconnects");
                 Globals_Game.RemoveObserver(client);
                 client.conn = null;
                 clientConnections.Remove(conn);
+                client.alg = null;
                 conn.Disconnect("Disconnect");
             }
         }

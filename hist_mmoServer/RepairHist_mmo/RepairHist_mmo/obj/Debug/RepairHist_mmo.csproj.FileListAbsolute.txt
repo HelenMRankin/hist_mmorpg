@@ -103,3 +103,9 @@ G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\Decl\hist_mmorpg.e
 G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\Decl\hist_mmorpg.pdb
 G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmoccrefgen.rsp
 G:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\CodeContractAnalysisRun.log
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\CodeContracts\hist_mmorpg.Contracts.dll
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\bin\Debug\CodeContracts\hist_mmorpg.Contracts.pdb
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\Decl\hist_mmorpg.exe
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\Decl\hist_mmorpg.pdb
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\RepairHist_mmoccrefgen.rsp
+E:\Git\hist_mmoServer\RepairHist_mmo\RepairHist_mmo\obj\Debug\CodeContractAnalysisRun.log

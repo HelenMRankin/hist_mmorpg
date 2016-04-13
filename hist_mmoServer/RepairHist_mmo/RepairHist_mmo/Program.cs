@@ -9,6 +9,7 @@ using System.Threading;
 using RiakClient.Models;
 using System.Configuration;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace hist_mmorpg
@@ -48,7 +49,7 @@ namespace hist_mmorpg
 
         public static void InitialiseGameState()
         {
-            Globals_Server.LogFile = new System.IO.StreamWriter("LogFile.txt");
+            Globals_Server.LogFile = new System.IO.StreamWriter("TestRunLogFile_NoSessions"+System.DateTime.Today.Millisecond+".txt");
             Globals_Server.LogFile.AutoFlush = true;
             game = new Game();
             server = new Server();
@@ -139,6 +140,8 @@ namespace hist_mmorpg
 
         public static void FinaliseGameState()
         {
+
+            client.LogOut();
             server.Shutdown();
             Globals_Server.LogFile.Close();
         }
@@ -147,21 +150,55 @@ namespace hist_mmorpg
         {
             InitialiseGameState();
             TestRun(client);
-            //FinaliseGameState();
+            FinaliseGameState();
         }
 
-        public static void TestRun(TestClient target)
+        [STAThread]
+        public static void TestRun(TestClient client)
         {
-            target.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6 });
-            while (!target.IsConnectedAndLoggedIn())
+            Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            client.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            Console.WriteLine("Commencing Tests");
-            target.Move(MyPlayerCharacter.charID, NotOwnedFief.id);
-            target.ExamineArmies(NotOwnedFief.id);
-            target.Camp(1);
-            target.LogOut();
+            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            client.RecruitTroops(OwnedArmy.armyID, 70, true);
+            Task<ProtoMessage> responseTask = client.GetReply();
+            responseTask.Wait();
+
+            while (responseTask.Result.ActionType != Actions.RecruitTroops)
+            {
+                responseTask = client.GetReply();
+                responseTask.Wait();
+            }
+            client.ClearMessageQueues();
+            client.Move(MyPlayerCharacter.charID, NotOwnedFief.id, null);
+            responseTask = client.GetReply();
+            responseTask.Wait();
+            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            while (responseTask.Result.ActionType != Actions.TravelTo)
+            {
+                responseTask = client.GetReply();
+                responseTask.Wait();
+            }
+            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            client.ClearMessageQueues();
+            client.SpyOnFief(MyPlayerCharacter.charID, MyPlayerCharacter.location.id);
+            responseTask = client.GetReply();
+            responseTask.Wait();
+            while (responseTask.Result.ActionType != Actions.SpyFief)
+            {
+                responseTask = client.GetReply();
+                responseTask.Wait();
+            }
+            client.ClearMessageQueues();
+            watch.Stop();
+            Globals_Server.logEvent("Time taken to run test: " + watch.ElapsedMilliseconds);
+            Globals_Server.logEvent("Memory useage: "+currentProcess.WorkingSet64);
         }
     
     ///// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using hist_mmorpg;
@@ -131,7 +132,6 @@ namespace hist_mmorpg.Tests1
         [Timeout(10000)]
         public void DoubleLogIn()
         {
-            client.ClearMessageQueues();
             client.SendDummyLogIn("helen", "potato", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, });
             Thread.Sleep(1000);
             Assert.IsTrue(client.IsConnectedAndLoggedIn() == false);
@@ -163,11 +163,12 @@ namespace hist_mmorpg.Tests1
         public void AdjustExpenditureTestNotLoggedIn()
         {
             TestClient s0 = new TestClient();
-            s0.ConnectNoLogin(OtherUser, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7 });
+            s0.ConnectNoLogin(OtherUser, OtherPass);
             while (!s0.net.GetConnectionStatus().Equals("Connected"))
             {
                 Thread.Sleep(0);
             }
+            Console.WriteLine("TEST: Sending adjust expenditure data");
             this.AdjustExpenditureTest(s0, OwnedFief.id, 50, 50, 50, 50, 50);
             s0.LogOut();
         }
@@ -636,6 +637,65 @@ namespace hist_mmorpg.Tests1
             MyPlayerCharacter.days = 1;
             this.TravelTest(client, MyPlayerCharacter.charID, NotOwnedFief.id,null);
             MyPlayerCharacter.days = oldDays;
+        }
+
+        [TestMethod]
+        [Timeout(15000)]
+        public void LogOutLogin()
+        {
+            client.LogOut();
+            client.LogInAndConnect(Username,Pass,new byte[]{1,2,3,4,5,6,7});
+            while (!client.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            Assert.IsTrue(client.IsConnectedAndLoggedIn());
+        }
+        /// <summary>
+        /// Measures performance: Log in, recruit for your army, travel to another fief, spy on it and log out
+        /// </summary>
+        [TestMethod]
+        [Timeout(30000)]
+        public void TestSuite()
+        {
+            Stopwatch watch = new Stopwatch();
+            client.LogOut();
+            watch.Start();
+            client.LogInAndConnect(Username,Pass,new byte[] {1,2,3,4,5,6,7,8});
+            while (!client.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            client.RecruitTroops(OwnedArmy.armyID,70,true);
+            Task<ProtoMessage> responseTask = client.GetReply();
+            responseTask.Wait();
+            while (responseTask.Result.ActionType != Actions.RecruitTroops)
+            {
+                responseTask = client.GetReply();
+                responseTask.Wait();
+            }
+            client.ClearMessageQueues();
+            client.Move(MyPlayerCharacter.charID,NotOwnedFief.id,null);
+            responseTask = client.GetReply();
+            responseTask.Wait();
+            while (responseTask.Result.ActionType != Actions.TravelTo)
+            {
+                responseTask = client.GetReply();
+                responseTask.Wait();
+            }
+            client.ClearMessageQueues();
+            client.SpyOnFief(MyPlayerCharacter.charID,MyPlayerCharacter.location.id);
+            responseTask = client.GetReply();
+            responseTask.Wait();
+            while (responseTask.Result.ActionType != Actions.SpyFief)
+            {
+                responseTask = client.GetReply();
+                responseTask.Wait();
+            }
+            client.ClearMessageQueues();
+            client.LogOut();
+            watch.Stop();
+            Console.WriteLine("Time taken to run test: "+watch.ElapsedMilliseconds);
         }
     }
 }

@@ -4,12 +4,21 @@ using System.Diagnostics.Contracts;
 using Lidgren.Network;
 namespace hist_mmorpg
 {
+#if V_CLIENT
+    [ContractVerification(true)]
+#endif
     /// <summary>
     /// Represents a connected client
     /// </summary>
     public class Client : IEquatable<Client>
     {
+        /// <summary>
+        /// Holds the client's connection
+        /// </summary>
         public NetConnection conn { get; set; }
+        /// <summary>
+        /// The client's username, aka playerID
+        /// </summary>
         public string username { get; set; }
         /// <summary>
         /// Holds PlayerCharacter associated with the player using this client
@@ -38,11 +47,11 @@ namespace hist_mmorpg
         /// <summary>
         /// Holds past events
         /// </summary>
-        public Journal myPastEvents = new Journal();
+        public Journal myPastEvents;
         /// <summary>
         /// Holds current set of events being displayed in UI
         /// </summary>
-        public SortedList<uint, JournalEntry> eventSetToView = new SortedList<uint, JournalEntry>();
+        public SortedList<uint, JournalEntry> eventSetToView;
         /// <summary>
         /// Holds index position of currently displayed entry in eventSetToView
         /// </summary>
@@ -63,7 +72,12 @@ namespace hist_mmorpg
         /// Holds the algorithm to be used during encryption and decryption. Alg is generated using the peer and a key obtained from the client 
         /// </summary>
         public NetAESEncryption alg = null;
-        [ContractVerification(true)]
+
+        /// <summary>
+        /// Create a new client object
+        /// </summary>
+        /// <param name="user">username</param>
+        /// <param name="pcID">PlayerCharacterID</param>
         public Client(String user, String pcID)
         {
             Contract.Requires(user!=null);
@@ -79,6 +93,11 @@ namespace hist_mmorpg
 
             // set player's character to display
             activeChar = myPlayerCharacter;
+
+            // Set up journal
+            myPastEvents = new Journal();
+            // Set up journal events
+            eventSetToView = new SortedList<uint, JournalEntry>();
 
             Globals_Game.ownedPlayerCharacters.Add(user,myPlayerCharacter);
         }
@@ -101,8 +120,13 @@ namespace hist_mmorpg
             }
         }
 
+        /// <summary>
+        /// Send an update to the client- used when the message to be sent requires additional information other than just a response code and some strings
+        /// </summary>
+        /// <param name="message">Message to be sent- can contain any number of details</param>
         public void Update(ProtoMessage message)
         {
+            Contract.Requires(message != null);
             message.ActionType = Actions.Update;
             if (conn != null)
             {
@@ -112,6 +136,11 @@ namespace hist_mmorpg
             }
         }
 
+        /// <summary>
+        /// Two clients are equal if their usernames are the same
+        /// </summary>
+        /// <param name="other">The client to be compared</param>
+        /// <returns>True if the usernames match, false if otherwise</returns>
         public bool Equals(Client other)
         {
             return this.username.Equals(other.username);

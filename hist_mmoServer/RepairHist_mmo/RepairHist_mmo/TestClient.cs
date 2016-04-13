@@ -103,7 +103,10 @@ namespace hist_mmorpg
         }
         public void LogOut()
         {
-            net.Disconnect();
+            if (this.IsConnectedAndLoggedIn())
+            {
+                net.Disconnect();
+            }
         }
 
         public void SendMessage(Actions a, object o)
@@ -180,7 +183,7 @@ namespace hist_mmorpg
         /// <returns>Task containing the reply as a result</returns>
         public async Task<string> GetServerMessage()
         {
-            Console.WriteLine("Awaiting reply");
+            Console.WriteLine("CLIENT: Awaiting reply");
 
             string reply = await (Task.Run(() => CheckForStringMessage()));
 
@@ -652,7 +655,7 @@ namespace hist_mmorpg
             private string pass;
             private IPAddress ip = NetUtility.Resolve("localhost");
             private int port = 8000;
-            private NetEncryption alg;
+            private NetEncryption alg = null;
             /// <summary>
             /// Optional- set encryption key manually for use in testing
             /// </summary>
@@ -667,6 +670,7 @@ namespace hist_mmorpg
                 autoLogIn = true;
                 this.key = key;
                 InitializeClient();
+                Console.WriteLine("Is alg null after initializing? "+(alg==null));
             }
 
             public NetConnection GetConnection()
@@ -710,7 +714,8 @@ namespace hist_mmorpg
                 }
 
 
-                Console.WriteLine("Starting client on host " + host + " and port " + port);
+                Console.WriteLine("Starting client "+username+" on host " + host + " and port " + port);
+                Console.WriteLine("Is alg null here1? "+(alg == null));
                 // Start listening for responses
                 Thread t_reader = new Thread(new ThreadStart(this.read));
                 t_reader.Start();
@@ -749,14 +754,16 @@ namespace hist_mmorpg
                 try
                 {
                     Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, message, ProtoBuf.PrefixStyle.Fixed32);
-                    
+                    Console.Write("Client: Sending");
                     msg.Write(ms.GetBuffer());
                     if (alg != null && encrypt)
                     {
+                        Console.WriteLine("is alg null? !" + (alg == null));
+                        Console.Write(" encrypted");
                         msg.Encrypt(alg);
                     }
                     var result = client.SendMessage(msg, NetDeliveryMethod.ReliableOrdered);
-                    Console.WriteLine("Client sends message of type " + message.GetType() + " with Action: " + message.ActionType + " with result: " + result.ToString());
+                    Console.WriteLine(" message of type " + message.GetType() + " with Action: " + message.ActionType + " with result: " + result.ToString());
                     client.FlushSendQueue();
 
                 }
@@ -838,7 +845,7 @@ namespace hist_mmorpg
                             Console.Write(bite.ToString());
                         }
                         Console.WriteLine("\n");
-#if TESTSUITE
+#if DEBUG
                         if (this.key != null)
                         {
                             Console.WriteLine("Using non-null key");
@@ -963,7 +970,6 @@ namespace hist_mmorpg
                                             }
                                             else
                                             {
-                                                Console.WriteLine("CLIENT: adding message to message queue: ");
                                                 if (m == null)
                                                 {
                                                     Console.WriteLine("#####ADDED NULL MESSAGE####");
@@ -974,9 +980,7 @@ namespace hist_mmorpg
                                                     byte[] key = null;
                                                     if (ValidateCertificateAndCreateKey(m as ProtoLogIn, out key))
                                                     {
-                                                        Console.WriteLine("CLIENT: Sending hash ahd key1");
                                                         ComputeAndSendHashAndKey(m as ProtoLogIn, key);
-                                                        Console.WriteLine("Sent hash");
                                                     }
                                                 }
                                                 else
@@ -1026,9 +1030,7 @@ namespace hist_mmorpg
                                                     {
                                                         if (autoLogIn)
                                                         {
-                                                            Console.WriteLine("CLIENT: Sending hash ahd key2");
                                                             ComputeAndSendHashAndKey(m as ProtoLogIn, key);
-                                                            Console.WriteLine("Sent hash2");
                                                         }
                                                         else
                                                         {

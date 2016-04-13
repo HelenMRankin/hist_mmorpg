@@ -102,6 +102,13 @@ Since there was no decided behaviour for what should happen when a client tries 
 Potential bug: In the "StatusChanged" message that can be received from the client it may be possible for the client to set the connection status to an invalid value, making the server crash when it attempts to convert this to a NetConnectionStatus
 Detected through: Static testing
 
+Potential bug: If somehow a user had a null username, all Log In methods would fail
+Detected through: Static testing
+Likelihood: extremely unlikely
+
+Potential null-reference exceptions in client and server if username or connection is null
+Detected through: static testing
+Likelihood: Very unlikely
 //////////// THOUGHTS ON CODE CONTRACTS /////////////
 Extremely time consuming to run on a project this size- need to restrict it to only the methods we select
 However, this reduces effectiveness! If a method which has been marked for analysis is called by a method which is not checked for analysis, and that method plainly calls it with wrong parameters, Code Contracts will not pick it up
