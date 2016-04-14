@@ -49,7 +49,7 @@ namespace hist_mmorpg
 
         public static void InitialiseGameState()
         {
-            Globals_Server.LogFile = new System.IO.StreamWriter("TestRunLogFile_NoSessions"+System.DateTime.Today.Millisecond+".txt");
+            Globals_Server.LogFile = new System.IO.StreamWriter("TestRunLogFile_NoSessions"+ DateTime.Now.TimeOfDay.Milliseconds + ".txt");
             Globals_Server.LogFile.AutoFlush = true;
             game = new Game();
             server = new Server();
@@ -150,158 +150,175 @@ namespace hist_mmorpg
         {
             InitialiseGameState();
             TestRun(client);
+            client.LogOut();
+            TestRun(client, false);
             FinaliseGameState();
         }
+        
 
         [STAThread]
-        public static void TestRun(TestClient client)
+        public static void TestRun(TestClient client, bool encrypt = true)
         {
+
+            if (encrypt)
+            {
+                Globals_Server.logEvent("Running test with encryption");
+            }
+            else
+            {
+                Globals_Server.logEvent("Running test without encryption");
+            }
+            long LoginTime, RecruitTime, MoveTime, SpyTime;
             Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
+            long start = DateTime.Now.TimeOfDay.Milliseconds;
             Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
-            client.LogInAndConnect(Username, Pass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+            byte[] encryptionKey = null;
+            if (encrypt)
+            {
+                encryptionKey = LogInManager.GetRandomSalt(32);
+            }
+            client.LogInAndConnect(Username, Pass, encryptionKey);
             while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
+            LoginTime = DateTime.Now.TimeOfDay.Milliseconds - start;
             Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            // Recruit troops
             client.RecruitTroops(OwnedArmy.armyID, 70, true);
+            RecruitTime = ProcessNextAction(Actions.RecruitTroops, currentProcess);
+            // Move to another fief
+            client.Move(MyPlayerCharacter.charID, NotOwnedFief.id, null);
+            MoveTime = ProcessNextAction(Actions.TravelTo, currentProcess);
+            // Spy
+            client.SpyOnFief(MyPlayerCharacter.charID, MyPlayerCharacter.location.id);
+            SpyTime = ProcessNextAction(Actions.SpyFief, currentProcess);
+            // Confirm spy
+            Globals_Server.logEvent("Time taken to run test: " + (DateTime.Now.TimeOfDay.Milliseconds - start));
+            Globals_Server.logEvent("LogIn time: " + LoginTime);
+            Globals_Server.logEvent("Recruit time: " + (RecruitTime));
+            Globals_Server.logEvent("Travel time: " + MoveTime);
+            Globals_Server.logEvent("Spy time: " + SpyTime);
+            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+        }
+
+        private static long ProcessNextAction(Actions action, Process p)
+        {
+            long start = DateTime.Now.TimeOfDay.Milliseconds;
             Task<ProtoMessage> responseTask = client.GetReply();
             responseTask.Wait();
-
-            while (responseTask.Result.ActionType != Actions.RecruitTroops)
+            while (responseTask.Result.ActionType != action)
             {
                 responseTask = client.GetReply();
                 responseTask.Wait();
             }
+            long end = DateTime.Now.TimeOfDay.Milliseconds;
             client.ClearMessageQueues();
-            client.Move(MyPlayerCharacter.charID, NotOwnedFief.id, null);
-            responseTask = client.GetReply();
-            responseTask.Wait();
-            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
-            while (responseTask.Result.ActionType != Actions.TravelTo)
-            {
-                responseTask = client.GetReply();
-                responseTask.Wait();
-            }
-            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
-            client.ClearMessageQueues();
-            client.SpyOnFief(MyPlayerCharacter.charID, MyPlayerCharacter.location.id);
-            responseTask = client.GetReply();
-            responseTask.Wait();
-            while (responseTask.Result.ActionType != Actions.SpyFief)
-            {
-                responseTask = client.GetReply();
-                responseTask.Wait();
-            }
-            client.ClearMessageQueues();
-            watch.Stop();
-            Globals_Server.logEvent("Time taken to run test: " + watch.ElapsedMilliseconds);
-            Globals_Server.logEvent("Memory useage: "+currentProcess.WorkingSet64);
+            Globals_Server.logEvent("Memory useage: " + p.WorkingSet64);
+            return end - start;
         }
-    
-    ///// <summary>
-    ///// The main entry point for the application.
-    ///// </summary>
-    //static void Main()
-    //{
 
-    //    try
-    //    {
-    //        using (Globals_Server.LogFile = new System.IO.StreamWriter("LogFile.txt"))
-    //        {
+        ///// <summary>
+        ///// The main entry point for the application.
+        ///// </summary>
+        //static void Main()
+        //{
 
-    //            //Globals_Server.rCluster = RiakCluster.FromConfig("riakConfig","app.config");
-    //            //Globals_Server.rClient = Globals_Server.rCluster.CreateClient();
-    //            Globals_Server.LogFile.AutoFlush = true;
-    //            Globals_Server.logEvent("Server start");
+        //    try
+        //    {
+        //        using (Globals_Server.LogFile = new System.IO.StreamWriter("LogFile.txt"))
+        //        {
 
-    //            Game game = new Game();
-    //            SetUpForDemo();
-    //            /*
-    //            //DatabaseWrite.DatabaseWriteAll ("testBucket");
+        //            //Globals_Server.rCluster = RiakCluster.FromConfig("riakConfig","app.config");
+        //            //Globals_Server.rClient = Globals_Server.rCluster.CreateClient();
+        //            Globals_Server.LogFile.AutoFlush = true;
+        //            Globals_Server.logEvent("Server start");
 
-    //            /*if (Globals_Server.rClient.Ping ().IsSuccess) {
-    //                Console.WriteLine ("Database connection successful");
-    //                string gameID = "testBucket";
-    //                foreach (string trait in Globals_Game.traitKeys) {
-    //                    Console.WriteLine (trait);
-    //                }
+        //            Game game = new Game();
+        //            SetUpForDemo();
+        //            /*
+        //            //DatabaseWrite.DatabaseWriteAll ("testBucket");
 
-    //                // Test can read from database
-    //                var newClient = Globals_Server.rCluster.CreateClient();
-    //                RiakObject newObj = new RiakObject (gameID, "superawesome3", Globals_Game.traitKeys.ToArray ());
-    //                newClient.Put (newObj);
-    //                Thread.Sleep (5000);
-    //                var testRead =newClient.Get (gameID, "superawesome3");
-    //                if (!testRead.IsSuccess) {
-    //                    Console.WriteLine ("FAIL :(" + testRead.ErrorMessage);
-    //                } else {
-    //                    Console.WriteLine ("Got traitkeys:");
-    //                }
-    //                //DatabaseRead.DatabaseReadAll (gameID);
-    //            } else {
-    //                Console.WriteLine ("Could not connect to database :( ");
-    //            } */
+        //            /*if (Globals_Server.rClient.Ping ().IsSuccess) {
+        //                Console.WriteLine ("Database connection successful");
+        //                string gameID = "testBucket";
+        //                foreach (string trait in Globals_Game.traitKeys) {
+        //                    Console.WriteLine (trait);
+        //                }
 
-    //            //testCaptives();
+        //                // Test can read from database
+        //                var newClient = Globals_Server.rCluster.CreateClient();
+        //                RiakObject newObj = new RiakObject (gameID, "superawesome3", Globals_Game.traitKeys.ToArray ());
+        //                newClient.Put (newObj);
+        //                Thread.Sleep (5000);
+        //                var testRead =newClient.Get (gameID, "superawesome3");
+        //                if (!testRead.IsSuccess) {
+        //                    Console.WriteLine ("FAIL :(" + testRead.ErrorMessage);
+        //                } else {
+        //                    Console.WriteLine ("Got traitkeys:");
+        //                }
+        //                //DatabaseRead.DatabaseReadAll (gameID);
+        //            } else {
+        //                Console.WriteLine ("Could not connect to database :( ");
+        //            } */
 
-
-
-    //            Server server = new Server();
-    //            try
-    //            {
-    //                //TestSuite testSuite = new TestSuite();
-    //                TestClient client = new TestClient();
-    //                client.LogInAndConnect("helen", "potato");
-    //            }
-    //            catch (Exception e)
-    //            {
-    //                Console.WriteLine(e.Message);
-    //            }
-    //            //client.LogIn("helen", "potato");
-    //            String s = Console.ReadLine();
-    //            if (s != null && s.Equals("exit"))
-    //            {
-    //                Globals_Server.logEvent("Server exits");
-    //                server.isListening = false;
-    //                Globals_Server.server.Shutdown("Server exits");
-    //            }
-
-    //            //testArmy();
-    //            //testSpying();
-    //            /*
-    //                    while (true)
-    //                    {
-
-    //                        if (s != null && s.Equals("exit"))
-    //                        {
-    //                            Globals_Server.logEvent("Server exits");
-    //                            server.isListening = false;
-    //                            Globals_Server.server.Shutdown("Server exits");
-    //                            break;
-    //                        }
-
-    //                    }
-
-    //                    * */
-    //            Globals_Server.LogFile.Close();
-
-    //        }
-
-    //    }
-    //    catch (Exception e)
-    //    {
-    //        Globals_Server.LogFile.Close();
-    //        Console.WriteLine("Encountered an error:" + e.StackTrace);
-    //        Console.ReadLine();
-    //    }
+        //            //testCaptives();
 
 
-    //}
 
-    public static void SetUpForDemo()
+        //            Server server = new Server();
+        //            try
+        //            {
+        //                //TestSuite testSuite = new TestSuite();
+        //                TestClient client = new TestClient();
+        //                client.LogInAndConnect("helen", "potato");
+        //            }
+        //            catch (Exception e)
+        //            {
+        //                Console.WriteLine(e.Message);
+        //            }
+        //            //client.LogIn("helen", "potato");
+        //            String s = Console.ReadLine();
+        //            if (s != null && s.Equals("exit"))
+        //            {
+        //                Globals_Server.logEvent("Server exits");
+        //                server.isListening = false;
+        //                Globals_Server.server.Shutdown("Server exits");
+        //            }
+
+        //            //testArmy();
+        //            //testSpying();
+        //            /*
+        //                    while (true)
+        //                    {
+
+        //                        if (s != null && s.Equals("exit"))
+        //                        {
+        //                            Globals_Server.logEvent("Server exits");
+        //                            server.isListening = false;
+        //                            Globals_Server.server.Shutdown("Server exits");
+        //                            break;
+        //                        }
+
+        //                    }
+
+        //                    * */
+        //            Globals_Server.LogFile.Close();
+
+        //        }
+
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Globals_Server.LogFile.Close();
+        //        Console.WriteLine("Encountered an error:" + e.StackTrace);
+        //        Console.ReadLine();
+        //    }
+
+
+        //}
+
+        public static void SetUpForDemo()
         {
             // Make Anselm Marshal very sneaky
             Character Anselm = Globals_Game.getCharFromID("Char_390");

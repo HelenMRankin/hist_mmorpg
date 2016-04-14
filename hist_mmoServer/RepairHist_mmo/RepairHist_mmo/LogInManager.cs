@@ -236,14 +236,26 @@ namespace hist_mmorpg
             }
             try
             {
-                byte[] key = rsa.Decrypt(login.Key, false);
-                // Key must be non-null and long enough
-                if (key == null || key.Length < 5)
+                if (login.Key != null)
                 {
-                    return false;
+                    byte[] key = rsa.Decrypt(login.Key, false);
+                    // Key must be non-null and long enough
+
+                    if (key == null || key.Length < 5)
+                    {
+                        return false;
+                    }
+                    c.alg = new NetAESEncryption(Globals_Server.server, key, 0, key.Length);
                 }
-                c.alg = new NetAESEncryption(Globals_Server.server, key, 0, key.Length);
-                ProtoClient clientDetails = new ProtoClient(c);
+                else
+                {
+#if ALLOW_UNENCRYPT
+                    c.alg = null;
+#else
+                    return false;
+#endif
+                }
+                    ProtoClient clientDetails = new ProtoClient(c);
                 clientDetails.ActionType = Actions.LogIn;
                 clientDetails.ResponseType = DisplayMessages.LogInSuccess;
                 Server.SendViaProto(clientDetails, c.conn, c.alg);
