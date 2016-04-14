@@ -237,18 +237,25 @@ namespace hist_mmorpg
             }
             try
             {
-                byte[] key = rsa.Decrypt(login.Key, false);
-                // Key must be non-null and long enough
-                if(key==null || key.Length<5)
+                if (login.Key != null)
                 {
+                    byte[] key = rsa.Decrypt(login.Key, false);
+                    // Key must be non-null and long enough
+
+                    if (key == null || key.Length < 5)
+                    {
+                        return false;
+                    }
+                    c.alg = new NetAESEncryption(Globals_Server.server, key, 0, key.Length);
+                }
+                else
+                {
+#if ALLOW_UNENCRYPT
+                    c.alg=null;
+#else
                     return false;
+#endif
                 }
-                Console.WriteLine("SERVER: symmetric key after decryption:");
-                foreach (var bite in key)
-                {
-                    Console.Write(bite.ToString());
-                }
-                c.alg = new NetAESEncryption(Globals_Server.server, key, 0, key.Length);
                 ProtoClient clientDetails = new ProtoClient(c);
                 clientDetails.ActionType = Actions.LogIn;
                 clientDetails.ResponseType = DisplayMessages.LogInSuccess;

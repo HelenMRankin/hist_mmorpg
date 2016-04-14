@@ -3443,7 +3443,7 @@ namespace hist_mmorpg
             double chance = spy.GetSpySuccessChance(fief);
             ProtoMessage chanceMsg = new ProtoMessage(DisplayMessages.SpyChance);
             chanceMsg.Message = chance.ToString();
-            chanceMsg.ActionType = Actions.SpyCharacter;
+            chanceMsg.ActionType = Actions.SpyFief;
             Server.SendViaProto(chanceMsg, client.connection, client.alg);
             Task<ProtoMessage> response = client.GetMessage();
             if (!response.Wait(30000))
@@ -3451,7 +3451,7 @@ namespace hist_mmorpg
                 return Utility_Methods.Timeout;
             }
             ProtoMessage spyConfirm = response.Result as ProtoMessage;
-            if (spyConfirm == null || spyConfirm.ActionType != Actions.SpyCharacter)
+            if (spyConfirm == null || spyConfirm.ActionType != Actions.SpyFief)
             {
 #if STRICT
                 return null;

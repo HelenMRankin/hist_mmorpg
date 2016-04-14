@@ -52,12 +52,12 @@ namespace hist_mmorpg
         /// <param name="ctx"></param>
         public static void InitialiseGameState()
         {
-            Globals_Server.LogFile = new System.IO.StreamWriter("LogFile.txt");
+            Globals_Server.LogFile = new System.IO.StreamWriter("TestRunLogFile_Sessions2.txt");
             Globals_Server.LogFile.AutoFlush = true;
             game = new Game();
             server = new Server();
             client = new TestClient();
-
+            server.AddTestUsers();
             Username = "helen";
             Pass = "potato";
             BadUsername = "notauser";
@@ -144,6 +144,7 @@ namespace hist_mmorpg
 
         public static void FinaliseGameState()
         {
+            client.LogOut();
             server.Shutdown();
             Globals_Server.LogFile.Close();
         }
@@ -151,36 +152,80 @@ namespace hist_mmorpg
         public static void Main()
         {
             InitialiseGameState();
-            TestRun();
-
-            
+            TestRun(client);
+            client.LogOut();
+            TestRun(client, false);
+            FinaliseGameState();
         }
 
-        public static async void TestRun()
+
+        [STAThread]
+        public static void TestRun(TestClient client, bool encrypt = true)
         {
-            client.LogInAndConnect("helen", "potato", new byte[] { 1, 2, 3, 4, 5, 6 });
-            while(!client.IsConnectedAndLoggedIn())
+            
+            if (encrypt)
+            {
+                Globals_Server.logEvent("Running test with encryption");
+            }
+            else
+            {
+                Globals_Server.logEvent("Running test without encryption");
+            }
+            long loginTime, recruitCheckTime, recruitConfirmTime,  MoveTime, SpyCheckTime, SpyConfirmTime;
+            Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            long start = DateTime.Now.TimeOfDay.Milliseconds;
+            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            byte[] encryptionKey = null;
+            if(encrypt)
+            {
+                encryptionKey = LogInManager.GetRandomSalt(32);
+            }
+            client.LogInAndConnect(Username, Pass, encryptionKey);
+            while (!client.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
-            client.Move(MyPlayerCharacter.charID, NotOwnedFief.id);
-            client.ExamineArmies(NotOwnedFief.id);
-            client.Camp(1);
-            
-            ProtoMessage reply = null;
-            Task<ProtoMessage> MessageTask = client.GetReply();
-            MessageTask.Wait();
-            reply = MessageTask.Result;
-            while(reply.ActionType!=Actions.Camp)
-            {
-                MessageTask = client.GetReply();
-                MessageTask.Wait();
-                reply = MessageTask.Result;
-            }
-            Console.WriteLine("End of test run");
-            client.LogOut();
-            FinaliseGameState();
+            loginTime = DateTime.Now.TimeOfDay.Milliseconds -start;
+            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            // Recruit troops
+            client.RecruitTroops(OwnedArmy.armyID, 70, true);
+            recruitCheckTime  =ProcessNextAction(Actions.RecruitTroops, currentProcess);
+            // Confirm it
+            client.RecruitTroops(OwnedArmy.armyID, 70, true);
+            recruitConfirmTime = ProcessNextAction(Actions.RecruitTroops, currentProcess);
+            // Move to another fief
+            client.Move(MyPlayerCharacter.charID, NotOwnedFief.id, null);
+            MoveTime = ProcessNextAction(Actions.TravelTo, currentProcess);
+            // Spy
+            client.SpyOnFief(MyPlayerCharacter.charID, MyPlayerCharacter.location.id);
+            SpyCheckTime = ProcessNextAction(Actions.SpyFief, currentProcess);
+            // Confirm spy
+            client.net.Send(new ProtoMessage(){ActionType=Actions.SpyFief,Message=true.ToString()});
+            SpyConfirmTime = ProcessNextAction(Actions.SpyFief, currentProcess);
+            Globals_Server.logEvent("Time taken to run test: " + (DateTime.Now.TimeOfDay.Milliseconds -start));
+            Globals_Server.logEvent("LogIn time: " + loginTime);
+            Globals_Server.logEvent("Recruit time: " + (recruitCheckTime+recruitConfirmTime) + "(Check: " + recruitCheckTime+ ", Confirm: "+recruitConfirmTime+")");
+            Globals_Server.logEvent("Travel time: " + MoveTime);
+            Globals_Server.logEvent("Spy time: " + (SpyCheckTime + SpyConfirmTime) + "(Check: " + SpyCheckTime + ", Confirm: " + SpyConfirmTime + ")");
+            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
         }
+
+        private static long ProcessNextAction(Actions action, Process p)
+        {
+            long start = DateTime.Now.TimeOfDay.Milliseconds;
+            Task<ProtoMessage> responseTask = client.GetReply();
+            responseTask.Wait();
+            while (responseTask.Result.ActionType != action)
+            {
+                responseTask = client.GetReply();
+                responseTask.Wait();
+            }
+            long end = DateTime.Now.TimeOfDay.Milliseconds;
+            client.ClearMessageQueues();
+            Globals_Server.logEvent("Memory useage: " + p.WorkingSet64);
+            return end - start;
+        }
+
         ///// <summary>
         ///// The main entry point for the application.
         ///// </summary>

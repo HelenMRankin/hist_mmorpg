@@ -132,9 +132,9 @@ namespace hist_mmorpg
         private ProtoMessage CheckForMessage()
         {
             ProtoMessage m = null;
-            while (!protobufMessageQueue.TryDequeue(out m))
+            while (!protobufMessageQueue.TryDequeue(out m)&&!cts.IsCancellationRequested)
             {
-                protobufMessageQueue.eventWaiter.WaitOne();
+                WaitHandle.WaitAny(new WaitHandle[] { protobufMessageQueue.eventWaiter,cts.Token.WaitHandle });
             }
             return m;
         }
@@ -153,6 +153,12 @@ namespace hist_mmorpg
             return reply;
         }
 
+        public void ProcessLogOut()
+        {
+            cts.Cancel();
+            connection = null;
+            alg = null;
+        }
 
         public void ActionControllerAsync()
         {
@@ -208,6 +214,12 @@ namespace hist_mmorpg
                 {
                     // Need to change
                     ProtoMessage clientRequest = GetMessageTask.Result;
+                    if(cts.IsCancellationRequested)
+                    {
+                        Console.WriteLine("Request cancelled");
+                        return;
+                    }
+                    
                     Console.WriteLine("SERVER: Processing client request for action: " + clientRequest.ActionType);
                     ProtoMessage reply = Game.ActionController(clientRequest, this);
                     if(!cts.IsCancellationRequested)
@@ -225,6 +237,11 @@ namespace hist_mmorpg
                             reply.ActionType = clientRequest.ActionType;
                             Server.SendViaProto(reply, connection, alg);
                         }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Request cancelled");
+                        return;
                     }
                 }
             }

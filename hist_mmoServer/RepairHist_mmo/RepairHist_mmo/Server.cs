@@ -41,7 +41,7 @@ namespace hist_mmorpg
         private readonly int max_connections = 2000;
         // Used in the NetPeerConfiguration to identify application
         private readonly string app_identifier = "test";
-
+        private static object ConnectionLock { get; set; } = new object();
         /// <summary>
         /// Check if client connections contains a connection- used in testing
         /// </summary>
@@ -49,10 +49,14 @@ namespace hist_mmorpg
         /// <returns></returns>
         public static bool ContainsConnection(string user)
         {
-            Client c;
-            Globals_Server.Clients.TryGetValue(user, out c);
-            if (c == null) return false;
-            return clientConnections.ContainsValue(c);
+            lock(ConnectionLock)
+            {
+                Client c;
+                Globals_Server.Clients.TryGetValue(user, out c);
+                if (c == null) return false;
+                return clientConnections.ContainsValue(c);
+            }
+            
         }
         /*******End of settings************/
         public void Initialise()
@@ -193,8 +197,12 @@ namespace hist_mmorpg
 
                                         Serializer.SerializeWithLengthPrefix<ProtoLogIn>(ms, logIn, PrefixStyle.Fixed32);
                                         msg.Write(ms.GetBuffer());
-                                        clientConnections.Add(im.SenderConnection, client);
-                                        client.connection = im.SenderConnection;
+                                        lock(ConnectionLock)
+                                        {
+                                            clientConnections.Add(im.SenderConnection, client);
+                                            client.connection = im.SenderConnection;
+                                            client.cts = new CancellationTokenSource();
+                                        }
                                         im.SenderConnection.Approve(msg);
                                         server.FlushSendQueue();
                                         Task.Run(() => client.ActionControllerAsync(),client.cts.Token);
@@ -255,27 +263,38 @@ namespace hist_mmorpg
         //TODO write all client details to database
         public static void Disconnect(NetConnection conn, string disconnectMsg = "Disconnect")
         {
-            if (conn != null && clientConnections.ContainsKey(conn))
+            Console.WriteLine("__TEST: In disconnect");
+            lock(ConnectionLock)
             {
+                if (conn != null && clientConnections.ContainsKey(conn))
+                {
 
-                Client client = clientConnections[conn];
-                Globals_Server.logEvent("Client " + client.username + "disconnects");
-                // Cancel awaiting tasks
-                client.cts.Cancel();
-                Globals_Game.RemoveObserver(client);
-                client.connection = null;
-                clientConnections.Remove(conn);
-                conn.Disconnect(disconnectMsg);
-                Console.WriteLine("SERVER: Disconnecting client for reason: " + disconnectMsg);
+                    Client client = clientConnections[conn];
+                    Console.WriteLine("__TEST:Is client + " + client.username + "an observer? " + Globals_Game.IsObserver(client));
+                    Globals_Server.logEvent("Client " + client.username + "disconnects");
+                    client.cts.Cancel();
+                    // Cancel awaiting tasks
+                    Globals_Game.RemoveObserver(client);
+                    client.connection = null;
+                    client.alg = null;
+                    clientConnections.Remove(conn);
+                    conn.Disconnect(disconnectMsg);
+                    Console.WriteLine("SERVER: Disconnecting client for reason: " + disconnectMsg);
 
+                }
             }
         }
 
         public void Shutdown()
         {
-            for (int i = clientConnections.Count - 1; i >= 0; i--)
+            Console.WriteLine("__TEST: in shut down");
+            for (int i = (clientConnections.Count - 1); i >= 0; i--)
             {
-                Disconnect(clientConnections.ElementAt(i).Key, "Server Shutting Down");
+                var c = clientConnections.ElementAt(i);
+                
+                    Disconnect(c.Key, "Server Shutting Down");
+                
+                
             }
             server.Shutdown("Server Shutdown");
         }

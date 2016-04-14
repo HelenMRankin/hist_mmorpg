@@ -798,18 +798,26 @@ namespace hist_mmorpg
                 response.userSalt = hashFull;
                 response.ActionType = Actions.LogIn;
                 response.Key = key;
-                Console.WriteLine("CLIENT: Symmetric key from client: ");
-                foreach (var bite in this.key)
+                if(key== null)
                 {
-                    Console.Write(bite.ToString());
+                    Console.WriteLine("No encryption key is used");
                 }
-                Console.WriteLine("\n");
-                Console.WriteLine("CLIENT: Encrypted key from client: ");
-                foreach (var bite in key)
+                else
                 {
-                    Console.Write(bite.ToString());
+
+                    Console.WriteLine("CLIENT: Symmetric key from client: ");
+                    foreach (var bite in this.key)
+                    {
+                        Console.Write(bite.ToString());
+                    }
+                    Console.WriteLine("\n");
+                    Console.WriteLine("CLIENT: Encrypted key from client: ");
+                    foreach (var bite in key)
+                    {
+                        Console.Write(bite.ToString());
+                    }
+                    Console.WriteLine("\n");
                 }
-                Console.WriteLine("\n");
                 Send(response, false);
             }
 

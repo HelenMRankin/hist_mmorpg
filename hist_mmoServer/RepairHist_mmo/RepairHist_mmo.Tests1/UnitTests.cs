@@ -71,9 +71,10 @@ namespace hist_mmorpg.Tests
         public void LogInTestNoKey()
         {
             TestClient s0 = new TestClient();
-            s0.net = (TestClient.Network)null;
-            this.LogInTest(s0, OtherUsername, OtherPass, new byte[] { });
+            this.LogInTest(s0, OtherUsername, OtherPass,null);
+#if !ALLOW_UNENCRYPT
             Assert.IsFalse(Server.ContainsConnection(OtherUsername));
+#endif
             s0.LogOut();
         }
 

@@ -24,7 +24,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SESSIONTYPES;TESTSUITE;STRICT</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SESSIONTYPES;TESTSUITE;STRICT;ALLOW_UNENCRYPT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
