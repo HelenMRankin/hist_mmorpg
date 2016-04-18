@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using RiakClient;
-using RiakClient.Models;
 using Lidgren.Network;
 namespace hist_mmorpg
 {
@@ -67,25 +64,36 @@ namespace hist_mmorpg
         /// <returns>string containing newGameID</returns>
         public static string GetNextGameID()
         {
-            string gameID = "Game_" + Globals_Server.newGameID;
-            Globals_Server.newGameID++;
+            string gameID = "Game_" + newGameID;
+            newGameID++;
             return gameID;
         }
-
+        /// <summary>
+        /// StreamWriter for writing output to a file
+        /// </summary>
 		public static StreamWriter LogFile;
         /// <summary>
         /// Writes any errors encountered to a logfile
         /// </summary>
-        /// <param name="error"></param>
+        /// <param name="error">The details of the error</param>
         public static void logError(String error)
         {
             LogFile.WriteLine("Run-time error: " + error);
+#if DEBUG
 			Console.WriteLine ("Run-time error: " + error);
+#endif
         }
 
+        /// <summary>
+        /// Write an event to the log file
+        /// </summary>
+        /// <param name="eventDetails">The details of the event</param>
         public static void logEvent(String eventDetails)
         {
             LogFile.WriteLine(eventDetails);
+#if DEBUG
+            Console.WriteLine(eventDetails);
+#endif
         }
     }
 }

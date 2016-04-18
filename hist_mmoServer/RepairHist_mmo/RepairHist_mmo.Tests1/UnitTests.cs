@@ -21,7 +21,7 @@ namespace hist_mmorpg.Tests1
         {
             TestClient s0 = new TestClient();
             this.LogInTest(s0, OtherUser, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-            while (!s0.net.GetConnectionStatus().Equals("Connected"))
+            while (!s0.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
@@ -651,51 +651,6 @@ namespace hist_mmorpg.Tests1
             }
             Assert.IsTrue(client.IsConnectedAndLoggedIn());
         }
-        /// <summary>
-        /// Measures performance: Log in, recruit for your army, travel to another fief, spy on it and log out
-        /// </summary>
-        [TestMethod]
-        [Timeout(30000)]
-        public void TestSuite()
-        {
-            Stopwatch watch = new Stopwatch();
-            client.LogOut();
-            watch.Start();
-            client.LogInAndConnect(Username,Pass,new byte[] {1,2,3,4,5,6,7,8});
-            while (!client.IsConnectedAndLoggedIn())
-            {
-                Thread.Sleep(0);
-            }
-            client.RecruitTroops(OwnedArmy.armyID,70,true);
-            Task<ProtoMessage> responseTask = client.GetReply();
-            responseTask.Wait();
-            while (responseTask.Result.ActionType != Actions.RecruitTroops)
-            {
-                responseTask = client.GetReply();
-                responseTask.Wait();
-            }
-            client.ClearMessageQueues();
-            client.Move(MyPlayerCharacter.charID,NotOwnedFief.id,null);
-            responseTask = client.GetReply();
-            responseTask.Wait();
-            while (responseTask.Result.ActionType != Actions.TravelTo)
-            {
-                responseTask = client.GetReply();
-                responseTask.Wait();
-            }
-            client.ClearMessageQueues();
-            client.SpyOnFief(MyPlayerCharacter.charID,MyPlayerCharacter.location.id);
-            responseTask = client.GetReply();
-            responseTask.Wait();
-            while (responseTask.Result.ActionType != Actions.SpyFief)
-            {
-                responseTask = client.GetReply();
-                responseTask.Wait();
-            }
-            client.ClearMessageQueues();
-            client.LogOut();
-            watch.Stop();
-            Console.WriteLine("Time taken to run test: "+watch.ElapsedMilliseconds);
-        }
+
     }
 }

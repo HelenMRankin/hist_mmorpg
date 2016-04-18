@@ -59,6 +59,7 @@ namespace hist_mmorpg
         /// <param name="pass">Password</param>
         public void LogInAndConnect(string user, string pass, byte[] key = null)
         {
+            
             net = new Network(this, key);
             net.Connect(user, pass);
             this.playerID = user;
@@ -648,7 +649,7 @@ namespace hist_mmorpg
         {
             private TestClient tClient;
             RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider();
-            HashAlgorithm hash = new SHA256Managed();
+            HashAlgorithm hash = new SHA1Managed();
             public NetClient client = null;
             private NetConnection connection;
             private string user;
@@ -706,16 +707,13 @@ namespace hist_mmorpg
                 if (username != null)
                 {
                     NetOutgoingMessage msg = client.CreateMessage(username);
+                    msg.Write("TestString");
                     NetConnection c = client.Connect(host, port, msg);
                 }
                 else
                 {
                     connection = client.Connect(host, port);
                 }
-
-
-                Console.WriteLine("Starting client "+username+" on host " + host + " and port " + port);
-                Console.WriteLine("Is alg null here1? "+(alg == null));
                 // Start listening for responses
                 Thread t_reader = new Thread(new ThreadStart(this.read));
                 t_reader.Start();

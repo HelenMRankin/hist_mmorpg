@@ -3517,6 +3517,12 @@ namespace hist_mmorpg
             return ransomResult;
         }
 
+        /// <summary>
+        /// Translates a message from a client into an action to be carried out
+        /// </summary>
+        /// <param name="msgIn">The client's request. Cannot be null</param>
+        /// <param name="_client">The client who sent the request. Cannot be null</param>
+        /// <returns>The result of attempting to process the client's request, ranging from the result of an action to an error message</returns>
         public static ProtoMessage ActionController(ProtoMessage msgIn, Client _client)
         {
             Contract.Requires(msgIn!=null && _client!=null);

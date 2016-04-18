@@ -7,6 +7,7 @@ using System.IO;
 using Lidgren.Network;
 using System.Security.Cryptography.X509Certificates;
 using System.Diagnostics.Contracts;
+using System.Diagnostics.Eventing.Reader;
 
 namespace hist_mmorpg
 {
@@ -27,7 +28,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Hashing algorithm, used for hashing passwords
         /// </summary>
-        static HashAlgorithm hash = new SHA256Managed();
+        static HashAlgorithm hashAlgorithm = new SHA1Managed();
         /// <summary>
         /// Dictionary mapping usernames to session salts, used to ensure each user gets their own salt once connected
         /// </summary>
@@ -75,7 +76,7 @@ namespace hist_mmorpg
             byte[] fullHash = new byte[toHash.Length + salt.Length];
             toHash.CopyTo(fullHash, 0);
             salt.CopyTo(fullHash, toHash.Length);
-            byte[] hashcode = hash.ComputeHash(fullHash);
+            byte[] hashcode = hashAlgorithm.ComputeHash(fullHash);
             return hashcode;
         }
 
@@ -151,16 +152,19 @@ namespace hist_mmorpg
                 return false;
             }
             byte[] passwordHash = ComputeHash(GetPasswordHash(username), sessionSalt);
+            bool eq = userhash.SequenceEqual(passwordHash);
             return userhash.SequenceEqual(passwordHash);
 
         }
+
         /// <summary>
         /// Determines whether or not to accept the connection based on whether a user's username is recognised, and constructs a ProtoLogIn containing session salt
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="response"></param>
-        /// <returns></returns>
-        public static bool AcceptConnection(Client client, out ProtoLogIn response)
+        /// <param name="client">Client who is connecting</param>
+        /// <param name="text">Challenge text from which to create a signature</param>
+        /// <param name="response">Response message</param>
+        /// <returns>Boolean indicating whether connection was accepted</returns>
+        public static bool AcceptConnection(Client client, string text, out ProtoLogIn response)
         {
             Contract.Requires(client!=null);
             byte[] sessionSalt = GetRandomSalt(32);
@@ -185,7 +189,31 @@ namespace hist_mmorpg
             {
                 response.certificate = ServerCert.GetRawCertData();
             }
+            response.Signature = Sign(text);
             return true;
+        }
+
+        /// <summary>
+        /// Sign a certificate
+        /// Note that now we are allowing certificates to be unsigned for purpose of testing
+        /// </summary>
+        /// <author> Alejandro Campos Magencio 2008</author>
+        /// <param name="text">String to sign</param>
+        /// <returns></returns>
+        private static byte[] Sign(string text)
+
+        {
+            if (string.IsNullOrWhiteSpace(text)||text.Length==0)
+            {
+                return null;
+            }
+            UnicodeEncoding encoding = new UnicodeEncoding();
+
+            byte[] data = encoding.GetBytes(text);
+
+            byte[] hash = hashAlgorithm.ComputeHash(data);
+
+            return rsa.SignHash(hash, CryptoConfig.MapNameToOID("SHA1"));
         }
 
         /// <summary>

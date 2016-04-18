@@ -1,16 +1,9 @@
 ﻿#define TESTSUITE
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Diagnostics;
-using RiakClient;
-using System.Threading;
-using RiakClient.Models;
-using System.Configuration;
-using System.IO;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace hist_mmorpg
 {
@@ -47,6 +40,9 @@ namespace hist_mmorpg
         public static NonPlayerCharacter NotMyEmplployee;
         public static NonPlayerCharacter NobodysCharacter;
 
+        /// <summary>
+        /// Set up the data and game state for the test run
+        /// </summary>
         public static void InitialiseGameState()
         {
             Globals_Server.LogFile = new System.IO.StreamWriter("TestRunLogFile_NoSessions"+ DateTime.Now.TimeOfDay.Milliseconds + ".txt");
@@ -138,6 +134,9 @@ namespace hist_mmorpg
             }
         }
 
+        /// <summary>
+        /// Clean up the server and close the log file
+        /// </summary>
         public static void FinaliseGameState()
         {
 
@@ -146,6 +145,9 @@ namespace hist_mmorpg
             Globals_Server.LogFile.Close();
         }
 
+        /// <summary>
+        /// Set up the game, run the TestRun (both for encrypted and unencrypted messages) and end
+        /// </summary>
         public static void Main()
         {
             InitialiseGameState();
@@ -155,7 +157,11 @@ namespace hist_mmorpg
             FinaliseGameState();
         }
         
-
+        /// <summary>
+        /// Run through a sequence of actions, recording the time taken and memory consumption
+        /// </summary>
+        /// <param name="client">The test client which will be sending the message requests</param>
+        /// <param name="encrypt">Whether or not to use encryption</param>
         [STAThread]
         public static void TestRun(TestClient client, bool encrypt = true)
         {
@@ -350,49 +356,6 @@ namespace hist_mmorpg
             pc.myNPCs.Add(proposalChar);
             proposalChar.inKeep = false;
         }
-        public static void testCaptives()
-        {
-            Character captive = Globals_Game.getCharFromID("Char_626");
-            PlayerCharacter captor = Globals_Game.pcMasterList["Char_158"];
-            Fief location = Globals_Game.fiefMasterList["EPM02"];
-            captor.AddCaptive(captive, location);
-            //captor.ReleaseCaptive(captive);
-            //captor.ExecuteCaptive(captive);
-            Console.WriteLine(captive.CalculateRansom());
-            Console.WriteLine(captive.isAlive.ToString());
-            Console.WriteLine(captive.location.id);
-        }
-        public static void testArmy()
-        {
-            Army A = Globals_Game.armyMasterList["Army_1"];
-            Army B = Globals_Game.armyMasterList["Army_2"];
-            Console.WriteLine("Army 1 troops:");
-            for (int i = 0; i < 7; i++)
-            {
-                Console.Write(i + ": " + A.troops[i] + ", ");
-            }
-            Console.WriteLine("\nArmy 2 troops:");
-            for (int i = 0; i < 7; i++)
-            {
-                Console.Write(i + ": " + B.troops[i] + ", ");
-            }
-            Console.WriteLine("\nCombat values A: " + A.CalculateCombatValue());
-            Console.WriteLine("Combat values B: " + B.CalculateCombatValue());
-            Console.WriteLine("Combat advantages A: " + A.CalculateTroopTypeAdvatages(B.troops));
-            Console.WriteLine("Combat advantages B: " + B.CalculateTroopTypeAdvatages(A.troops));
-           
-        }
 
-        public static void testSpying()
-        {
-            Fief f = Globals_Game.fiefMasterList["ESW04"];
-            Character bailiff = Globals_Game.pcMasterList["Char_158"];
-            bailiff.traits = new Tuple<Trait, int>[] { new Tuple<Trait, int>(Globals_Game.traitMasterList["trait_8"], 9) };
-            f.bailiff = bailiff;
-            Character c = Globals_Game.npcMasterList["Char_626"];
-            c.traits = new Tuple<Trait, int>[] { new Tuple<Trait, int>(Globals_Game.traitMasterList["trait_9"], 1) };
-            ProtoMessage ignore;
-            c.SpyOn(f,out ignore);
-        }
     }
 }

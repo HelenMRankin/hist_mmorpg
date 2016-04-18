@@ -130,7 +130,9 @@ namespace hist_mmorpg
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ProtoLogIn : ProtoMessage
     {
-        // The session salt, used to salt the password hash
+        /// <summary>
+        /// The session salt, used to salt the password hash
+        /// </summary>
         public byte[] sessionSalt {get;set;}
         /// <summary>
         /// The user's salt, used to salt the password hash
@@ -141,13 +143,18 @@ namespace hist_mmorpg
         /// </summary>
         public byte[] Key { get; set; }
         /// <summary>
+        /// Challenge text to be signed by server
+        /// </summary>
+        public string Text { get;set; }
+        /// <summary>
+        /// Result of server signing certificate
+        /// </summary>
+        public byte[] Signature { get; set; }
+        /// <summary>
         /// Holds the X509 certificate as a byte array for optionally verifying the peer
         /// </summary>
         public byte[] certificate { get; set; }
-        public ProtoLogIn()
-            : base()
-        {
-        }
+
     }
     /// <summary>
     /// A generic array, used to store things like detachment details or expenses
