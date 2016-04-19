@@ -183,30 +183,30 @@ namespace hist_mmorpg
                                 Globals_Server.Clients.TryGetValue(senderID, out client);
                                 if (client != null)
                                 {
-                                    ProtoLogIn logIn;
-                                    if (!LogInManager.AcceptConnection(client, out logIn))
-                                    {
-                                        im.SenderConnection.Deny("Access denied- you may already be logged in on another machine, or have entered the wrong credentials");
-                                    }
-                                    else
-                                    {
+ProtoLogIn logIn;
+if (!LogInManager.AcceptConnection(client, out logIn))
+{
+    im.SenderConnection.Deny("Access denied- you may already be logged in on another machine, or have entered the wrong credentials");
+}
+else
+{
 
-                                        NetOutgoingMessage msg = server.CreateMessage();
-                                        MemoryStream ms = new MemoryStream();
-                                        // Include X509 certificate as bytes for client to validate
+    NetOutgoingMessage msg = server.CreateMessage();
+    MemoryStream ms = new MemoryStream();
+    // Include X509 certificate as bytes for client to validate
 
-                                        Serializer.SerializeWithLengthPrefix<ProtoLogIn>(ms, logIn, PrefixStyle.Fixed32);
-                                        msg.Write(ms.GetBuffer());
-                                        lock(ConnectionLock)
-                                        {
-                                            clientConnections.Add(im.SenderConnection, client);
-                                            client.connection = im.SenderConnection;
-                                            client.cts = new CancellationTokenSource();
-                                        }
-                                        im.SenderConnection.Approve(msg);
-                                        server.FlushSendQueue();
-                                        Task.Run(() => client.ActionControllerAsync(),client.cts.Token);
-                                    }
+    Serializer.SerializeWithLengthPrefix<ProtoLogIn>(ms, logIn, PrefixStyle.Fixed32);
+    msg.Write(ms.GetBuffer());
+    lock(ConnectionLock)
+    {
+        clientConnections.Add(im.SenderConnection, client);
+        client.connection = im.SenderConnection;
+        client.cts = new CancellationTokenSource();
+    }
+    im.SenderConnection.Approve(msg);
+    server.FlushSendQueue();
+    Task.Run(() => client.ActionControllerAsync(),client.cts.Token);
+}
 
                                 }
                                 else
@@ -263,14 +263,12 @@ namespace hist_mmorpg
         //TODO write all client details to database
         public static void Disconnect(NetConnection conn, string disconnectMsg = "Disconnect")
         {
-            Console.WriteLine("__TEST: In disconnect");
             lock(ConnectionLock)
             {
                 if (conn != null && clientConnections.ContainsKey(conn))
                 {
 
                     Client client = clientConnections[conn];
-                    Console.WriteLine("__TEST:Is client + " + client.username + "an observer? " + Globals_Game.IsObserver(client));
                     Globals_Server.logEvent("Client " + client.username + "disconnects");
                     client.cts.Cancel();
                     // Cancel awaiting tasks
@@ -279,7 +277,6 @@ namespace hist_mmorpg
                     client.alg = null;
                     clientConnections.Remove(conn);
                     conn.Disconnect(disconnectMsg);
-                    Console.WriteLine("SERVER: Disconnecting client for reason: " + disconnectMsg);
 
                 }
             }

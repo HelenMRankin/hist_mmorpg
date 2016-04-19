@@ -167,22 +167,20 @@ namespace hist_mmorpg
             {
                 // Taken too long after accepting connection request to receive login
                 Server.Disconnect(connection, "Failed to login due to timeout");
+                return;
             }
             ProtoLogIn LogIn = GetMessageTask.Result as ProtoLogIn;
             if (LogIn == null||LogIn.ActionType!=Actions.LogIn)
             {
-                Console.WriteLine("SERVER: was expecting log in, disconnecting");
                 // Error- expecting LogIn. Disconnect and send message to client
                 Server.Disconnect(connection, "Invalid message sequence-expecting login");
                 return;
             }
             else
             {
-                Console.WriteLine("SERVER: Processing log in");
                 // Process LogIn
                 if (!LogInManager.ProcessLogIn(LogIn, this))
                 {
-                    Console.WriteLine("SERVER: Log in fails");
                     // Error
                     Server.Disconnect(connection, "Log in failed");
                     return;
@@ -193,9 +191,7 @@ namespace hist_mmorpg
             {
                 if (myPlayerCharacter == null || !myPlayerCharacter.isAlive)
                 {
-                    Console.WriteLine("SERVER: client has no valid playercharacter");
-                    ProtoMessage error = new ProtoMessage();
-                    error.ResponseType = DisplayMessages.Error;
+                    ProtoMessage error = new ProtoMessage(DisplayMessages.Error);
                     Server.SendViaProto(error, connection, alg);
                     Server.Disconnect(connection,"You have no head of family to play as");
                     return;
@@ -204,10 +200,9 @@ namespace hist_mmorpg
                 // TimeOut after 15 mins of inactivity
                 if (!GetMessageTask.Wait(15 * 60 * 1000) || GetMessageTask.IsCanceled|| GetMessageTask.Result==null)
                 {
-                    Console.WriteLine("SERVER: client times out");
                     // Session TimeOut or Cancellation
                     // Disconnect
-                    Server.Disconnect(connection, "You have timed out due to inactivity");
+                    Server.Disconnect(connection, "You have timed out");
                     return;
                 }
                 else
@@ -216,20 +211,16 @@ namespace hist_mmorpg
                     ProtoMessage clientRequest = GetMessageTask.Result;
                     if(cts.IsCancellationRequested)
                     {
-                        Console.WriteLine("Request cancelled");
                         return;
                     }
                     
-                    Console.WriteLine("SERVER: Processing client request for action: " + clientRequest.ActionType);
                     ProtoMessage reply = Game.ActionController(clientRequest, this);
                     if(!cts.IsCancellationRequested)
                     {
                         if (reply == null)
                         {
-                            Console.WriteLine("SERVER: Invalid message sequence");
-                            ProtoMessage invalid = new ProtoMessage();
+                            ProtoMessage invalid = new ProtoMessage(DisplayMessages.ErrorGenericMessageInvalid);
                             invalid.ActionType = clientRequest.ActionType;
-                            invalid.ResponseType = DisplayMessages.ErrorGenericMessageInvalid;
                             Server.SendViaProto(invalid, connection, alg);
                         }
                         else
@@ -240,7 +231,6 @@ namespace hist_mmorpg
                     }
                     else
                     {
-                        Console.WriteLine("Request cancelled");
                         return;
                     }
                 }
