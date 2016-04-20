@@ -127,6 +127,12 @@ namespace hist_mmorpg
         /// </summary>
         public string ransomDemand { get; set; }
 
+#if DEBUG
+        /// <summary>
+        /// Fix the success chance- use -1 to calculate success based on traits
+        /// </summary>
+        public double fixedSuccessChance { get;set; }
+#endif
         /**************LOCKS**************/
         protected object entourageLock = new Object();
         /// <summary>
@@ -390,6 +396,10 @@ namespace hist_mmorpg
                 this.ailments = ails;
             }
             this.fiancee = fia;
+#if DEBUG
+            // Default = trait-influenced success chance
+            fixedSuccessChance = -1;
+#endif
         }
 
 		/// <summary>
@@ -4475,8 +4485,19 @@ namespace hist_mmorpg
 
 
         // TODO use values from config
+        /// <summary>
+        /// Get the success chance for spying on a target
+        /// </summary>
+        /// <param name="target">Target to spy on- currently Fief, Character or Army</param>
+        /// <returns>Chance of success</returns>
         public double GetSpySuccessChance(object target)
         {
+#if DEBUG
+            if (0<=fixedSuccessChance&&fixedSuccessChance <=100)
+            {
+                return fixedSuccessChance;
+            }
+#endif
             Type t = target.GetType();
             double baseChance;
             Character perceptiveCharacter = null;

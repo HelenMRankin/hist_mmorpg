@@ -269,6 +269,9 @@ namespace hist_mmorpg
                     server.Recycle(im);
                 }
             }
+#if DEBUG
+            Globals_Server.logEvent("Server listening thread exits");
+#endif
         }
 
         /// <summary>

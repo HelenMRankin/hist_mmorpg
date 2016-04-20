@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace hist_mmorpg
@@ -23,40 +25,42 @@ namespace hist_mmorpg
         /// The dummy Client to be used for this test
         /// </summary>
         public static TestClient client;
-
+        /// <summary>
+        /// The location of the log file
+        /// </summary>
+        public static string logFilePath;
+        /// <summary>
+        /// Store the max memory consumption
+        /// </summary>
+        public static long maxMemoryUseage;
+        
         public static Army OwnedArmy;
         public static Army NotOwnedArmy;
         public static Fief OwnedFief;
         public static Fief NotOwnedFief;
         public static string Username;
         public static string Pass;
-        public static string BadUsername;
-        public static string BadPass;
         public static PlayerCharacter MyPlayerCharacter;
         public static PlayerCharacter NotMyPlayerCharacter;
-        public static NonPlayerCharacter MyFamily;
-        public static NonPlayerCharacter MyEmployee;
-        public static NonPlayerCharacter NotMyFamily;
-        public static NonPlayerCharacter NotMyEmplployee;
-        public static NonPlayerCharacter NobodysCharacter;
 
         /// <summary>
         /// Set up the data and game state for the test run
         /// </summary>
         public static void InitialiseGameState()
         {
-            Globals_Server.LogFile = new System.IO.StreamWriter("TestRunLogFile_NoSessions"+ DateTime.Now.TimeOfDay.Milliseconds + ".txt");
-            Globals_Server.LogFile.AutoFlush = true;
+                        
             game = new Game();
             server = new Server();
             client = new TestClient();
 
             Username = "helen";
             Pass = "potato";
-            BadUsername = "notauser";
-            BadPass = "notapass";
             MyPlayerCharacter = Globals_Game.ownedPlayerCharacters[Username];
-            Dictionary<string, PlayerCharacter>.Enumerator e = Globals_Game.pcMasterList.GetEnumerator();
+#if DEBUG
+            // We want to run the test with constants, so we set the success chance to 100 to remove random element
+            MyPlayerCharacter.fixedSuccessChance = 100;
+#endif
+        Dictionary<string, PlayerCharacter>.Enumerator e = Globals_Game.pcMasterList.GetEnumerator();
             e.MoveNext();
             NotMyPlayerCharacter = e.Current.Value;
             while (NotMyPlayerCharacter == MyPlayerCharacter)
@@ -64,43 +68,12 @@ namespace hist_mmorpg
                 e.MoveNext();
                 NotMyPlayerCharacter = e.Current.Value;
             }
-            foreach (NonPlayerCharacter npc in MyPlayerCharacter.myNPCs)
-            {
-                if (!string.IsNullOrWhiteSpace(npc.familyID))
-                {
-                    MyFamily = npc;
-                }
-                else if (!string.IsNullOrWhiteSpace(npc.employer))
-                {
-                    MyEmployee = npc;
-                }
-                if (MyEmployee != null && MyFamily != null)
-                {
-                    break;
-                }
-            }
-            foreach (NonPlayerCharacter npc in NotMyPlayerCharacter.myNPCs)
-            {
-                if (!string.IsNullOrWhiteSpace(npc.familyID))
-                {
-                    NotMyFamily = npc;
-                }
-                else if (!string.IsNullOrWhiteSpace(npc.employer))
-                {
-                    NotMyEmplployee = npc;
-                }
-                if (NotMyEmplployee != null && NotMyFamily != null)
-                {
-                    break;
-                }
-            }
             if (MyPlayerCharacter.myArmies != null && MyPlayerCharacter.myArmies.Count > 0)
             {
                 OwnedArmy = MyPlayerCharacter.myArmies[0];
             }
             else
             {
-                Console.WriteLine("Set owned army");
                 Army army = new Army(Globals_Game.GetNextArmyID(), null, MyPlayerCharacter.charID, 30, NotMyPlayerCharacter.location.id, false, trp: new uint[] { 5, 5, 5, 5, 5, 5 });
                 OwnedArmy = army;
                 OwnedArmy.AddArmy();
@@ -111,7 +84,6 @@ namespace hist_mmorpg
             }
             else
             {
-                Console.Write("Set not owned army");
                 Army army = new Army(Globals_Game.GetNextArmyID(), null, NotMyPlayerCharacter.charID, 30, NotMyPlayerCharacter.location.id, false, trp: new uint[] { 5, 5, 5, 5, 5, 5 });
                 NotOwnedArmy = army;
                 NotOwnedArmy.AddArmy();
@@ -125,13 +97,6 @@ namespace hist_mmorpg
             {
                 NotOwnedFief = NotMyPlayerCharacter.ownedFiefs[0];
             }
-            foreach (var npc in Globals_Game.npcMasterList)
-            {
-                if (npc.Value.GetPlayerCharacter() == null)
-                {
-                    NobodysCharacter = npc.Value;
-                }
-            }
         }
 
         /// <summary>
@@ -142,7 +107,9 @@ namespace hist_mmorpg
 
             client.LogOut();
             server.Shutdown();
-            Globals_Server.LogFile.Close();
+#if DEBUG
+            Console.WriteLine("A log file was written to "+logFilePath);
+#endif
         }
 
         /// <summary>
@@ -150,20 +117,39 @@ namespace hist_mmorpg
         /// </summary>
         public static void Main()
         {
-            InitialiseGameState();
-            TestRun(client);
-            client.LogOut();
-            TestRun(client, false);
-            FinaliseGameState();
+            Console.WriteLine("Beginning test run. Enter 'e' to run with encryption");
+            bool encrypt = false;
+            string userInput = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(userInput))
+            {
+                char doEncrypt = userInput[0];
+                encrypt = (doEncrypt == 'e');
+            }
+            string encryptString;
+            encryptString = encrypt ? "_encrypted_" : "_unencrypted_";
+            string datePatern = "MM_dd_H_mm";
+            logFilePath = "TestRun_NoSessions"+encryptString + DateTime.Now.ToString(datePatern) + ".txt";
+            
+            using (Globals_Server.LogFile = new System.IO.StreamWriter(logFilePath))
+            {
+                InitialiseGameState();
+                Globals_Server.LogFile.AutoFlush = true;
+                TestRun(encrypt);
+                FinaliseGameState();
+                
+            }
+            Console.Write("Run complete. Press any enter to exit.");
+            Console.Out.Flush();
+            Console.ReadLine();
+            
         }
         
         /// <summary>
         /// Run through a sequence of actions, recording the time taken and memory consumption
         /// </summary>
-        /// <param name="client">The test client which will be sending the message requests</param>
         /// <param name="encrypt">Whether or not to use encryption</param>
         [STAThread]
-        public static void TestRun(TestClient client, bool encrypt = true)
+        public static void TestRun(bool encrypt = true)
         {
 
             if (encrypt)
@@ -174,10 +160,10 @@ namespace hist_mmorpg
             {
                 Globals_Server.logEvent("Running test without encryption");
             }
-            long LoginTime, RecruitTime, MoveTime, SpyTime;
+            double LoginTime, RecruitTime, MoveTime, SpyTime;
             Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
-            long start = DateTime.Now.TimeOfDay.Milliseconds;
-            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            double start = DateTime.Now.TimeOfDay.TotalMilliseconds;
+            LogMemory(currentProcess);
             byte[] encryptionKey = null;
             if (encrypt)
             {
@@ -188,8 +174,8 @@ namespace hist_mmorpg
             {
                 Thread.Sleep(0);
             }
-            LoginTime = DateTime.Now.TimeOfDay.Milliseconds - start;
-            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            LoginTime = DateTime.Now.TimeOfDay.TotalMilliseconds - start;
+            LogMemory(currentProcess);
             // Recruit troops
             client.RecruitTroops(OwnedArmy.armyID, 70, true);
             RecruitTime = ProcessNextAction(Actions.RecruitTroops, currentProcess);
@@ -200,17 +186,33 @@ namespace hist_mmorpg
             client.SpyOnFief(MyPlayerCharacter.charID, MyPlayerCharacter.location.id);
             SpyTime = ProcessNextAction(Actions.SpyFief, currentProcess);
             // Confirm spy
-            Globals_Server.logEvent("Time taken to run test: " + (DateTime.Now.TimeOfDay.Milliseconds - start));
+            Globals_Server.logEvent("Time taken to run test (ms): " + (DateTime.Now.TimeOfDay.TotalMilliseconds - start));
             Globals_Server.logEvent("LogIn time: " + LoginTime);
             Globals_Server.logEvent("Recruit time: " + (RecruitTime));
             Globals_Server.logEvent("Travel time: " + MoveTime);
             Globals_Server.logEvent("Spy time: " + SpyTime);
-            Globals_Server.logEvent("Memory useage: " + currentProcess.WorkingSet64);
+            Globals_Server.logEvent("Max memory measured: "+maxMemoryUseage);
         }
 
-        private static long ProcessNextAction(Actions action, Process p)
+        /// <summary>
+        /// Logs the memory useage using GC.GetTotalMemory and returns the memory useage
+        /// </summary>
+        /// <param name="p">Process to use to calculate memory</param>
+        public static void LogMemory(Process p)
         {
-            long start = DateTime.Now.TimeOfDay.Milliseconds;
+            long mem = +GC.GetTotalMemory(false);
+            if (mem > maxMemoryUseage) maxMemoryUseage = mem;
+            Globals_Server.logEvent("GC memory: "+mem);
+        }
+        /// <summary>
+        /// Waits for the response to a client's action, gets the time taken to receive reply, and logs memory
+        /// </summary>
+        /// <param name="action">Action which was taken- will wait until a response with the same action has been received</param>
+        /// <param name="p">Process used to get memory</param>
+        /// <returns>Time taken (milliseconds)</returns>
+        private static double ProcessNextAction(Actions action, Process p)
+        {
+            double start = DateTime.Now.TimeOfDay.TotalMilliseconds;
             Task<ProtoMessage> responseTask = client.GetReply();
             responseTask.Wait();
             while (responseTask.Result.ActionType != action)
@@ -218,9 +220,9 @@ namespace hist_mmorpg
                 responseTask = client.GetReply();
                 responseTask.Wait();
             }
-            long end = DateTime.Now.TimeOfDay.Milliseconds;
+            double end = DateTime.Now.TimeOfDay.TotalMilliseconds;
             client.ClearMessageQueues();
-            Globals_Server.logEvent("Memory useage: " + p.WorkingSet64);
+            LogMemory(p);
             return end - start;
         }
 
@@ -324,6 +326,9 @@ namespace hist_mmorpg
 
         //}
 
+        /// <summary>
+        /// Code which was used in the 2015 demo- sets up a few armies, adds funds and sets a few traits to demonstrate trait effects
+        /// </summary>
         public static void SetUpForDemo()
         {
             // Make Anselm Marshal very sneaky

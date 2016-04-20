@@ -362,7 +362,7 @@ namespace hist_mmorpg.Tests1
             MyPlayerCharacter.GetHomeFief().AdjustTreasury(-treasuryOld);
             // Ensure army has not been maintained already
             OwnedArmy.isMaintained = false;
-            Assert.AreEqual(DisplayMessages.ArmyMaintainedAlready,this.MaintainArmyTest(client, OwnedArmy.armyID));
+            Assert.AreEqual(DisplayMessages.ArmyMaintainInsufficientFunds,this.MaintainArmyTest(client, OwnedArmy.armyID));
 
             // Reset treasury
             MyPlayerCharacter.GetHomeFief().AdjustTreasury(treasuryOld);

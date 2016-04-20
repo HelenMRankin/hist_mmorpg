@@ -43,12 +43,17 @@ namespace hist_mmorpg
     }
     public partial class TestClient
     {
-        public ConcurrentQueueWithEvent<ProtoMessage> protobufMessageQueue = new ConcurrentQueueWithEvent<ProtoMessage>();
-        public ConcurrentQueueWithEvent<string> stringMessageQueue = new ConcurrentQueueWithEvent<string>();
+        public ConcurrentQueueWithEvent<ProtoMessage> protobufMessageQueue;
+        public ConcurrentQueueWithEvent<string> stringMessageQueue;
         public Network net;
         public string playerID;
 
 
+        public TestClient()
+        {
+            protobufMessageQueue = new ConcurrentQueueWithEvent<ProtoMessage>();
+            stringMessageQueue = new ConcurrentQueueWithEvent<string>();
+        }
         /*************************************
          * General Commands ***
          * **********************************/
@@ -127,15 +132,18 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// Gets the next message from the server by repeatedly polling the message queue
+        /// Gets the next message from the server by repeatedly polling the message queue. 
         /// </summary>
         /// <returns>Message from server</returns>
+        /// <throws>TaskCanceledException if task is cancelled</throws>
         private ProtoMessage CheckForProtobufMessage()
         {
             ProtoMessage m = null;
+            var waitHandles = new WaitHandle[] { protobufMessageQueue.eventWaiter, net.ctSource.Token.WaitHandle };
             while (!protobufMessageQueue.TryDequeue(out m))
             {
-                protobufMessageQueue.eventWaiter.WaitOne();
+                EventWaitHandle.WaitAny(waitHandles);
+                net.ctSource.Token.ThrowIfCancellationRequested();
             }
             return m;
         }
@@ -144,12 +152,15 @@ namespace hist_mmorpg
         /// Gets the next message from the server by repeatedly polling the message queue
         /// </summary>
         /// <returns>Message from server</returns>
+        /// <throws>TaskCanceledException if task is cancelled</throws>
         private string CheckForStringMessage()
         {
             string s = null;
+            var waitHandles = new WaitHandle[] {stringMessageQueue.eventWaiter, net.ctSource.Token.WaitHandle};
             while (!stringMessageQueue.TryDequeue(out s))
             {
-                stringMessageQueue.eventWaiter.WaitOne();
+                EventWaitHandle.WaitAny(waitHandles);
+                net.ctSource.Token.ThrowIfCancellationRequested();
             }
             return s;
         }
@@ -660,13 +671,14 @@ namespace hist_mmorpg
             private byte[] key;
             public bool autoLogIn { get; set; }
             public bool loggedIn { get; set; }
-
+            public CancellationTokenSource ctSource;
 
             public Network(TestClient tc, byte[] key = null)
             {
                 this.tClient = tc;
                 autoLogIn = true;
                 this.key = key;
+                ctSource = new CancellationTokenSource();
                 InitializeClient();
             }
 
@@ -723,6 +735,7 @@ namespace hist_mmorpg
 
             public void Disconnect()
             {
+                ctSource.Cancel();
                 if (!(client.ConnectionStatus == NetConnectionStatus.None || client.ConnectionStatus == NetConnectionStatus.Disconnected))
                 {
                     client.Disconnect("Log out");
@@ -828,7 +841,6 @@ namespace hist_mmorpg
 #if DEBUG
                         if (this.key != null)
                         {
-                            Console.WriteLine("Using non-null key");
                             if (this.key.Length == 0)
                             {
                                 alg = new NetAESEncryption(client);
@@ -894,11 +906,12 @@ namespace hist_mmorpg
 
             public void read()
             {
-                bool running = true;
-                while (running)
+                while (client.Status == NetPeerStatus.Running && !ctSource.Token.IsCancellationRequested)
                 {
+
+                    WaitHandle.WaitAny(new WaitHandle[] { client.MessageReceivedEvent, ctSource.Token.WaitHandle });
                     NetIncomingMessage im;
-                    while ((im = client.ReadMessage()) != null)
+                    while ((im = client.ReadMessage()) != null&&!ctSource.IsCancellationRequested)
                     {
 
                         switch (im.MessageType)
@@ -1048,8 +1061,10 @@ namespace hist_mmorpg
                         }
                         client.Recycle(im);
                     }
-                    Thread.Sleep(1);
                 }
+#if DEBUG
+                Globals_Server.logEvent("Client listening thread ends");
+#endif
             }
 
             public void Dispose()
