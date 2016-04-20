@@ -133,6 +133,13 @@ namespace hist_mmorpg
 
         /**************LOCKS**************/
         protected object entourageLock = new Object();
+
+#if DEBUG
+        /// <summary>
+        /// Fix the success chance- use -1 to calculate success based on traits
+        /// </summary>
+        public double fixedSuccessChance { get; set; }
+#endif
         /// <summary>
         /// Constructor for Character
         /// </summary>
@@ -1528,8 +1535,7 @@ namespace hist_mmorpg
 
                     if (!String.IsNullOrWhiteSpace(this.GetPlayerCharacter().playerID))
                     {
-                        Client c;
-                        Globals_Server.Clients.TryGetValue(this.GetPlayerCharacter().playerID, out c);
+                        Client c=Utility_Methods.GetClient(GetPlayerCharacter().playerID);
                         if (c != null)
                         {
                             if (c.activeChar == this)
@@ -1926,8 +1932,7 @@ namespace hist_mmorpg
                     promotedNPC.playerID = user;
                     Globals_Server.Clients[user].myPlayerCharacter = promotedNPC;
                     //TODO notify user if logged in and write to database
-                    Client player;
-                    Globals_Server.Clients.TryGetValue(user, out player);
+                    Client player=Utility_Methods.GetClient(user);
                     if (player != null)
                     {
                         player.myPlayerCharacter = promotedNPC;
@@ -4397,6 +4402,12 @@ namespace hist_mmorpg
 
         public double GetSpySuccessChance(object target)
         {
+#if DEBUG
+            if (0 <= fixedSuccessChance && fixedSuccessChance <= 100)
+            {
+                return fixedSuccessChance;
+            }
+#endif
             Type t = target.GetType();
             if (t.IsSubclassOf(typeof(Character)))
             {

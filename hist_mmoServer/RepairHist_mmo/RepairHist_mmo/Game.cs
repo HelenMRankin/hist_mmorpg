@@ -5,6 +5,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Diagnostics.Contracts;
+using System.Threading;
 using QuickGraph.Algorithms.TopologicalSort;
 
 namespace hist_mmorpg
@@ -1155,48 +1156,29 @@ namespace hist_mmorpg
         /// <summary>
         /// Allows a player to switch character
         /// </summary>
-        /// <param name="user">userID of the player</param>
+        /// <param name="client">Client who is switching character</param>
         /// <param name="charID">characterID of the playercharacter to be switched to</param>
-        public void switchPlayerCharacter(string user, string charID)
+        public void switchPlayerCharacter(string charID, Client client)
         {
-            if (string.IsNullOrWhiteSpace(user))
+            PlayerCharacter pc;
+            if (string.IsNullOrWhiteSpace(charID))
             {
-                Globals_Server.logError("Null User detected in switchPlayerCharacter! charID: "+charID);
+                Globals_Game.UpdatePlayer(client.username, DisplayMessages.SwitchPlayerErrorNoID);
                 return;
             }
-            if (!Globals_Game.ownedPlayerCharacters.ContainsKey(user))
+            // Checks that the character is available
+            if (!Globals_Game.pcMasterList.ContainsKey(charID) || Globals_Game.ownedPlayerCharacters.ContainsValue(Globals_Game.pcMasterList[charID]))
             {
-                Globals_Server.logError("Invalid User detected in switchPlayerCharacter! charID: " + charID);
-                return;
+                Globals_Game.UpdatePlayer(client.username, DisplayMessages.SwitchPlayerErrorIDInvalid);
             }
             else
             {
-                Client c;
-                PlayerCharacter pc;
-                if (string.IsNullOrWhiteSpace(charID))
-                {
-                    Globals_Game.UpdatePlayer(user, DisplayMessages.SwitchPlayerErrorNoID);
-                    return;
-                }
-                // Checks that the character is available
-                if (!Globals_Game.pcMasterList.ContainsKey(charID) || Globals_Game.ownedPlayerCharacters.ContainsValue(Globals_Game.pcMasterList[charID]))
-                {
-                    Globals_Game.UpdatePlayer(user, DisplayMessages.SwitchPlayerErrorIDInvalid);
-                }
-                else
-                {
-                    pc = Globals_Game.pcMasterList[charID];
+                pc = Globals_Game.pcMasterList[charID];
 
-                    Globals_Game.ownedPlayerCharacters[user] = pc;
-                    //TODO write new user character to database
-                    if (Globals_Server.Clients.ContainsKey(user))
-                    {
-                        c = Globals_Server.Clients[user];
-                        c.activeChar = pc;
-                        c.myPlayerCharacter = pc;
-                        c.fiefToView = pc.location;
-                    }
-                }
+                Globals_Game.ownedPlayerCharacters[client.username] = pc;
+                client.activeChar = pc;
+                client.myPlayerCharacter = pc;
+                client.fiefToView = pc.location;
             }
         }
 
@@ -3707,9 +3689,11 @@ namespace hist_mmorpg
                 return ransomResult;
             }
         }
-        public static ProtoMessage ActionController(ProtoMessage msgIn, Client _client)
+        public static ProtoMessage ActionController(ProtoMessage msgIn, Client _client, CancellationTokenSource ctSource)
         {
             Contract.Requires(_client != null&&msgIn!=null);
+            // If action has been cancelled, throw exeption back to Client's asynchronous action controller
+            ctSource.Token.ThrowIfCancellationRequested();
             switch (msgIn.ActionType)
             {
                 // Switch to using another character (performing actions with NPC

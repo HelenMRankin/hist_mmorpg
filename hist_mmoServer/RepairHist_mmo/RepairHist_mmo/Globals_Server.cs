@@ -79,13 +79,32 @@ namespace hist_mmorpg
         /// <param name="error"></param>
         public static void logError(String error)
         {
-            LogFile.WriteLine("Run-time error: " + error);
+            try
+            {
+                LogFile.WriteLine("Run-time error: " + error);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failure to write to log file: "+e.ToString());
+            }
+#if DEBUG
 			Console.WriteLine ("Run-time error: " + error);
+#endif
         }
 
         public static void logEvent(String eventDetails)
         {
-            LogFile.WriteLine(eventDetails);
+            try
+            {
+                LogFile.WriteLine(eventDetails);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failure to write to log file: "+e.ToString());
+            }
+#if DEBUG
+            Console.WriteLine(eventDetails);
+#endif
         }
     }
 }

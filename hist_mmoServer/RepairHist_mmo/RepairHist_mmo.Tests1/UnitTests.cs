@@ -21,12 +21,11 @@ namespace hist_mmorpg.Tests
         {
             TestClient s0 = new TestClient();
             this.LogInTest(s0, OtherUsername, OtherPass, new byte[] { 1,2,3,4,5,6,7,8,9});
-            while (!s0.net.GetConnectionStatus().Equals("Connected"))
+            while (!s0.IsConnectedAndLoggedIn())
             {
                 Thread.Sleep(0);
             }
             s0.LogOut();
-            
         }
 
         [TestMethod]

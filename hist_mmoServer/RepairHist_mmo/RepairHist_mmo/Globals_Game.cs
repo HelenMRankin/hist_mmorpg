@@ -1264,8 +1264,7 @@ CharacterMoveEndSiege, MoveCancelled, CharacterInvalidMovement, ErrorGenericFief
         public static void UpdatePlayer(string player, ProtoMessage message)
         {
             if (string.IsNullOrWhiteSpace(player)) return;
-            Client c = null;
-            Globals_Server.Clients.TryGetValue(player, out c);
+            Client c = Utility_Methods.GetClient(player);
             if (c != null)
             {
                 c.Update(message.ResponseType, message.MessageFields);
@@ -1308,7 +1307,7 @@ CharacterMoveEndSiege, MoveCancelled, CharacterInvalidMovement, ErrorGenericFief
                 // Check PlayerCharacter is being played
                 if (!string.IsNullOrWhiteSpace(pc.playerID))
                 {
-                    Globals_Server.Clients.TryGetValue(pc.playerID, out c);
+                    c = Utility_Methods.GetClient(pc.playerID);
                 }
                 // If PlayerCharacter belongs to a client and client iscurrently playing
                 if (c!=null && registeredObservers.Contains(c))
@@ -1328,6 +1327,11 @@ CharacterMoveEndSiege, MoveCancelled, CharacterInvalidMovement, ErrorGenericFief
         public static bool IsObserver(Client c)
         {
             return (registeredObservers.Contains(c));
+        }
+
+        public static bool IsObserver(string uname)
+        {
+            return registeredObservers.Any(i => i.username.Equals(uname));
         }
     }
 

@@ -126,15 +126,18 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// Gets the next message from the server by repeatedly polling the message queue
+        /// Gets the next message from the server by repeatedly polling the message queue. 
         /// </summary>
         /// <returns>Message from server</returns>
+        /// <throws>TaskCanceledException if task is cancelled</throws>
         private ProtoMessage CheckForProtobufMessage()
         {
             ProtoMessage m = null;
+            var waitHandles = new WaitHandle[] { protobufMessageQueue.eventWaiter, net.ctSource.Token.WaitHandle };
             while (!protobufMessageQueue.TryDequeue(out m))
             {
-                protobufMessageQueue.eventWaiter.WaitOne();
+                EventWaitHandle.WaitAny(waitHandles);
+                net.ctSource.Token.ThrowIfCancellationRequested();
             }
             return m;
         }
@@ -143,12 +146,15 @@ namespace hist_mmorpg
         /// Gets the next message from the server by repeatedly polling the message queue
         /// </summary>
         /// <returns>Message from server</returns>
+        /// <throws>TaskCanceledException if task is cancelled</throws>
         private string CheckForStringMessage()
         {
             string s = null;
+            var waitHandles = new WaitHandle[] { stringMessageQueue.eventWaiter, net.ctSource.Token.WaitHandle };
             while (!stringMessageQueue.TryDequeue(out s))
             {
-                stringMessageQueue.eventWaiter.WaitOne();
+                EventWaitHandle.WaitAny(waitHandles);
+                net.ctSource.Token.ThrowIfCancellationRequested();
             }
             return s;
         }
@@ -659,7 +665,8 @@ namespace hist_mmorpg
             private byte[] key;
             public bool autoLogIn { get; set; }
             public bool loggedIn { get; set; }
-            
+
+            public CancellationTokenSource ctSource;
             
             public Network(TestClient tc,byte[] key = null)
             {
@@ -667,6 +674,7 @@ namespace hist_mmorpg
                 autoLogIn = true;
                 this.key = key;
                 InitializeClient();
+                ctSource=new CancellationTokenSource();
             }
 
             public NetConnection GetConnection()
@@ -719,9 +727,15 @@ namespace hist_mmorpg
 
             public void Disconnect()
             {
+                ctSource.Cancel();
                 if (client.ConnectionStatus == NetConnectionStatus.Connected)
                 {
+                    Console.WriteLine("___TEST: at test client called disconnect");
                     client.Disconnect("Log out");
+                }
+                else
+                {
+                    Console.WriteLine("___TEST: at test client FAILED to disconnect");
                 }
                 Dispose();
                 client.Shutdown("Exit");
@@ -916,11 +930,11 @@ namespace hist_mmorpg
 
             public void read()
             {
-                bool running = true;
-                while (running)
+                while (client.Status == NetPeerStatus.Running && !ctSource.Token.IsCancellationRequested)
                 {
+                    WaitHandle.WaitAny(new WaitHandle[] { client.MessageReceivedEvent, ctSource.Token.WaitHandle });
                     NetIncomingMessage im;
-                    while ((im = client.ReadMessage()) != null)
+                    while ((im = client.ReadMessage()) != null && !ctSource.IsCancellationRequested)
                     {
 
                         switch (im.MessageType)
@@ -1086,8 +1100,11 @@ namespace hist_mmorpg
                         }
                         client.Recycle(im);
                     }
-                    Thread.Sleep(1);
+
                 }
+#if DEBUG
+                Globals_Server.logEvent("TestClient " + user + "'s listening thread ends");
+#endif
             }
 
             public void Dispose()

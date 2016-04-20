@@ -717,6 +717,17 @@ namespace hist_mmorpg
             error = DisplayMessages.Success;
             return c;
         }
+
+        public static Client GetClient(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return null;
+            }
+            Client client= null;
+            Globals_Server.Clients.TryGetValue(username, out client);
+            return client;
+        }
        
     }
 }

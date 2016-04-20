@@ -8,6 +8,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Lidgren.Network;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace hist_mmorpg
 {
@@ -227,8 +228,14 @@ namespace hist_mmorpg
             return true;
         }
 
-
-        public static bool ProcessLogIn(ProtoLogIn login, Client c)
+        /// <summary>
+        /// Attempt to log in a client. Catches OperationCancelledException
+        /// </summary>
+        /// <param name="login">Log in credentials</param>
+        /// <param name="c">Client who is trying to log in</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        public static bool ProcessLogIn(ProtoLogIn login, Client c,CancellationToken ct)
         {
             if (!VerifyUser(c.username,login.userSalt))
             {
@@ -251,7 +258,7 @@ namespace hist_mmorpg
                 else
                 {
 #if ALLOW_UNENCRYPT
-                    c.alg=null;
+                    c.alg = null;
 #else
                     return false;
 #endif
@@ -259,13 +266,22 @@ namespace hist_mmorpg
                 ProtoClient clientDetails = new ProtoClient(c);
                 clientDetails.ActionType = Actions.LogIn;
                 clientDetails.ResponseType = DisplayMessages.LogInSuccess;
-                Server.SendViaProto(clientDetails, c.connection, c.alg);
-                Globals_Game.RegisterObserver(c);
-                return true;
+                if (ct.IsCancellationRequested)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    return false;
+                }
+                else
+                {
+                    Server.SendViaProto(clientDetails, c.connection, c.alg);
+                    Globals_Game.RegisterObserver(c);
+                    return true;
+                }
+                
             }
-            catch (Exception e)
+            catch (CryptographicException e)
             {
-                Console.WriteLine("Failure during decryption: " + e.GetType() + " " + e.Message + ";" + e.StackTrace);
+                Globals_Server.logError("Failure during decryption: " + e.GetType() + " " + e.Message + ";" + e.StackTrace);
                 return false;
             }
         }

@@ -41,7 +41,15 @@ namespace hist_mmorpg
         private readonly int max_connections = 2000;
         // Used in the NetPeerConfiguration to identify application
         private readonly string app_identifier = "test";
-        private static object ConnectionLock { get; set; } = new object();
+        /// <summary>
+        /// Consistency control for sever connection lists
+        /// </summary>
+        private static object ConnectionLock { get; set; }
+
+        /// <summary>
+        /// Server cancellation token. All connected clients can view this token and cancel if the server shuts down
+        /// </summary>
+        public static CancellationTokenSource ctSource { get; set; }
         /// <summary>
         /// Check if client connections contains a connection- used in testing
         /// </summary>
@@ -51,8 +59,7 @@ namespace hist_mmorpg
         {
             lock(ConnectionLock)
             {
-                Client c;
-                Globals_Server.Clients.TryGetValue(user, out c);
+                Client c=Utility_Methods.GetClient(user);
                 if (c == null) return false;
                 return clientConnections.ContainsValue(c);
             }
@@ -61,6 +68,8 @@ namespace hist_mmorpg
         /*******End of settings************/
         public void Initialise()
         {
+            ctSource=new CancellationTokenSource();
+            ConnectionLock=new object();
             LogInManager.StoreNewUser("helen", "potato");
             LogInManager.StoreNewUser("test", "tomato");
             NetPeerConfiguration config = new NetPeerConfiguration(app_identifier);
@@ -91,11 +100,11 @@ namespace hist_mmorpg
 
         public void Listen()
         {
-            server.MessageReceivedEvent.WaitOne();
-            while (server.Status == NetPeerStatus.Running)
+
+            while (server.Status == NetPeerStatus.Running && !ctSource.Token.IsCancellationRequested)
             {
                 NetIncomingMessage im;
-                while ((im = server.ReadMessage()) != null)
+                while ((im = server.ReadMessage()) != null && !ctSource.Token.IsCancellationRequested)
                 {
                     switch (im.MessageType)
                     {
@@ -114,7 +123,11 @@ namespace hist_mmorpg
                                     Disconnect(im.SenderConnection, "Not recognised");
                                     continue;
                                 }
-                                Client c = clientConnections[im.SenderConnection];
+                                Client c;
+                                lock (ConnectionLock)
+                                {
+                                     c = clientConnections[im.SenderConnection];
+                                }
                                 // Decrypt message if appropriate
                                 if (c.alg != null)
                                 {
@@ -160,70 +173,82 @@ namespace hist_mmorpg
                                 c.protobufMessageQueue.Enqueue(m);
                             }
                             break;
-                        case NetIncomingMessageType.StatusChanged:
-                            NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
-                            string reason = im.ReadString();
-                            Console.WriteLine(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " " + status + ": " + reason);
-                            if (im.SenderConnection.RemoteHailMessage != null && status == NetConnectionStatus.Connected)
+                        case NetIncomingMessageType.StatusChanged: byte stat = im.ReadByte();
+                            NetConnectionStatus status = NetConnectionStatus.None;
+                            if (Enum.IsDefined(typeof(NetConnectionStatus), Convert.ToInt32(stat)))
                             {
-                                string username = (im.SenderConnection.RemoteHailMessage.ReadString());
+
+                                status = (NetConnectionStatus)stat;
                             }
-                            else if (status == NetConnectionStatus.Disconnected)
+                            else
                             {
-                                if (clientConnections.ContainsKey(im.SenderConnection))
+                                Globals_Server.logError("Failure to parse byte " + stat + " to NetConnectionStatus for endpoint " + im.ReadIPEndPoint());
+                            }
+                            if (status == NetConnectionStatus.Disconnected)
+                            {
+                                Console.WriteLine("___TEST: Got disconnect");
+                                lock (ConnectionLock)
                                 {
-                                    Disconnect(im.SenderConnection, reason);
+                                    if (clientConnections.ContainsKey(im.SenderConnection))
+                                    {
+                                        Disconnect(im.SenderConnection);
+                                    }
                                 }
                             }
                             break;
                         case NetIncomingMessageType.ConnectionApproval:
+                        {
+                            string senderID = im.ReadString();
+                            Client client = Utility_Methods.GetClient(senderID);
+                            if (client != null)
                             {
-                                string senderID = im.ReadString();
-                                Client client;
-                                Globals_Server.Clients.TryGetValue(senderID, out client);
-                                if (client != null)
+                                ProtoLogIn logIn;
+                                if (!LogInManager.AcceptConnection(client, out logIn))
                                 {
-ProtoLogIn logIn;
-if (!LogInManager.AcceptConnection(client, out logIn))
-{
-    im.SenderConnection.Deny("Access denied- you may already be logged in on another machine, or have entered the wrong credentials");
-}
-else
-{
-
-    NetOutgoingMessage msg = server.CreateMessage();
-    MemoryStream ms = new MemoryStream();
-    // Include X509 certificate as bytes for client to validate
-
-    Serializer.SerializeWithLengthPrefix<ProtoLogIn>(ms, logIn, PrefixStyle.Fixed32);
-    msg.Write(ms.GetBuffer());
-    lock(ConnectionLock)
-    {
-        clientConnections.Add(im.SenderConnection, client);
-        client.connection = im.SenderConnection;
-        client.cts = new CancellationTokenSource();
-    }
-    im.SenderConnection.Approve(msg);
-    server.FlushSendQueue();
-    Task.Run(() => client.ActionControllerAsync(),client.cts.Token);
-}
-
+                                    im.SenderConnection.Deny(
+                                        "Access denied- you may already be logged in on another machine, or have entered the wrong credentials");
                                 }
                                 else
                                 {
-                                    im.SenderConnection.Deny("unrecognised");
+                                    NetOutgoingMessage msg = server.CreateMessage();
+                                    MemoryStream ms = new MemoryStream();
+                                    // Include X509 certificate as bytes for client to validate
+
+                                    Serializer.SerializeWithLengthPrefix<ProtoLogIn>(ms, logIn, PrefixStyle.Fixed32);
+                                    msg.Write(ms.GetBuffer());
+                                    lock (ConnectionLock)
+                                    {
+                                        clientConnections.Add(im.SenderConnection, client);
+                                        client.connection = im.SenderConnection;
+                                        client.ProcessConnect();
+                                        
+                                    }
+                                    im.SenderConnection.Approve(msg);
+                                    server.FlushSendQueue();
+                                    Thread clientThread = new Thread(new ThreadStart(client.ActionControllerAsync));
+                                    clientThread.Start();
+                                   // Task.Run(() => client.ActionControllerAsync(), client.ctSource.Token);
                                 }
                             }
+                            else
+                            {
+                                im.SenderConnection.Deny("unrecognised");
+                            }
+                        }
 
                             break;
                         case NetIncomingMessageType.ConnectionLatencyUpdated:
                             Console.WriteLine("Latency: " + im.ReadFloat());
                             break;
-                        default: Console.WriteLine("not recognised"); break;
+                        default:
+                            Console.WriteLine("not recognised");
+                            break;
                     }
                     server.Recycle(im);
                 }
+                WaitHandle.WaitAny(new WaitHandle[] {server.MessageReceivedEvent, ctSource.Token.WaitHandle});
             }
+            Globals_Server.logEvent("Server listening thread ends");
         }
 
         /// <summary>
@@ -270,7 +295,7 @@ else
 
                     Client client = clientConnections[conn];
                     Globals_Server.logEvent("Client " + client.username + "disconnects");
-                    client.cts.Cancel();
+                    client.ctSource.Cancel();
                     // Cancel awaiting tasks
                     Globals_Game.RemoveObserver(client);
                     client.connection = null;
@@ -284,15 +309,7 @@ else
 
         public void Shutdown()
         {
-            Console.WriteLine("__TEST: in shut down");
-            for (int i = (clientConnections.Count - 1); i >= 0; i--)
-            {
-                var c = clientConnections.ElementAt(i);
-                
-                    Disconnect(c.Key, "Server Shutting Down");
-                
-                
-            }
+            ctSource.Cancel();
             server.Shutdown("Server Shutdown");
         }
 
