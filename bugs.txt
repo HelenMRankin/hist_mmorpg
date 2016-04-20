@@ -102,6 +102,10 @@ Since there was no decided behaviour for what should happen when a client tries 
 Potential bug: In the "StatusChanged" message that can be received from the client it may be possible for the client to set the connection status to an invalid value, making the server crash when it attempts to convert this to a NetConnectionStatus
 Detected through: Static testing
 
+Bug: Verification process throws NullReferenceException if the client doesn't provide a hash
+Detected through: Dynamic testing
+Note: this bug only happened because I removed the dynamic test while doing static testing to see whether it would detect it (it didn't), and I forgot to re-add
+
 Potential bug: If somehow a user had a null username, all Log In methods would fail
 Detected through: Static testing
 Likelihood: extremely unlikely

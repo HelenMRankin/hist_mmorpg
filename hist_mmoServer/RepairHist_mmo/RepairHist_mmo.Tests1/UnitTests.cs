@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using hist_mmorpg;
 using System.Threading.Tasks;
 using System.Threading;
+using Lidgren.Network;
 
 namespace hist_mmorpg.Tests1
 {
@@ -33,13 +34,23 @@ namespace hist_mmorpg.Tests1
         /// Try logging out before logging in
         /// </summary>
         [TestMethod]
-        [Timeout(15000)]
+        [Timeout(20000)]
         public void LogOutBeforeLogIn()
         {
             TestClient s0 = new TestClient();
             s0.ConnectNoLogin(OtherUser, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6 });
+            while (s0.net.GetConnectionStatus()!=NetConnectionStatus.Connected||!Server.ContainsConnection(OtherUser))
+            {
+                Thread.Sleep(0);
+            }
             s0.LogOut();
-            Assert.IsFalse(Server.ContainsConnection(Username));
+            Console.WriteLine("Connection status: " + s0.net.GetConnectionStatus().ToString() + " Server contains connection? " + Server.ContainsConnection(OtherUser));
+            while ((s0.net.GetConnectionStatus()!=NetConnectionStatus.Disconnected)||(Server.ContainsConnection(OtherUser)))
+            {
+                Thread.Sleep(0);
+            }
+            Console.WriteLine("Connection status: " + s0.net.GetConnectionStatus().ToString() + " Server contains connection? " + Server.ContainsConnection(OtherUser));
+            Assert.IsFalse(Server.ContainsConnection(OtherUser));
         }
 
         /// <summary>
@@ -50,9 +61,9 @@ namespace hist_mmorpg.Tests1
         public void LogInTestBadPassword()
         {
             TestClient s0 = new TestClient();
-            this.LogInTest(s0, OtherUser,OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            this.LogInTest(s0, OtherUser,"Notpass", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            Assert.IsFalse(Server.ContainsConnection(OtherUser));
             s0.LogOut();
-            Assert.IsFalse(Server.ContainsConnection(Username));
         }
 
         /// <summary>
@@ -65,7 +76,7 @@ namespace hist_mmorpg.Tests1
             TestClient s0 = new TestClient();
             s0.net = (TestClient.Network)null;
             this.LogInTest(s0, OtherUser, null, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-            Assert.IsFalse(Server.ContainsConnection(Username));
+            Assert.IsFalse(Server.ContainsConnection(OtherUser));
             s0.LogOut();
         }
 
@@ -79,7 +90,6 @@ namespace hist_mmorpg.Tests1
             TestClient s0 = new TestClient();
             s0.net = (TestClient.Network)null;
             this.LogInTest(s0, OtherUser, OtherPass, new byte[] { });
-            Assert.IsFalse(Server.ContainsConnection(Username));
             s0.LogOut();
         }
 
@@ -129,7 +139,6 @@ namespace hist_mmorpg.Tests1
         /// Try logging in twice. The second log in should cause the server to terminate the connection
         /// </summary>
         [TestMethod]
-        [Timeout(10000)]
         public void DoubleLogIn()
         {
             client.SendDummyLogIn("helen", "potato", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, });
@@ -151,7 +160,7 @@ namespace hist_mmorpg.Tests1
             Task<string> reply = s0.GetServerMessage();
             reply.Wait();
             Assert.AreEqual("Failed to login due to timeout", reply.Result);
-            Assert.AreEqual(s0.net.GetConnectionStatus(), "Disconnected");
+            Assert.AreEqual(s0.net.GetConnectionStatusString(), "Disconnected");
             s0.LogOut();
         }
 
@@ -164,7 +173,7 @@ namespace hist_mmorpg.Tests1
         {
             TestClient s0 = new TestClient();
             s0.ConnectNoLogin(OtherUser, OtherPass);
-            while (!s0.net.GetConnectionStatus().Equals("Connected"))
+            while (!s0.net.GetConnectionStatusString().Equals("Connected"))
             {
                 Thread.Sleep(0);
             }

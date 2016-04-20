@@ -83,7 +83,7 @@ namespace hist_mmorpg
 
         public bool IsConnectedAndLoggedIn()
         {
-            if (net.GetConnectionStatus().Equals("Connected") && net.loggedIn)
+            if (net.GetConnectionStatusString().Equals("Connected") && net.loggedIn)
             {
                 return true;
             }
@@ -104,10 +104,7 @@ namespace hist_mmorpg
         }
         public void LogOut()
         {
-            if (this.IsConnectedAndLoggedIn())
-            {
-                net.Disconnect();
-            }
+            net.Disconnect();
         }
 
         public void SendMessage(Actions a, object o)
@@ -649,7 +646,7 @@ namespace hist_mmorpg
         {
             private TestClient tClient;
             RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider();
-            HashAlgorithm hash = new SHA1Managed();
+            HashAlgorithm hash = new SHA256Managed();
             public NetClient client = null;
             private NetConnection connection;
             private string user;
@@ -671,7 +668,6 @@ namespace hist_mmorpg
                 autoLogIn = true;
                 this.key = key;
                 InitializeClient();
-                Console.WriteLine("Is alg null after initializing? "+(alg==null));
             }
 
             public NetConnection GetConnection()
@@ -684,9 +680,14 @@ namespace hist_mmorpg
                 return client.ServerConnection;
             }
 
-            public string GetConnectionStatus()
+            public string GetConnectionStatusString()
             {
                 return client.ConnectionStatus.ToString();
+            }
+
+            public NetConnectionStatus GetConnectionStatus()
+            {
+                return client.ConnectionStatus;
             }
 
             void InitializeClient()
@@ -722,7 +723,7 @@ namespace hist_mmorpg
 
             public void Disconnect()
             {
-                if (client.ConnectionStatus == NetConnectionStatus.Connected)
+                if (!(client.ConnectionStatus == NetConnectionStatus.None || client.ConnectionStatus == NetConnectionStatus.Disconnected))
                 {
                     client.Disconnect("Log out");
                 }
@@ -756,7 +757,6 @@ namespace hist_mmorpg
                     msg.Write(ms.GetBuffer());
                     if (alg != null && encrypt)
                     {
-                        Console.WriteLine("is alg null? !" + (alg == null));
                         Console.Write(" encrypted");
                         msg.Encrypt(alg);
                     }
@@ -801,27 +801,7 @@ namespace hist_mmorpg
                 ProtoLogIn response = new ProtoLogIn();
                 response.userSalt = hashFull;
                 response.ActionType = Actions.LogIn;
-                response.Key = key; if (key == null)
-                {
-                    Console.WriteLine("No encryption key is used");
-                }
-                else
-                {
-
-                    Console.WriteLine("CLIENT: Symmetric key from client: ");
-                    foreach (var bite in this.key)
-                    {
-                        Console.Write(bite.ToString());
-                    }
-                    Console.WriteLine("\n");
-                    Console.WriteLine("CLIENT: Encrypted key from client: ");
-                    foreach (var bite in key)
-                    {
-                        Console.Write(bite.ToString());
-                    }
-                    Console.WriteLine("\n");
-                }
-                Console.WriteLine("\n");
+                response.Key = key;
                 Send(response, false);
             }
 
@@ -845,12 +825,6 @@ namespace hist_mmorpg
                         // Get certificate
                         X509Certificate2 cert = new X509Certificate2(login.certificate);
                         RSACryptoServiceProvider rsa = (RSACryptoServiceProvider)cert.PublicKey.Key;
-                        Console.WriteLine("CLIENT: RSA key from server: ");
-                        foreach (var bite in rsa.ExportParameters(false).Exponent)
-                        {
-                            Console.Write(bite.ToString());
-                        }
-                        Console.WriteLine("\n");
 #if DEBUG
                         if (this.key != null)
                         {
@@ -934,12 +908,10 @@ namespace hist_mmorpg
                             case NetIncomingMessageType.WarningMessage:
                             case NetIncomingMessageType.VerboseDebugMessage:
                             case NetIncomingMessageType.Data:
-                                Console.WriteLine("Client: Got data message");
                                 try
                                 {
                                     if (alg != null)
                                     {
-                                        Console.WriteLine("Decrypting");
                                         im.Decrypt(alg);
                                     }
                                     MemoryStream ms = new MemoryStream(im.Data);
@@ -976,10 +948,6 @@ namespace hist_mmorpg
                                             }
                                             else
                                             {
-                                                if (m == null)
-                                                {
-                                                    Console.WriteLine("#####ADDED NULL MESSAGE####");
-                                                }
                                                 tClient.protobufMessageQueue.Enqueue(m);
                                                 if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
                                                 {
@@ -1038,10 +1006,6 @@ namespace hist_mmorpg
                                                         {
                                                             ComputeAndSendHashAndKey(m as ProtoLogIn, key);
                                                         }
-                                                        else
-                                                        {
-                                                            Console.WriteLine("Allowing log in to time out");
-                                                        }
                                                     }
                                                     else
                                                     {
@@ -1062,7 +1026,6 @@ namespace hist_mmorpg
                                 }
                                 else if (status == NetConnectionStatus.Disconnected)
                                 {
-                                    Console.WriteLine("CLIENT: In disconnect state");
                                     string reason = im.ReadString();
                                     if (!string.IsNullOrEmpty(reason))
                                     {

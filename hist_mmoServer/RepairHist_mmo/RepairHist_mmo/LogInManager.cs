@@ -28,7 +28,7 @@ namespace hist_mmorpg
         /// <summary>
         /// Hashing algorithm, used for hashing passwords
         /// </summary>
-        static HashAlgorithm hashAlgorithm = new SHA1Managed();
+        static HashAlgorithm hashAlgorithm = new SHA256Managed();
         /// <summary>
         /// Dictionary mapping usernames to session salts, used to ensure each user gets their own salt once connected
         /// </summary>
@@ -146,13 +146,16 @@ namespace hist_mmorpg
         {
             Contract.Requires(username!=null);
             Contract.Requires(userhash!=null);
+            if (userhash == null)
+            {
+                return false;
+            }
             byte[] sessionSalt;
             if (!sessionSalts.TryGetValue(username, out sessionSalt))
             {
                 return false;
             }
             byte[] passwordHash = ComputeHash(GetPasswordHash(username), sessionSalt);
-            bool eq = userhash.SequenceEqual(passwordHash);
             return userhash.SequenceEqual(passwordHash);
 
         }
@@ -213,7 +216,7 @@ namespace hist_mmorpg
 
             byte[] hash = hashAlgorithm.ComputeHash(data);
 
-            return rsa.SignHash(hash, CryptoConfig.MapNameToOID("SHA1"));
+            return rsa.SignHash(hash, CryptoConfig.MapNameToOID("SHA256"));
         }
 
         /// <summary>
@@ -234,7 +237,7 @@ namespace hist_mmorpg
                 return false;
             }
             ServerCert =
-                    new X509Certificate2(path, "zip1020");
+                    new X509Certificate2(path, "zip1020", X509KeyStorageFlags.Exportable);
             X509Chain chain = new X509Chain
             {
                 ChainPolicy =
@@ -243,9 +246,12 @@ namespace hist_mmorpg
                     RevocationMode = X509RevocationMode.NoCheck
                 }
             };
-            // Set up asymmetric decryption algorithm
-
-            rsa = (RSACryptoServiceProvider)ServerCert.PrivateKey;
+            // This song-and-dance is to get SHA256 working for certificate signing
+            var rsa2 = ServerCert.PrivateKey as RSACryptoServiceProvider;
+            // Create a new RSACryptoServiceProvider
+            rsa = new RSACryptoServiceProvider();
+            // Export RSA parameters from 'rsa' and import them into 'rsaClear'
+            rsa.ImportParameters(rsa2.ExportParameters(true));
             return true;
         }
 
