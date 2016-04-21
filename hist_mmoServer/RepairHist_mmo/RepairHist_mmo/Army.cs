@@ -11,7 +11,6 @@ namespace hist_mmorpg
     /// 
     public class Army 
     {
-        public static Mutex m { get; set; }
 		/// <summary>
 		/// Holds army ID
 		/// </summary>
@@ -26,7 +25,7 @@ namespace hist_mmorpg
         /// 5 = foot
         /// 6 = rabble
         /// </summary>
-        public uint[] troops = new uint[7] {0, 0, 0, 0, 0, 0, 0};
+        public uint[] troops = new uint[] {0, 0, 0, 0, 0, 0, 0};
         /// <summary>
         /// Holds army leader (ID)
         /// </summary>
@@ -55,6 +54,13 @@ namespace hist_mmorpg
         /// Indicates army's combat odds value (i.e. at what odds will attempt automated combat action)
         /// </summary>
         public byte combatOdds { get; set; }
+
+        /// <summary>
+        /// Holds the number of types of troops (prevents errors, as troops represented as array)
+        /// </summary>
+        public static int TroopTypeCount {
+            get { return 7; }
+        }
 
         /// <summary>
         /// Constructor for Army
@@ -132,8 +138,11 @@ namespace hist_mmorpg
             this.isMaintained = maint;
             this.aggression = aggr;
             this.combatOdds = odds;
+            // Ensure the number of troop types is correct
             if (trp != null)
             {
+                if(trp.Length!=TroopTypeCount)
+                    throw new InvalidDataException("Invalid number of troop types: got "+trp.Length +" expected "+TroopTypeCount);
                 this.troops = trp;
             }
         }
@@ -589,16 +598,12 @@ namespace hist_mmorpg
 
             // carry out CONDITIONAL CHECKS
             // 1. check arry length
-            if (troops.Length != 7)
+            if (troops.Length != TroopTypeCount)
             {
                 proceed = false;
                 adjustDays = false;
-                result = new ProtoMessage();
-                result.ResponseType =DisplayMessages.ArmyDetachmentArrayWrongLength;
-                //LEGACY
-                /*
-                Globals_Game.UpdatePlayer(owner, DisplayMessages.ArmyDetachmentArrayWrongLength);
-                */
+                result = new ProtoMessage(DisplayMessages.ArmyDetachmentArrayWrongLength);
+                return false;
             }
             else
             {
@@ -815,7 +820,6 @@ namespace hist_mmorpg
                     }
                 }
             }
-            Console.WriteLine("COMBAT VALUES: "+cv);
             return cv;
         }
 
@@ -826,7 +830,7 @@ namespace hist_mmorpg
         /// <param name="observer">The character making the estimate</param>
         public uint[] GetTroopsEstimate(Character observer)
         {
-            uint[] troopNumbers = new uint[7] {0, 0, 0, 0, 0, 0, 0};
+            uint[] troopNumbers = new uint[] {0, 0, 0, 0, 0, 0, 0};
 
             if (observer != null)
             {
@@ -1372,7 +1376,6 @@ namespace hist_mmorpg
                         }
                         // If this army has advantage, ensure advantage does not exceed number of enemy troops for this troop types
                         advantage += (uint)difference;
-                        Console.WriteLine("Advantage (" + i + "," + j + ") :" + difference);
                     }
                 }
             }

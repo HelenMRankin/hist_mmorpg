@@ -166,7 +166,7 @@ namespace hist_mmorpg.Tests
             s1.LogInAndConnect(OtherUsername, OtherPass, new byte[]{1,2,3,4,5,6,6,8});
             Assert.IsTrue(s1.net.GetConnectionStatus().Equals("Disconnected"));
             s0.LogOut();
-           s1.LogOut();
+            s1.LogOut();
         }
         
         [TestMethod]
@@ -663,10 +663,6 @@ namespace hist_mmorpg.Tests
             client.ClearMessageQueues();
             if (OwnedArmy == null)
             {
-                Console.WriteLine("Do not own an army!");
-                Console.WriteLine("PlayerCharacter " + MyPlayerCharacter.charID + "( " + MyPlayerCharacter.firstName +
-                                  " " + MyPlayerCharacter.familyName + " has " + MyPlayerCharacter.myArmies.Count +
-                                  " armies");
                 this.RecruitTroopsTest(client,null,50,false);
             }
             else
@@ -686,10 +682,6 @@ namespace hist_mmorpg.Tests
             client.ClearMessageQueues();
             if (OwnedArmy == null)
             {
-                Console.WriteLine("Do not own an army!");
-                Console.WriteLine("PlayerCharacter " + MyPlayerCharacter.charID + "( " + MyPlayerCharacter.firstName +
-                                  " " + MyPlayerCharacter.familyName + " has " + MyPlayerCharacter.myArmies.Count +
-                                  " armies");
                 this.RecruitTroopsTest(client, null, 50, true);
             }
             else
@@ -708,10 +700,6 @@ namespace hist_mmorpg.Tests
             client.ClearMessageQueues();
             if (OwnedArmy == null)
             {
-                Console.WriteLine("Do not own an army!");
-                Console.WriteLine("PlayerCharacter " + MyPlayerCharacter.charID + "( " + MyPlayerCharacter.firstName +
-                                  " " + MyPlayerCharacter.familyName + " has " + MyPlayerCharacter.myArmies.Count +
-                                  " armies");
                 this.RecruitTroopsTest(client, null, 50000, true);
             }
             else
@@ -731,10 +719,6 @@ namespace hist_mmorpg.Tests
             client.ClearMessageQueues();
             if (OwnedArmy == null)
             {
-                Console.WriteLine("Do not own an army!");
-                Console.WriteLine("PlayerCharacter " + MyPlayerCharacter.charID + "( " + MyPlayerCharacter.firstName +
-                                  " " + MyPlayerCharacter.familyName + " has " + MyPlayerCharacter.myArmies.Count +
-                                  " armies");
                 this.RecruitTroopsTest(client, null, 50, true);
             }
             else
@@ -755,10 +739,6 @@ namespace hist_mmorpg.Tests
             client.ClearMessageQueues();
             if (OwnedArmy == null)
             {
-                Console.WriteLine("Do not own an army!");
-                Console.WriteLine("PlayerCharacter " + MyPlayerCharacter.charID + "( " + MyPlayerCharacter.firstName +
-                                  " " + MyPlayerCharacter.familyName + " has " + MyPlayerCharacter.myArmies.Count +
-                                  " armies");
                 client.RecruitTroops(null, 50, true);
             }
             else
@@ -1090,7 +1070,6 @@ namespace hist_mmorpg.Tests
             client.ClearMessageQueues();
             Fief f = MyPlayerCharacter.location;
             Fief adjacent = Globals_Game.gameMap.GetFief(f, "E");
-            Console.WriteLine("TEST: Army id: "+OwnedArmy.armyID);
             Siege s = Pillage_Siege.SiegeStart(OwnedArmy, NotOwnedFief);
 
             if (s == null||string.IsNullOrWhiteSpace(OwnedArmy.CheckIfBesieger())||OwnedArmy.GetSiege()==null||MyPlayerCharacter.GetArmy().GetSiege()==null)

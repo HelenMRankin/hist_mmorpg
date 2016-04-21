@@ -337,7 +337,6 @@ namespace hist_mmorpg
             }
             // get battle values for both armies
             battleValues = attacker.CalculateBattleValues(defender);
-            Console.WriteLine("###PROGRESS CHECK 1.1.1");
             // check if attacker has managed to bring defender to battle
             // case 1: defending army sallies during siege to attack besieger = battle always occurs
             if (circumstance.Equals("siege"))

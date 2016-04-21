@@ -136,8 +136,7 @@ namespace hist_mmorpg
                                         im.Decrypt(c.alg);
                                     }
                                     catch (Exception e)
-                                    {
-                                        Console.WriteLine("SERVER: Bad decrypt");
+                                    {;
                                         Disconnect(im.SenderConnection, e.Message);
                                         continue;
                                     }
@@ -169,7 +168,9 @@ namespace hist_mmorpg
                                     Globals_Server.logError(error);
                                     break;
                                 }
-                                Console.WriteLine("SERVER: Received message with action: " + m.ActionType);
+#if DEBUG
+                                Globals_Server.logEvent("Server receives from "+c.username+" request "+m.ActionType);
+#endif
                                 c.protobufMessageQueue.Enqueue(m);
                             }
                             break;
@@ -186,7 +187,6 @@ namespace hist_mmorpg
                             }
                             if (status == NetConnectionStatus.Disconnected)
                             {
-                                Console.WriteLine("___TEST: Got disconnect");
                                 lock (ConnectionLock)
                                 {
                                     if (clientConnections.ContainsKey(im.SenderConnection))
@@ -200,11 +200,17 @@ namespace hist_mmorpg
                         {
                             string senderID = im.ReadString();
                             Client client = Utility_Methods.GetClient(senderID);
+#if DEBUG
+                            Console.WriteLine("SERVER: received request from " + senderID + " for approval");
+#endif
                             if (client != null)
                             {
                                 ProtoLogIn logIn;
                                 if (!LogInManager.AcceptConnection(client, out logIn))
                                 {
+#if DEBUG
+                                    Console.WriteLine("SERVER: Denied connection approval for "+senderID);
+#endif
                                     im.SenderConnection.Deny(
                                         "Access denied- you may already be logged in on another machine, or have entered the wrong credentials");
                                 }
@@ -227,7 +233,7 @@ namespace hist_mmorpg
                                     server.FlushSendQueue();
                                     Thread clientThread = new Thread(new ThreadStart(client.ActionControllerAsync));
                                     clientThread.Start();
-                                   // Task.Run(() => client.ActionControllerAsync(), client.ctSource.Token);
+                                    Globals_Server.logEvent("Client "+client.username+" logs in from "+im.SenderEndPoint);
                                 }
                             }
                             else
@@ -238,10 +244,9 @@ namespace hist_mmorpg
 
                             break;
                         case NetIncomingMessageType.ConnectionLatencyUpdated:
-                            Console.WriteLine("Latency: " + im.ReadFloat());
                             break;
                         default:
-                            Console.WriteLine("not recognised");
+                            Globals_Server.logError("Unrecognised message type: "+im.MessageType);
                             break;
                     }
                     server.Recycle(im);
@@ -269,8 +274,9 @@ namespace hist_mmorpg
             }
 
             server.SendMessage(msg, conn, NetDeliveryMethod.ReliableOrdered);
-
-            Console.WriteLine("Server sends message of type " + m.GetType() + " with Action: " + m.ActionType + " and response: " + m.ResponseType);
+#if DEBUG
+            Globals_Server.logEvent("Server sends message of type " + m.GetType() + " with Action: " + m.ActionType + " and response: " + m.ResponseType);
+#endif
             server.FlushSendQueue();
         }
 

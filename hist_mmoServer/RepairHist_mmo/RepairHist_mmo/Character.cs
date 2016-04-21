@@ -401,6 +401,10 @@ namespace hist_mmorpg
                 this.ailments = ails;
             }
             this.fiancee = fia;
+#if DEBUG
+            // Default = trait-influenced success chance
+            fixedSuccessChance = -1;
+#endif
         }
 
 		/// <summary>
@@ -2326,7 +2330,6 @@ namespace hist_mmorpg
         /// <param name="armyID">string containing the army ID (if choosing a leader)</param>
         public bool ChecksBeforeGranting(PlayerCharacter granter, string type, bool priorToList, out ProtoMessage error, string armyID = null)
         {
-            Console.WriteLine("Check before granting " +type+ " to "+this.firstName);
             error = null;
             bool proceed = true;
             // get army if appropriate
@@ -2381,7 +2384,6 @@ namespace hist_mmorpg
                 // 1. check is male
                 if (!this.isMale)
                 {
-                    Console.WriteLine("Not male");
                     proceed = false;
                     error = new ProtoMessage();
                     error.ResponseType = DisplayMessages.CharacterNotMale;
@@ -2392,7 +2394,6 @@ namespace hist_mmorpg
                     // 2. check is of age
                     if (this.CalcAge() < 14)
                     {
-                        Console.Write("too young");
                         proceed = false;
                         error = new ProtoMessage();
                         error.ResponseType = DisplayMessages.CharacterNotOfAge;
@@ -2408,7 +2409,6 @@ namespace hist_mmorpg
                             // Army must be defined
                             if (armyToLead == null)
                             {
-                                Console.WriteLine("No Army");
                                 ProtoMessage noArmy = new ProtoMessage();
                                 noArmy.ResponseType = DisplayMessages.ErrorGenericArmyUnidentified;
                                 error = noArmy;
@@ -2416,7 +2416,6 @@ namespace hist_mmorpg
                             }
                             if ((!(this.location.id.Equals(armyToLead.location))))
                             {
-                                Console.WriteLine("Not same location");
                                 proceed = false;
                                 error = new ProtoMessage();
                                 error.ResponseType = DisplayMessages.CharacterLeaderLocation;
@@ -2428,7 +2427,6 @@ namespace hist_mmorpg
                                 {
                                     if (this.armyID.Equals(armyID))
                                     {
-                                        Console.WriteLine("Already leader");
                                         proceed = false;
                                         error = new ProtoMessage();
                                         error.ResponseType = DisplayMessages.CharacterLeadingArmy;
@@ -4325,7 +4323,6 @@ namespace hist_mmorpg
                // if target successfully acquired, add to queue
                if (target != null)
                {
-                   Console.WriteLine("Target: " + target.name);
                    route.Enqueue(target);
                }
                // if no target acquired, display message and break
@@ -4484,55 +4481,36 @@ namespace hist_mmorpg
            bool wasDetected=false;
            bool wasKilled=false;
 
-           Console.WriteLine("Spying on fief: " + fief.id);
            this.AdjustDays(10);
            result = new ProtoMessage(DisplayMessages.None);
            // TOOD Move to config
-           // Base chance of success in fief 
-           double baseFiefChance = 40;
            // Threshold under which this character will be detected
            double detectedThreshold = 40;
            // Threshold under which this character will be killed //TODO add capture
            double killThreshold = 30;
 
-           // Calculate stealth bonus
-           double stealth = CalcTraitEffect(Globals_Game.Stats.STEALTH);
-           // Calculate bailiff's percepton
-           double bailiffPerception = 0;
-           if(fief.bailiff!=null) {
-               bailiffPerception = fief.bailiff.CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
-           }
-
-           // Calculate additional success modifier
-           double totalModifier = ((stealth - bailiffPerception) * 100);
            // Get random success and escape chances 
            double successChance= Utility_Methods.GetRandomDouble(85,15);
            double escapeChance = Utility_Methods.GetRandomDouble(75, 25);
 
            // Calculate total chance of success
-           double success = baseFiefChance + totalModifier;
-           Console.WriteLine("Chance: " + successChance + ", Total success rating: " + success);
+           double success = GetSpySuccessChance(fief);
            // Check for success
            if (success > successChance)
            {
-               Console.WriteLine("Successful");
                isSuccessful=true;
            }
            else
            {
-               Console.WriteLine("Not successful");
                isSuccessful=false;
            }
            // Check whether detected or killed
-           Console.WriteLine("Escape chance: " + escapeChance);
            if ((success + escapeChance) / 2 < detectedThreshold)
            {
-               Console.WriteLine("Detected");
                wasDetected = true;
            }
            if ((success + escapeChance) / 2 < killThreshold)
            {
-               Console.WriteLine("Killed");
                wasKilled = true;
                this.ProcessDeath("spy");
            }
@@ -4700,9 +4678,7 @@ namespace hist_mmorpg
            result = null;
            this.AdjustDays(10);
            // Get own stealth rating and enemy perception rating
-           Console.WriteLine("Calculating trait effect for "+Globals_Game.Stats.STEALTH.ToString());
            double stealth = this.CalcTraitEffect(Globals_Game.Stats.STEALTH);
-           Console.WriteLine("Stealth: " + stealth);
            double enemyPerception = character.CalcTraitEffect(Globals_Game.Stats.PERCEPTION);
 
            double baseCharacterChance = 40;
@@ -4713,7 +4689,6 @@ namespace hist_mmorpg
            double successChance = Utility_Methods.GetRandomDouble(85, 15);
            double escapeChance = Utility_Methods.GetRandomDouble(75, 25);
 
-           Console.WriteLine("Chance: " + successChance + ", Total success rating: " + success);
            if (success > successChance)
            {
                isSuccessful = true;
@@ -4723,15 +4698,12 @@ namespace hist_mmorpg
                isSuccessful = false;
            }
            // Check whether detected or killed
-           Console.WriteLine("Escape chance: " + escapeChance);
            if ((success + escapeChance) / 2 < detectedThreshold)
            {
-               Console.WriteLine("Detected");
                wasDetected = true;
            }
            if ((success + escapeChance) / 2 < killThreshold)
            {
-               Console.WriteLine("Killed");
                wasKilled = true;
                this.ProcessDeath("spy");
            }
@@ -4841,7 +4813,6 @@ namespace hist_mmorpg
            double successChance = Utility_Methods.GetRandomDouble(85, 15);
            double escapeChance = Utility_Methods.GetRandomDouble(75, 25);
 
-           Console.WriteLine("Chance: " + successChance + ", Total success rating: " + success);
            if (success > successChance)
            {
                isSuccessful = true;
@@ -4851,15 +4822,12 @@ namespace hist_mmorpg
                isSuccessful = false;
            }
            // Check whether detected or killed
-           Console.WriteLine("Escape chance: " + escapeChance);
            if ((success + escapeChance) / 2 < detectedThreshold)
            {
-               Console.WriteLine("Detected");
                wasDetected = true;
            }
            if ((success + escapeChance) / 2 < killThreshold)
            {
-               Console.WriteLine("Killed");
                wasKilled = true;
                this.ProcessDeath("spy");
            }
@@ -4997,7 +4965,6 @@ namespace hist_mmorpg
            }
 
            success = success * successModifier;
-           Console.WriteLine("Kidnap success: " + success + ",SuccessChance: " + successChance + ",EscapeChance: " + escapeChance);
            if (success > successChance)
            {
                isSuccessful = true;
@@ -5010,15 +4977,12 @@ namespace hist_mmorpg
                isSuccessful = false;
            }
            // Check whether detected or killed
-           Console.WriteLine("Escape chance: " + escapeChance);
            if ((success + escapeChance) / 2 < detectedThreshold)
            {
-               Console.WriteLine("Detected");
                wasDetected = true;
            }
            if ((success + escapeChance) / 2 < killThreshold)
            {
-               Console.WriteLine("Killed");
                wasKilled = true;
                this.ProcessDeath("kidnap");
            }
@@ -6013,7 +5977,6 @@ namespace hist_mmorpg
         /// <param name="armyExists">bool indicating whether the army already exists</param>
         public ProtoMessage RecruitTroops(uint number, Army thisArmy, bool isConfirm)
         {
-            Console.WriteLine("SERVER: In Recruit Troops");
             bool armyExists = (thisArmy != null);
             // used to record outcome of various checks
             bool proceed = true;
@@ -8158,6 +8121,7 @@ namespace hist_mmorpg
             this.playerID = pID;
             this.myArmies = myA;
             this.mySieges = myS;
+
         }
 
         //TODO change serialised class to serialise method

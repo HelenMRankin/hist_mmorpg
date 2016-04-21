@@ -81,7 +81,7 @@ namespace hist_mmorpg
             }
             else
             {
-                Army army = new Army(Globals_Game.GetNextArmyID(), null, MyPlayerCharacter.charID, 30, NotMyPlayerCharacter.location.id, false, trp: new uint[] { 5, 5, 5, 5, 5, 5 });
+                Army army = new Army(Globals_Game.GetNextArmyID(), null, MyPlayerCharacter.charID, 30, NotMyPlayerCharacter.location.id, false, trp: new uint[] { 5, 5, 5, 5, 5, 5,5 });
                 OwnedArmy = army;
                 OwnedArmy.AddArmy();
             }
@@ -91,7 +91,7 @@ namespace hist_mmorpg
             }
             else
             {
-                Army army = new Army(Globals_Game.GetNextArmyID(), null, NotMyPlayerCharacter.charID, 30, NotMyPlayerCharacter.location.id, false, trp: new uint[] { 5, 5, 5, 5, 5, 5 });
+                Army army = new Army(Globals_Game.GetNextArmyID(), null, NotMyPlayerCharacter.charID, 30, NotMyPlayerCharacter.location.id, false, trp: new uint[] { 5, 5, 5, 5, 5, 5, 5 });
                 NotOwnedArmy = army;
                 NotOwnedArmy.AddArmy();
 
@@ -114,6 +114,8 @@ namespace hist_mmorpg
 
             client.LogOut();
             server.Shutdown();
+            // This just allows a bit of time for the server threads to cancel and finish writing to the log file
+            Thread.Sleep(1000);
 #if DEBUG
             Console.WriteLine("A log file was written to " + logFilePath);
 #endif
@@ -197,6 +199,7 @@ namespace hist_mmorpg
             Globals_Server.logEvent("Travel time: " + MoveTime);
             Globals_Server.logEvent("Spy time: " + (SpyCheckTime + SpyConfirmTime) + "(Check: " + SpyCheckTime + ", Confirm: " + SpyConfirmTime + ")");
             LogMemory(currentProcess);
+            Globals_Server.logEvent("Max memory: "+maxMemoryUseage);
         }
 
         /// <summary>
@@ -364,51 +367,6 @@ namespace hist_mmorpg
             PlayerCharacter pc = Globals_Game.pcMasterList["Char_126"];
             pc.myNPCs.Add(proposalChar);
             proposalChar.inKeep = false;
-        }
-        public static void testCaptives()
-        {
-            DisplayMessages charErr;
-            Character captive = Utility_Methods.GetCharacter("Char_626",out charErr);
-            PlayerCharacter captor = Globals_Game.pcMasterList["Char_158"];
-            Fief location = Globals_Game.fiefMasterList["EPM02"];
-            captor.AddCaptive(captive, location);
-            //captor.ReleaseCaptive(captive);
-            //captor.ExecuteCaptive(captive);
-            Console.WriteLine(captive.CalculateRansom());
-            Console.WriteLine(captive.isAlive.ToString());
-            Console.WriteLine(captive.location.id);
-        }
-        public static void testArmy()
-        {
-            Army A = Globals_Game.armyMasterList["Army_1"];
-            Army B = Globals_Game.armyMasterList["Army_2"];
-            Console.WriteLine("Army 1 troops:");
-            for (int i = 0; i < 7; i++)
-            {
-                Console.Write(i + ": " + A.troops[i] + ", ");
-            }
-            Console.WriteLine("\nArmy 2 troops:");
-            for (int i = 0; i < 7; i++)
-            {
-                Console.Write(i + ": " + B.troops[i] + ", ");
-            }
-            Console.WriteLine("\nCombat values A: " + A.CalculateCombatValue());
-            Console.WriteLine("Combat values B: " + B.CalculateCombatValue());
-            Console.WriteLine("Combat advantages A: " + A.CalculateTroopTypeAdvatages(B.troops));
-            Console.WriteLine("Combat advantages B: " + B.CalculateTroopTypeAdvatages(A.troops));
-           
-        }
-
-        public static void testSpying()
-        {
-            Fief f = Globals_Game.fiefMasterList["ESW04"];
-            Character bailiff = Globals_Game.pcMasterList["Char_158"];
-            bailiff.traits = new Tuple<Trait, int>[] { new Tuple<Trait, int>(Globals_Game.traitMasterList["trait_8"], 9) };
-            f.bailiff = bailiff;
-            Character c = Globals_Game.npcMasterList["Char_626"];
-            c.traits = new Tuple<Trait, int>[] { new Tuple<Trait, int>(Globals_Game.traitMasterList["trait_9"], 1) };
-            ProtoMessage ignore;
-            c.SpyOn(f,out ignore);
         }
     }
 }

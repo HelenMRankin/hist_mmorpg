@@ -186,8 +186,6 @@ namespace hist_mmorpg
         /// <returns>Task containing the reply as a result</returns>
         public async Task<string> GetServerMessage()
         {
-            Console.WriteLine("Awaiting reply");
-
             string reply = await (Task.Run(() => CheckForStringMessage()));
 
             return reply;
@@ -579,7 +577,6 @@ namespace hist_mmorpg
             newExpenses.fields = new double[] { newTax, newOff, newGarr, newInfra, newKeep };
             newExpenses.ActionType = Actions.AdjustExpenditure;
             net.Send(newExpenses);
-            Console.WriteLine("CLIENT: sent adjust expenditure message");
         }
 
         /// <summary>
@@ -730,15 +727,11 @@ namespace hist_mmorpg
                 ctSource.Cancel();
                 if (client.ConnectionStatus == NetConnectionStatus.Connected)
                 {
-                    Console.WriteLine("___TEST: at test client called disconnect");
                     client.Disconnect("Log out");
                 }
-                else
-                {
-                    Console.WriteLine("___TEST: at test client FAILED to disconnect");
-                }
-                Dispose();
                 client.Shutdown("Exit");
+                Dispose();
+                
             }
 
             /// <summary>
@@ -812,26 +805,7 @@ namespace hist_mmorpg
                 response.userSalt = hashFull;
                 response.ActionType = Actions.LogIn;
                 response.Key = key;
-                if(key== null)
-                {
-                    Console.WriteLine("No encryption key is used");
-                }
-                else
-                {
-
-                    Console.WriteLine("CLIENT: Symmetric key from client: ");
-                    foreach (var bite in this.key)
-                    {
-                        Console.Write(bite.ToString());
-                    }
-                    Console.WriteLine("\n");
-                    Console.WriteLine("CLIENT: Encrypted key from client: ");
-                    foreach (var bite in key)
-                    {
-                        Console.Write(bite.ToString());
-                    }
-                    Console.WriteLine("\n");
-                }
+                
                 Send(response, false);
             }
 
@@ -844,7 +818,6 @@ namespace hist_mmorpg
             {
                 if (login == null || login.certificate == null)
                 {
-                    Console.WriteLine("CLIENT: No certificate");
                     key = null;
                     return false;
                 }
@@ -855,16 +828,10 @@ namespace hist_mmorpg
                         // Get certificate
                         X509Certificate2 cert = new X509Certificate2(login.certificate);
                         RSACryptoServiceProvider rsa = (RSACryptoServiceProvider)cert.PublicKey.Key;
-                        Console.WriteLine("CLIENT: RSA key from server: ");
-                        foreach (var bite in rsa.ExportParameters(false).Exponent)
-                        {
-                            Console.Write(bite.ToString());
-                        }
-                        Console.WriteLine("\n");
-#if TESTSUITE
+                        
+#if DEBUG
                         if (this.key != null)
                         {
-                            Console.WriteLine("Using non-null key");
                             if (this.key.Length == 0)
                             {
                                 alg = new NetAESEncryption(client);
@@ -891,11 +858,7 @@ namespace hist_mmorpg
                         key = rsa.Encrypt(des.Key, false);
                         // Initialise the algoitm
                         alg = new NetAESEncryption(client, des.Key, 0, des.Key.Length);
-                        Console.WriteLine("CLIENT: my unencrypted key:");
-                        foreach (var bite in des.Key)
-                        {
-                            Console.Write(bite.ToString());
-                        }
+                        
 #endif
                         // Validate certificate
                         if (!cert.Verify())
@@ -906,10 +869,6 @@ namespace hist_mmorpg
                             bool IsCertificateChainValid = CertificateChain.Build(cert);
                             if (!IsCertificateChainValid)
                             {
-                                for (int i = 0; i < CertificateChain.ChainStatus.Length; i++)
-                                {
-                                    Console.WriteLine(i + ": " + CertificateChain.ChainStatus[i].Status.ToString() + "; " + CertificateChain.ChainStatus[i].StatusInformation);
-                                }
                                 // TODO change to false after testing
                                 return true;
                             }
@@ -944,12 +903,10 @@ namespace hist_mmorpg
                             case NetIncomingMessageType.WarningMessage:
                             case NetIncomingMessageType.VerboseDebugMessage:
                             case NetIncomingMessageType.Data:
-                                Console.WriteLine("Client: Got data message");
                                 try
                                 {
                                     if (alg != null)
                                     {
-                                        Console.WriteLine("Decrypting");
                                         im.Decrypt(alg);
                                     }
                                     MemoryStream ms = new MemoryStream(im.Data);
@@ -986,11 +943,6 @@ namespace hist_mmorpg
                                             }
                                             else
                                             {
-                                                Console.WriteLine("CLIENT: adding message to message queue: ");
-                                                if(m== null)
-                                                {
-                                                    Console.WriteLine("#####ADDED NULL MESSAGE####");
-                                                }
                                                 tClient.protobufMessageQueue.Enqueue(m);
                                                 if (m.ActionType == Actions.LogIn && m.ResponseType == DisplayMessages.None)
                                                 {
@@ -1028,7 +980,7 @@ namespace hist_mmorpg
                             case NetIncomingMessageType.StatusChanged:
 
                                 NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
-                                Console.WriteLine("CLIENT: Status changed to "+status.ToString());
+                                Console.WriteLine("CLIENT: "+user+ " Status changed to "+status.ToString());
                                 //MemoryStream ms2 = new MemoryStream(im.SenderConnection.RemoteHailMessage.Data);
                                 if (status == NetConnectionStatus.Connected)
                                 {
@@ -1077,24 +1029,31 @@ namespace hist_mmorpg
                                 }
                                 else if (status == NetConnectionStatus.Disconnected)
                                 {
-                                    Console.WriteLine("CLIENT: In disconnect state");
+#if DEBUG
+                                    Console.WriteLine("CLIENT: "+user+"In disconnect state");
+#endif
                                     string reason = im.ReadString();
                                     if (!string.IsNullOrEmpty(reason))
                                     {
-
+#if DEBUG
+                                        Console.WriteLine("CLIENT: "+user+ " disconnected for reason: "+reason);
+#endif
                                             tClient.stringMessageQueue.Enqueue(reason);
 
-                                        
-
                                     }
-                                }
-                                if (im.SenderConnection.RemoteHailMessage != null && (NetConnectionStatus)im.ReadByte() == NetConnectionStatus.Connected)
-                                {
-
                                 }
                                 break;
                             case NetIncomingMessageType.ConnectionLatencyUpdated:
                                 break;
+                            case NetIncomingMessageType.ConnectionApproval:
+                            {
+#if DEBUG
+                                string message = im.ReadString();
+                                if(!string.IsNullOrWhiteSpace(message))
+                                    Console.WriteLine("CLIENT: "+user+ " connection approval message: "+message);
+#endif
+                                break;
+                            }
                             default:
                                 break;
                         }

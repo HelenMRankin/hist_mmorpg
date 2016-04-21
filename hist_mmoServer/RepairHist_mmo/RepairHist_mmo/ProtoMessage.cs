@@ -1101,7 +1101,6 @@ namespace hist_mmorpg
             this.keyStatsNext[0] = f.CalcNewLoyalty();
             this.keyStatsNext[1] = f.CalcNewGDP();
             this.keyStatsNext[2] = f.taxRateNext;
-            Console.WriteLine("Tax rate next: " + f.taxRateNext);
             this.keyStatsNext[3] = f.officialsSpendNext;
             this.keyStatsNext[4] = f.garrisonSpendNext;
             this.keyStatsNext[5] = f.infrastructureSpendNext;
@@ -1564,7 +1563,6 @@ namespace hist_mmorpg
             this.replied = j.replied;
             getCharacterOverviews(j);
 
-            Console.WriteLine("Entry type:" + this.type + ", entry year:" + this.year);
         }
 
         public ProtoJournalEntry() : base()

@@ -456,9 +456,6 @@ namespace hist_mmorpg
 			}
 		}
 		public static bool DatabaseWrite_Test(string gameID) {
-			if (!Globals_Server.rClient.Ping ().IsSuccess) {
-				Console.WriteLine ("NOW PING FAILS");
-			}
 			Console.WriteLine ("Writing test to : " + gameID);
 			var o = new RiakObject (gameID, "test",new TestObject("hello","world"));
 			RiakResult result = Globals_Server.rClient.Put (o);

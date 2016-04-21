@@ -181,7 +181,6 @@
     <Compile Include="Terrain.cs" />
     <Compile Include="TestClient.Battle.cs" />
     <Compile Include="TestClient.cs" />
-    <Compile Include="TestSuite.cs" />
     <Compile Include="Trait.cs" />
     <Compile Include="Utility_Methods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

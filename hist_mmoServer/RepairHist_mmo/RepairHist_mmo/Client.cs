@@ -118,7 +118,6 @@ namespace hist_mmorpg
             if (connection != null)
             {
                 Globals_Server.logEvent("Update " + this.username + ": " + type.ToString());
-                Console.WriteLine("Sending update " + type.ToString() + " to " + this.username);
                 Server.SendViaProto(m, connection,alg);
             }
         }
@@ -129,7 +128,6 @@ namespace hist_mmorpg
             if (connection != null)
             {
                 Globals_Server.logEvent("Update " + this.username + ": " + message.ResponseType.ToString());
-                Console.WriteLine("Sending update " + message.ResponseType.ToString() + " to " + this.username);
                 Server.SendViaProto(message, connection, alg);
             }
         }
@@ -160,7 +158,6 @@ namespace hist_mmorpg
         /// <returns>Task containing the reply as a result</returns>
         public async Task<ProtoMessage> GetMessage()
         {
-            Console.WriteLine("SERVER: Getting next message...");
             ProtoMessage reply = null;
             reply = await (Task.Run(() => CheckForMessage(), _linkedTokenSource.Token));
             _linkedTokenSource.Token.ThrowIfCancellationRequested();
