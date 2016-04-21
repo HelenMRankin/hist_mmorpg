@@ -7,7 +7,7 @@ namespace hist_mmorpg
     /// <summary>
     /// Class storing data on character (PC and NPC)
     /// </summary>
-    public abstract class Character
+    public abstract class Character : IEquatable<Character>
     {
 
         /// <summary>
@@ -5008,6 +5008,11 @@ namespace hist_mmorpg
            }
            return ransom;
        }
+
+        public bool Equals(Character other)
+        {
+            return charID.Equals(other.charID);
+        }
     }
 
     
