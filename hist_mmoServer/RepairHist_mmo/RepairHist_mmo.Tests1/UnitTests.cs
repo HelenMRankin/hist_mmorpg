@@ -661,5 +661,19 @@ namespace hist_mmorpg.Tests1
             Assert.IsTrue(client.IsConnectedAndLoggedIn());
         }
 
+        [TestMethod]
+        [Timeout(15000)]
+        public void LogInTwiceAsDifferentUsers()
+        {
+            // Tell the client it isn't logged in
+            client.net.loggedIn = false;
+            // Try to log in as anothr user
+            client.LogInAndConnect(OtherUser, OtherPass, new byte[] { 1, 2, 3, 4, 5, 6, 7 });
+            while (!client.IsConnectedAndLoggedIn())
+            {
+                Thread.Sleep(0);
+            }
+            Assert.IsFalse(Globals_Game.IsObserver(OtherUser));
+        }
     }
 }

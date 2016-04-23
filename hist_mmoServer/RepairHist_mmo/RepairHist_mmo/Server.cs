@@ -46,6 +46,14 @@ namespace hist_mmorpg
         /// </summary>
         private readonly object ServerLock = new object();
 
+        [ContractInvariantMethod]
+        private void Invariant()
+        {
+            Contract.Invariant(server!=null);
+            Contract.Invariant(ctSource!=null);
+            Contract.Invariant(ServerLock!=null);
+        }
+
         /// <summary>
         /// Check if client connections contains a username- used in testing
         /// </summary>
@@ -94,6 +102,7 @@ namespace hist_mmorpg
         [ContractVerification(true)]
         public void Listen()
         {
+            
             while (server.Status == NetPeerStatus.Running && !ctSource.Token.IsCancellationRequested)
             {
                 NetIncomingMessage im;
@@ -282,7 +291,7 @@ namespace hist_mmorpg
         /// <param name="alg">Optional encryption algorithm</param>
         public static void SendViaProto(ProtoMessage m, NetConnection conn, NetEncryption alg = null)
         {
-            Contract.Requires(m != null);
+            Contract.Requires(m != null&&conn!=null);
             NetOutgoingMessage msg = server.CreateMessage();
             MemoryStream ms = new MemoryStream();
             Serializer.SerializeWithLengthPrefix<ProtoMessage>(ms, m, PrefixStyle.Fixed32);
@@ -302,7 +311,7 @@ namespace hist_mmorpg
         /// <param name="connection">Client's connecton</param>
         public void ProcessMessage(ProtoMessage m, NetConnection connection)
         {
-            Contract.Requires(connection != null);
+            Contract.Requires(connection != null&&m!=null);
             Client client;
             clientConnections.TryGetValue(connection, out client);
             if (client == null)
@@ -361,8 +370,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="conn">Connection of the client who disconnected</param>
         private void Disconnect(NetConnection conn)
-        {
-            Contract.Assert(conn != null);
+        {Contract.Requires(conn!=null);
             lock (ServerLock)
             {
                 if (clientConnections.ContainsKey(conn))

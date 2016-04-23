@@ -12,13 +12,11 @@ using System.Diagnostics.Eventing.Reader;
 namespace hist_mmorpg
 {
     // NOTE: Verification is expensive! We may not want to verify every class. To turn on verification, compile with V_LOGIN
-#if V_LOGIN
     /// <summary>
     /// This class handles all log in tasks, including certificate transmission and password verification.
     /// It may be possible to turn this class into a stand-alone application in order to create a dedicated log-in server.
     /// </summary>
     [ContractVerification(true)]
-#endif
     public static class LogInManager
     {
         /// <summary>
@@ -145,7 +143,6 @@ namespace hist_mmorpg
         public static bool VerifyUser(string username, byte[] userhash)
         {
             Contract.Requires(username!=null);
-            Contract.Requires(userhash!=null);
             if (userhash == null)
             {
                 return false;

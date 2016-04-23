@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 namespace hist_mmorpg
 {
+    [ContractVerification(true)] 
     public static class Battle
     {
         /// <summary>
@@ -12,7 +14,7 @@ namespace hist_mmorpg
         /// <param name="attackerValue">uint containing attacking army battle value</param>
         /// <param name="defenderValue">uint containing defending army battle value</param>
         /// <param name="circumstance">string indicating circumstance of battle</param>
-        public static bool BringToBattle(uint attackerValue, uint defenderValue, string circumstance = "battle")
+        private static bool BringToBattle(uint attackerValue, uint defenderValue, string circumstance = "battle")
         {
             bool battleHasCommenced = false;
             double[] combatOdds = Globals_Server.battleProbabilities["odds"];
@@ -23,6 +25,7 @@ namespace hist_mmorpg
             {
                 if (i < combatOdds.Length - 1)
                 {
+                    // ReSharper disable once PossibleLossOfFraction
                     if (attackerValue / defenderValue < combatOdds[i])
                     {
                         thisChance = battleChances[i];
@@ -192,6 +195,7 @@ namespace hist_mmorpg
         /// <param name="attackerVictorious">bool indicating if attacking army was victorious</param>
         public static int[] CheckForRetreat(Army attacker, Army defender, double aCasualties, double dCasualties, bool attackerVictorious)
         {
+            Contract.Requires(defender!=null);
             bool[] hasRetreated = { false, false };
             int[] retreatDistance = { 0, 0 };
 
@@ -244,6 +248,7 @@ namespace hist_mmorpg
         /// <param name="defender">The defending army</param>
         public static int GetBattleOdds(Army attacker, Army defender)
         {
+            Contract.Requires(attacker!=null&&defender!=null);
             double battleOdds = 0;
 
             battleOdds = Math.Floor(attacker.CalculateCombatValue() / defender.CalculateCombatValue());
@@ -258,6 +263,7 @@ namespace hist_mmorpg
         /// <returns>String description</returns>
         public static String DisplayBattleResults(ProtoBattle battle)
         {
+            Contract.Requires(battle!=null);
             // Battle introduction
             string toDisplay = "The fief garrison and militia";
             if (battle.attackerLeader != null)
@@ -378,6 +384,7 @@ namespace hist_mmorpg
         /// <returns>String describing battle</returns>
         public static String DisplaySiegeResults(ProtoBattle battle)
         {
+            Contract.Requires(battle!=null);
             string siegeDescription = "";
             if (battle.attackerVictorious || battle.retreatedArmies.Contains(battle.attackerOwner))
             {
@@ -420,6 +427,7 @@ namespace hist_mmorpg
         /// <param name="circumstance">string indicating circumstance of battle</param>
         public static bool GiveBattle(Army attacker, Army defender, out ProtoBattle battleResults, string circumstance = "battle")
         {
+            Contract.Requires(attacker!=null&&defender!=null&&circumstance!=null);
             battleResults = new ProtoBattle();
             bool attackerVictorious = false;
             bool battleHasCommenced = false;
@@ -453,12 +461,12 @@ namespace hist_mmorpg
             Character attackerLeader = attacker.GetLeader();
             Character defenderLeader = defender.GetLeader();
 
-            if(attackerLeader!=null) {
+           // if(attackerLeader!=null) {
                 battleResults.attackerLeader = attackerLeader.firstName + " " + attackerLeader.familyName;
-            }
-            if(defenderLeader!=null) {
+          //  }
+          //  if(defenderLeader!=null) {
                 battleResults.defenderLeader=defenderLeader.firstName+ " " + defenderLeader.familyName;
-            }
+         //   }
             
             battleResults.attackerOwner = attacker.GetOwner().firstName + "  " + attacker.GetOwner().familyName;
             battleResults.defenderOwner = defender.GetOwner().firstName + " " + defender.GetOwner().familyName;

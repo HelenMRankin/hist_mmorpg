@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Text;
 using System.IO;
 using System.Threading;
@@ -9,9 +10,9 @@ namespace hist_mmorpg
     /// Class storing data on army 
     /// </summary>
     /// 
+    [ContractVerification(true)]
     public class Army 
     {
-        public static Mutex m { get; set; }
 		/// <summary>
 		/// Holds army ID
 		/// </summary>
@@ -56,6 +57,13 @@ namespace hist_mmorpg
         /// </summary>
         public byte combatOdds { get; set; }
 
+        [ContractInvariantMethod]
+        private void Invariant()
+        {
+            Contract.Invariant(location!=null);
+            Contract.Invariant(owner!=null);
+            Contract.Invariant(armyID!=null);
+        }
         /// <summary>
         /// Constructor for Army
         /// </summary>
@@ -70,6 +78,7 @@ namespace hist_mmorpg
         /// <param name="trp">uint[] holding troops in army</param>
         public Army(String id, string ldr, string own, double day, string loc, bool maint = false, byte aggr = 1, byte odds = 9, uint[] trp = null)
         {
+            Contract.Requires(!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(own) && !string.IsNullOrWhiteSpace(loc));
             // VALIDATION
 
             // ID
@@ -181,6 +190,7 @@ namespace hist_mmorpg
         /// <returns>uint representing cost</returns>
         public uint getMaintenanceCost()
         {
+            Contract.Requires(troops!=null);
             return this.CalcArmySize() * 500;
         }
 
@@ -468,6 +478,7 @@ namespace hist_mmorpg
         /// <returns>double containing casualty modifier to be applied troops</returns>
         public double CalcAttrition()
         {
+            Contract.Requires(troops!=null);
             uint troopNumbers = this.CalcArmySize();
             double casualtyModifier = 0;
             Double attritionChance = 0;
@@ -551,6 +562,7 @@ namespace hist_mmorpg
         /// <param name="lossModifier">modifier to be applied to each troop type</param>
         public uint ApplyTroopLosses(double lossModifier)
         {
+            Contract.Requires(troops!=null);
             // keep track of total troops lost
             uint troopsLost = 0;
 
@@ -574,6 +586,7 @@ namespace hist_mmorpg
         /// <param name="details">string[] containing troop numbers and recipient (ID)</param>
         public bool CreateDetachment(uint[] troops, string leftFor, out ProtoMessage result)
         {
+            Contract.Requires(troops!=null);
             result = null;
             bool proceed = true;
             bool adjustDays = true;
@@ -860,6 +873,7 @@ namespace hist_mmorpg
         /// <returns>the fief</returns>
         public Fief GetLocation()
         {
+            Contract.Ensures(Contract.Result<Fief>()!=null);
             Fief thisFief = null;
 
             if (!String.IsNullOrWhiteSpace(this.location))
@@ -879,6 +893,7 @@ namespace hist_mmorpg
         /// <returns>the owner</returns>
         public PlayerCharacter GetOwner()
         {
+            Contract.Ensures(Contract.Result<PlayerCharacter>()!=null);
             PlayerCharacter myOwner = null;
 
             // get leader from PC master list
@@ -899,6 +914,7 @@ namespace hist_mmorpg
         /// <returns>the leader</returns>
         public Character GetLeader()
         {
+            Contract.Ensures(Contract.Result<Character>()==null||Contract.Result<Character>()!=null);
             Character myLeader = null;
 
             if (!String.IsNullOrWhiteSpace(this.leader))
@@ -1199,7 +1215,13 @@ namespace hist_mmorpg
             {
                 result = new ProtoMessage();
                 result.ResponseType = DisplayMessages.ErrorGenericNotEnoughDays;
-                proceed = false;
+                return false;
+            }
+            if (this.GetLocation() != targetArmy.GetLocation())
+            {
+                result = new ProtoMessage();
+                result.ResponseType = DisplayMessages.ErrorGenericNotInSameFief;
+                return false;
             }
             else
             {
@@ -1343,7 +1365,6 @@ namespace hist_mmorpg
                         }
                         // If this army has advantage, ensure advantage does not exceed number of enemy troops for this troop types
                         advantage += (uint)difference;
-                        Console.WriteLine("Advantage (" + i + "," + j + ") :" + difference);
                     }
                 }
             }

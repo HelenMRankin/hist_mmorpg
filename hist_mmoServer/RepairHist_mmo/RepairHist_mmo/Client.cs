@@ -80,7 +80,9 @@ namespace hist_mmorpg
         /// <param name="pcID">PlayerCharacterID</param>
         public Client(String user, String pcID)
         {
-            Contract.Requires(user!=null);
+            Contract.Requires(!string.IsNullOrEmpty(user));
+            Contract.Requires(!string.IsNullOrEmpty(pcID));
+            Contract.Requires(Contract.Exists(Globals_Game.pcMasterList,(i=>i.Key.Equals(pcID))));
             // set username associated with client
             this.username = user;
 
@@ -101,21 +103,22 @@ namespace hist_mmorpg
 
             Globals_Game.ownedPlayerCharacters.Add(user,myPlayerCharacter);
         }
+
         /// <summary>
         /// Updates the client
         /// </summary>
-        /// <param name="info"></param>
-        public void Update(DisplayMessages type, string[] fields = null)
+        /// <param name="message">The message code to send</param>
+        /// <param name="fields">Additional information to add to the message</param>
+        public void Update(DisplayMessages message, string[] fields = null)
         {
-
             ProtoMessage m = new ProtoMessage();
             m.ActionType = Actions.Update;
-            m.ResponseType = type;
+            m.ResponseType = message;
             m.MessageFields = fields;
             if (conn != null)
             {
-                Globals_Server.logEvent("Update " + this.username + ": " + type.ToString());
-                Console.WriteLine("Sending update " + type.ToString() + " to " + this.username);
+                Globals_Server.logEvent("Update " + this.username + ": " + message.ToString());
+                Console.WriteLine("Sending update " + message.ToString() + " to " + this.username);
                 Server.SendViaProto(m, conn,alg);
             }
         }

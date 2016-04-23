@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 namespace hist_mmorpg
@@ -5020,6 +5021,7 @@ namespace hist_mmorpg
     /// <summary>
     /// Class storing data on PlayerCharacter
     /// </summary>
+    [ContractVerification(true)]
     public class PlayerCharacter : Character
     {
         /// <summary>
@@ -5941,14 +5943,14 @@ namespace hist_mmorpg
 
             return proceed;
         }
-        
-        //TODO lots of confirmation
+
         /// <summary>
         /// Recruits troops from the current fief
         /// </summary>
         /// <returns>uint containing number of troops recruited</returns>
         /// <param name="number">How many troops to recruit</param>
-        /// <param name="armyExists">bool indicating whether the army already exists</param>
+        /// <param name="thisArmy">Army to recruit into- null to create new army</param>
+        /// <param name="isConfirm">Whether or not this action has been confirmed by client</param>
         public ProtoMessage RecruitTroops(uint number, Army thisArmy, bool isConfirm)
         {
             bool armyExists = (thisArmy != null);

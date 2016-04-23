@@ -1352,6 +1352,11 @@ namespace hist_mmorpg
         {
             return (registeredObservers.Contains(c));
         }
+
+        public static bool IsObserver(string c)
+        {
+            return (registeredObservers.Exists(i=>i.username.Equals(c)));
+        }
     }
 
     /// <summary>
