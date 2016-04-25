@@ -30,13 +30,11 @@ namespace hist_mmorpg
         /// </summary>
         public static string logFilePath;
         /// <summary>
-        /// Store the max memory consumption (WorkingSet64)
+        /// Store the max memory consumption
         /// </summary>
-        public static long maxMemoryUseageWS64;
-        /// <summary>
-        /// Store the max memory consumption (GC.GetTotalMemory)
-        /// </summary>
-        public static long maxMemoryUseageGCTotal;
+        public static long maxMemoryUseage;
+
+        /******Objects for use during testing **/
         public static Army OwnedArmy;
         public static Army NotOwnedArmy;
         public static Fief OwnedFief;
@@ -45,7 +43,7 @@ namespace hist_mmorpg
         public static string Pass;
         public static PlayerCharacter MyPlayerCharacter;
         public static PlayerCharacter NotMyPlayerCharacter;
-        public static int numLogTimes;
+         
         /// <summary>
         /// Set up the data and game state for the test run
         /// </summary>
@@ -146,22 +144,6 @@ namespace hist_mmorpg
             Console.ReadLine();
             
         }
-
-        public static void MemoryMeasureThread(Process p)
-        {
-            try
-            {
-                while (true)
-                {
-                    LogMemory(p);
-                    Thread.Sleep(5);
-                }
-            }
-            catch (ThreadAbortException e)
-            {
-                Console.WriteLine("Thread aborted");
-            }
-        }
         
         /// <summary>
         /// Run through a sequence of actions, recording the time taken and memory consumption
@@ -170,11 +152,7 @@ namespace hist_mmorpg
         [STAThread]
         public static void TestRun(bool encrypt = true)
         {
-            numLogTimes = 0;
             Process currentProcess = Process.GetCurrentProcess();
-            Thread t = new Thread(new ThreadStart(() => MemoryMeasureThread(currentProcess)));
-            t.IsBackground = true;
-            t.Start();
             if (encrypt)
             {
                 Globals_Server.logEvent("Running test with encryption");
@@ -197,21 +175,20 @@ namespace hist_mmorpg
             }
             LoginTime = DateTime.Now.TimeOfDay.TotalMilliseconds - start;
             client.RecruitTroops(OwnedArmy.armyID, 70, true);
-            RecruitTime = ProcessNextAction(Actions.RecruitTroops);
+            RecruitTime = ProcessNextAction(Actions.RecruitTroops,currentProcess);
             // Move to another fief
             client.Move(MyPlayerCharacter.charID, NotOwnedFief.id, null);
-            MoveTime = ProcessNextAction(Actions.TravelTo);
+            MoveTime = ProcessNextAction(Actions.TravelTo,currentProcess);
             // Spy
             client.SpyOnFief(MyPlayerCharacter.charID, MyPlayerCharacter.location.id);
-            SpyTime = ProcessNextAction(Actions.SpyFief);
-            t.Abort();
+            SpyTime = ProcessNextAction(Actions.SpyFief,currentProcess);
             // Confirm spy
             Globals_Server.logEvent("Time taken to run test (ms): " + (DateTime.Now.TimeOfDay.TotalMilliseconds - start));
             Globals_Server.logEvent("LogIn time: " + LoginTime);
             Globals_Server.logEvent("Recruit time: " + (RecruitTime));
             Globals_Server.logEvent("Travel time: " + MoveTime);
             Globals_Server.logEvent("Spy time: " + SpyTime);
-            Globals_Server.logEvent("Max memory measured: WS64="+maxMemoryUseageWS64+"\t GCTotal="+maxMemoryUseageGCTotal+" ( took "+numLogTimes+" readings)");
+            Globals_Server.logEvent("Max memory measured: " + maxMemoryUseage);
         }
 
         /// <summary>
@@ -220,19 +197,18 @@ namespace hist_mmorpg
         /// <param name="p">Process to use to calculate memory</param>
         public static void LogMemory(Process p)
         {
-            long mem = p.WorkingSet64; ;
-            if (mem > maxMemoryUseageWS64) maxMemoryUseageWS64 = mem;
-            mem = GC.GetTotalMemory(true);
-            if (mem > maxMemoryUseageGCTotal) maxMemoryUseageGCTotal = mem;
-            numLogTimes++;
+            long mem = +GC.GetTotalMemory(false);
+            if (mem > maxMemoryUseage) maxMemoryUseage = mem;
+            Globals_Server.logEvent("GC memory: " + mem);
         }
+
         /// <summary>
         /// Waits for the response to a client's action, gets the time taken to receive reply, and logs memory
         /// </summary>
         /// <param name="action">Action which was taken- will wait until a response with the same action has been received</param>
         /// <param name="p">Process used to get memory</param>
         /// <returns>Time taken (milliseconds)</returns>
-        private static double ProcessNextAction(Actions action)
+        private static double ProcessNextAction(Actions action, Process p)
         {
             double start = DateTime.Now.TimeOfDay.TotalMilliseconds;
             Task<ProtoMessage> responseTask = client.GetReply();
@@ -244,6 +220,7 @@ namespace hist_mmorpg
             }
             double end = DateTime.Now.TimeOfDay.TotalMilliseconds;
             client.ClearMessageQueues();
+            LogMemory(p);
             return end - start;
         }
 

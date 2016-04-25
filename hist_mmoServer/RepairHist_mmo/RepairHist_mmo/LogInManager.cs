@@ -7,7 +7,6 @@ using System.IO;
 using Lidgren.Network;
 using System.Security.Cryptography.X509Certificates;
 using System.Diagnostics.Contracts;
-using System.Diagnostics.Eventing.Reader;
 
 namespace hist_mmorpg
 {
@@ -101,7 +100,7 @@ namespace hist_mmorpg
         public static byte[] GetPasswordHash(string username)
         {
             Contract.Requires(username !=null);
-            Contract.Exists(users, a => a.Key == username);
+            Contract.Requires(Contract.Exists(users, a => a.Key == username));
             Tuple<byte[], byte[]> hashNsalt;
             if (users.TryGetValue(username, out hashNsalt))
             {

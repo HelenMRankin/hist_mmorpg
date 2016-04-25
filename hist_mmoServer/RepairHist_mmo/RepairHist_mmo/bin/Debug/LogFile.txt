@@ -1,7 +1,0 @@
-Server started- host: localhost, port: 8000, appID: test, max connections: 2000
-Total approximate memory: 2882512
-helen logs in from 127.0.0.1:61581
-From hist_mmorpg.Client: request = RecruitTroops, reply = Success
-From hist_mmorpg.Client: request = TravelTo, reply = Success
-Update helen: SpySuccess
-From hist_mmorpg.Client: request = SpyFief, reply = Success

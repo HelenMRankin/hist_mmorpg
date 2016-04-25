@@ -5,11 +5,6 @@ using System.IO;
 using Lidgren.Network;
 using ProtoBuf;
 using System.Threading;
-using System.Diagnostics;
-using System.Net.Security;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Configuration;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 
@@ -29,12 +24,13 @@ namespace hist_mmorpg
         private static Dictionary<NetConnection, Client> clientConnections = new Dictionary<NetConnection, Client>();
 
         private static NetServer server;
-        /******Server Settings (can move to config file) ******/
+        /******Server Settings  ******/
         private readonly int port = 8000;
         private readonly string host_name = "localhost";
         private readonly int max_connections = 2000;
         // Used in the NetPeerConfiguration to identify application
         private readonly string app_identifier = "test";
+        /******End Settings  ******/
 
         /// <summary>
         /// Cancellation token- used to abort listening thread
@@ -68,6 +64,9 @@ namespace hist_mmorpg
             return clientConnections.ContainsValue(c);
         }
 
+        /// <summary>
+        /// Initialise the server, and store some test users and clients.
+        /// </summary>
         private void initialise()
         {
             LogInManager.StoreNewUser("helen", "potato");
@@ -364,7 +363,6 @@ namespace hist_mmorpg
         }
 
 
-        //TODO write all client details to database
         /// <summary>
         /// Processes a client disconnecting from the server- removes the client as an observer, removes their connection and deletes their CryptoServiceProvider
         /// </summary>
@@ -388,7 +386,7 @@ namespace hist_mmorpg
         }
 
         /// <summary>
-        /// Shut down the server
+        /// Shut down the server and cancels the server's token, which should stop all client tasks
         /// </summary>
         public void Shutdown()
         {

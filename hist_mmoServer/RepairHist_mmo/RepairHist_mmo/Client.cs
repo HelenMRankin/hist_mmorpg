@@ -4,12 +4,12 @@ using System.Diagnostics.Contracts;
 using Lidgren.Network;
 namespace hist_mmorpg
 {
+    /// <summary>
+    /// Represents a client, their details and the information about their objects
+    /// </summary>
 #if V_CLIENT
     [ContractVerification(true)]
 #endif
-    /// <summary>
-    /// Represents a connected client
-    /// </summary>
     public class Client : IEquatable<Client>
     {
         /// <summary>
@@ -150,6 +150,9 @@ namespace hist_mmorpg
         }
     }
 
+    /// <summary>
+    /// Serialised version of Client for used in reading/writing to database
+    /// </summary>
     public class Client_Serialized
     {
         public string user { get; set; }

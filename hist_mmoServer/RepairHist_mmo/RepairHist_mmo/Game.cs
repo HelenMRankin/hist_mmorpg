@@ -3175,34 +3175,6 @@ namespace hist_mmorpg
             return reply;
         }
 
-        /*
-         * Spy protocol for session types
-         * */
-
-        //global protocol Spy(role Server, role Spy, role Target) {
-        //    SpyRequest(ProtoMessage) from Spy to Server;
-        //    () from Server to Target;
-        //    choice at Server {
-        //        SendSpyChance(ProtoMessage) from Server to Spy;
-        //        choice at Spy {
-        //            DoSpy(ProtoMessage) from Spy to Server;
-        //            choice at Server {
-        //                SendSpyResult(ProtoMessage) from Server to Spy;
-        //                NotifyPlayer(ProtoMessage) from Server to Target;
-        //            }
-        //            or {
-        //                SendError(ProtoMessage) from Server to Spy;
-        //            }
-        //        }
-        //        or {
-        //            CancelSpy(ProtoMessage) from Spy to Server;
-        //        }
-        //    }
-        //    or {
-        //        SendError(ProtoMessage) from Server to Spy;
-        //    }
-        //}
-
         public static ProtoMessage SpyArmy(string armyID, string charID, Client client)
         {
             DisplayMessages armyErr, charErr;
