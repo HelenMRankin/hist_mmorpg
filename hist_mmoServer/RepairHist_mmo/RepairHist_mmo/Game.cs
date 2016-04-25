@@ -2,11 +2,9 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Diagnostics.Contracts;
 using System.Threading;
-using QuickGraph.Algorithms.TopologicalSort;
 
 namespace hist_mmorpg
 {
@@ -58,8 +56,6 @@ namespace hist_mmorpg
         /// <param name="herald1">ID of PlayerCharacter in role of heraldOne</param>
         /// <param name="herald2">ID of PlayerCharacter in role of heraldTwo</param>
         /// <param name="sysAdmin">ID of PlayerCharacter in role of sysAdmin</param>
-        /// 
-        //TODO need to refactor- should initialise game data, then add clients as player characters
         public void InitGameObjects(string gameID = null, string objectDataFile = null,
             string mapDataFile = null, uint type = 0, uint duration = 100, uint start = 1337, string king1 = null,
             string king2 = null, string herald1 = null, string herald2 = null, string sysAdmin = null)
@@ -163,34 +159,6 @@ namespace hist_mmorpg
                     Globals_Game.duration = duration;
                 }
             }
-
-            // =================== TESTING
-
-            // create and add army
-           /* uint[] myArmyTroops1 = new uint[] { 5, 10, 0, 30, 40, 4000, 6020 };
-            Army myArmy1 = new Army(Globals_Game.GetNextArmyID(), Globals_Game.pcMasterList["Char_196"].charID, Globals_Game.pcMasterList["Char_196"].charID, Globals_Game.pcMasterList["Char_196"].days, Globals_Game.pcMasterList["Char_196"].location.id, trp: myArmyTroops1);
-            myArmy1.AddArmy();
-            addTestCharacter();
-            // create and add army
-            uint[] myArmyTroops2 = new uint[] { 5, 10, 0, 30, 40, 80, 220 };
-            Army myArmy2 = new Army(Globals_Game.GetNextArmyID(), Globals_Game.pcMasterList["Char_158"].charID, Globals_Game.pcMasterList["Char_158"].charID, Globals_Game.pcMasterList["Char_158"].days, Globals_Game.pcMasterList["Char_158"].location.id, trp: myArmyTroops2, aggr: 1, odds: 2);
-            myArmy2.AddArmy(); */
-/*
-            uint[] myArmyTroops1 = new uint[] { 20, 20, 15, 5, 5, 100, 100 };
-            Army myArmy1 = new Army(Globals_Game.GetNextArmyID(), Globals_Game.pcMasterList["Char_196"].charID, Globals_Game.pcMasterList["Char_196"].charID, Globals_Game.pcMasterList["Char_196"].days, Globals_Game.pcMasterList["Char_196"].location.id, trp: myArmyTroops1);
-            myArmy1.AddArmy();
-
-            addTestCharacter();
-            // create and add army
-            uint[] myArmyTroops2 = new uint[] { 10, 10, 10, 10, 25, 0, 0 };
-            Army myArmy2 = new Army(Globals_Game.GetNextArmyID(), Globals_Game.pcMasterList["Char_158"].charID, Globals_Game.pcMasterList["Char_158"].charID, Globals_Game.pcMasterList["Char_158"].days, Globals_Game.pcMasterList["Char_158"].location.id, trp: myArmyTroops2, aggr: 1, odds: 2);
-            myArmy2.AddArmy(); */
-            /*
-            // create ailment
-            Ailment myAilment = new Ailment(Globals_Game.getNextAilmentID(), "Battlefield injury", Globals_Game.clock.seasons[Globals_Game.clock.currentSeason] + ", " + Globals_Game.clock.currentYear, 1, 0);
-            Globals_Game.pcMasterList["Char_196"].ailments.Add(myAilment.ailmentID, myAilment); */
-            // =================== END TESTING
-
         }
 
         /// <summary>
@@ -1013,7 +981,7 @@ namespace hist_mmorpg
             // CHECK FOR VICTORY / END GAME
             bool gameEnded = Globals_Game.CheckForVictory();
 
-            //TODO either implement or remove
+            //TODO legacy from original - decide how to implement, or remove
             /*
             // update and get scores for individual point game
             SortedList<double, string> currentScores = new SortedList<double,string>();
@@ -1430,7 +1398,14 @@ namespace hist_mmorpg
             return result;
         }
 
-
+        /// <summary>
+        /// Retrieve a list of NPCs
+        /// </summary>
+        /// <param name="type">Type of list- NPCs in entourage, NPCs that can be granted a role, or NPCs that are in your household </param>
+        /// <param name="role">Role- for granting</param>
+        /// <param name="item">Item to be granted control over- for granting</param>
+        /// <param name="client">Client performing action</param>
+        /// <returns>List of NPCs</returns>
         public static ProtoMessage GetNPCList(string type, string role, string item, Client client)
         {
             List<ProtoCharacterOverview> listOfChars = new List<ProtoCharacterOverview>();
@@ -1527,6 +1502,14 @@ namespace hist_mmorpg
             return result;
         }
 
+        /// <summary>
+        /// Travel to another fief
+        /// </summary>
+        /// <param name="charID">Character travelling</param>
+        /// <param name="fiefID">Fief to travel to</param>
+        /// <param name="travelInstructions">(optional) route</param>
+        /// <param name="client">Client who sent request</param>
+        /// <returns>Result</returns>
         public static ProtoMessage TravelTo(string charID, string fiefID, string[] travelInstructions, Client client)
         {
             Character charToMove = null;
@@ -3560,6 +3543,14 @@ namespace hist_mmorpg
                 return ransomResult;
             }
         }
+
+        /// <summary>
+        /// Main action controller- translates a client request into a response
+        /// </summary>
+        /// <param name="msgIn">Client's request</param>
+        /// <param name="_client">Client whose request is being processed</param>
+        /// <param name="ctSource">Cancellation token</param>
+        /// <returns>Result of processing request</returns>
         public static ProtoMessage ActionController(ProtoMessage msgIn, Client _client, CancellationTokenSource ctSource)
         {
             Contract.Requires(_client != null&&msgIn!=null);
@@ -4036,7 +4027,7 @@ namespace hist_mmorpg
                     }
             }
         }
-        //TODO remove or implement
+        //TODO legacy - remove or implement
         /*
         /// <summary>
         /// Checks for a historical team victory (victory depends on whether the English own any French fiefs)

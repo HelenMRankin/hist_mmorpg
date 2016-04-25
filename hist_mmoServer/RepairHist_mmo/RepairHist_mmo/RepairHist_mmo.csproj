@@ -173,7 +173,6 @@
     <Compile Include="Place.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProtoMessage.cs" />
-    <Compile Include="ProtoMessage2.cs" />
     <Compile Include="Province.cs" />
     <Compile Include="Rank.cs" />
     <Compile Include="Server.cs" />

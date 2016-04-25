@@ -1,27 +1,10 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Text.RegularExpressions;
-using System.Xml;
-using QuickGraph;
-using RiakClient;
 using Lidgren.Network;
 using ProtoBuf;
 using System.Threading;
-using System.Diagnostics;
-using System.Net.Security;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Configuration;
-using System.Windows.Forms;
-using System.Threading.Tasks;
-
 namespace hist_mmorpg
 {
 
@@ -34,13 +17,19 @@ namespace hist_mmorpg
         /// Dictionary mapping connections to the Client who owns the connection
         /// </summary>
         private static Dictionary<NetConnection, Client> clientConnections = new Dictionary<NetConnection, Client>();
+        /// <summary>
+        /// The underlying NetServer that handles connections
+        /// </summary>
         static NetServer server;
-        /******Server Settings (can move to config file) ******/
+
+        /******Server Settings  ******/
         private readonly int port = 8000;
         private readonly string host_name = "localhost";
         private readonly int max_connections = 2000;
         // Used in the NetPeerConfiguration to identify application
         private readonly string app_identifier = "test";
+        /******End of Settings *******/
+
         /// <summary>
         /// Consistency control for sever connection lists
         /// </summary>
@@ -50,10 +39,11 @@ namespace hist_mmorpg
         /// Server cancellation token. All connected clients can view this token and cancel if the server shuts down
         /// </summary>
         public static CancellationTokenSource ctSource { get; set; }
+
         /// <summary>
         /// Check if client connections contains a connection- used in testing
         /// </summary>
-        /// <param name="conn">Connection of client</param>
+        /// <param name="user">Username of client to check for</param>
         /// <returns></returns>
         public static bool ContainsConnection(string user)
         {
@@ -63,9 +53,12 @@ namespace hist_mmorpg
                 if (c == null) return false;
                 return clientConnections.ContainsValue(c);
             }
-            
+
         }
-        /*******End of settings************/
+
+        /// <summary>
+        /// Initialise the server (including with some test clients
+        /// </summary>
         public void Initialise()
         {
             ctSource=new CancellationTokenSource();
@@ -92,12 +85,18 @@ namespace hist_mmorpg
             LogInManager.InitialiseCertificateAndRSA(path);
         }
 
+        /// <summary>
+        /// Add some test users. "helen" controls "Char_158"; "test" controls "Char_126"
+        /// </summary>
         public void AddTestUsers()
         {
             Client client = new Client("helen", "Char_158");
             Client client2 = new Client("test", "Char_126");
         }
 
+        /// <summary>
+        /// Server listening thread- repeatedly receive and process messages until cancellation or shut down
+        /// </summary>
         public void Listen()
         {
 
@@ -209,7 +208,7 @@ namespace hist_mmorpg
                                 if (!LogInManager.AcceptConnection(client, out logIn))
                                 {
 #if DEBUG
-                                    Console.WriteLine("SERVER: Denied connection approval for "+senderID);
+                                    Globals_Server.logEvent("SERVER: Denied connection approval for "+senderID);
 #endif
                                     im.SenderConnection.Deny(
                                         "Access denied- you may already be logged in on another machine, or have entered the wrong credentials");
@@ -251,6 +250,7 @@ namespace hist_mmorpg
                     }
                     server.Recycle(im);
                 }
+                // Wait for the next message if empty (or cancellation)
                 WaitHandle.WaitAny(new WaitHandle[] {server.MessageReceivedEvent, ctSource.Token.WaitHandle});
             }
             Globals_Server.logEvent("Server listening thread ends");
@@ -261,7 +261,7 @@ namespace hist_mmorpg
         /// </summary>
         /// <param name="m">Message to be sent</param>
         /// <param name="conn">Connection to send across</param>
-        /// <param name="key">Optional encryption key</param>
+        /// <param name="alg">Optional encryption algorithm</param>
         public static void SendViaProto(ProtoMessage m, NetConnection conn, NetEncryption alg = null)
         {
             NetOutgoingMessage msg = server.CreateMessage();
@@ -291,7 +291,11 @@ namespace hist_mmorpg
             listenThread.Start();
         }
 
-        //TODO write all client details to database
+        /// <summary>
+        /// Handles a client disconnecting
+        /// </summary>
+        /// <param name="conn">connection of the client</param>
+        /// <param name="disconnectMsg">Reason for disconnection</param>
         public static void Disconnect(NetConnection conn, string disconnectMsg = "Disconnect")
         {
             lock(ConnectionLock)
@@ -313,19 +317,15 @@ namespace hist_mmorpg
             }
         }
 
+        /// <summary>
+        /// Shut down the server and cancel the server's token (which should cancel all client tasks)
+        /// </summary>
         public void Shutdown()
         {
             ctSource.Cancel();
             server.Shutdown("Server Shutdown");
         }
 
-        public void Test()
-        {
-            NonPlayerCharacter marry = Globals_Game.npcMasterList["Char_626"];
-            NonPlayerCharacter hubby = Globals_Game.npcMasterList["Char_390"];
-
-            hubby.ProposeMarriage(marry);
-        }
 
     }
 }

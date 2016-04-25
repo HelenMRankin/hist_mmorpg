@@ -39,6 +39,8 @@ namespace hist_mmorpg
         /// </summary>
         public static long maxMemoryUseage;
 
+        /********Objects used during testing***/
+         
         public static Army OwnedArmy;
         public static Army NotOwnedArmy;
         public static Fief OwnedFief;
@@ -48,6 +50,7 @@ namespace hist_mmorpg
         public static PlayerCharacter MyPlayerCharacter;
         public static PlayerCharacter NotMyPlayerCharacter;
 
+        /*****************************/
         /// <summary>
         /// Set up the data and game state for the test run
         /// </summary>
@@ -149,7 +152,10 @@ namespace hist_mmorpg
             Console.ReadLine();
         }
 
-
+        /// <summary>
+        /// The Test Run
+        /// </summary>
+        /// <param name="encrypt">Whether or not to perform with encryption</param>
         [STAThread]
         public static void TestRun(bool encrypt = true)
         {
@@ -334,6 +340,9 @@ namespace hist_mmorpg
 
         //}
 
+        /// <summary>
+        /// Used during set up for the 2015 demo in Glasgow. Adds a few test characters and armies and assigns some traits
+        /// </summary>
         public static void SetUpForDemo()
         {
             // Make Anselm Marshal very sneaky

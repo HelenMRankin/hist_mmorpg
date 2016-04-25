@@ -19,18 +19,24 @@ namespace hist_mmorpg
     /// <summary>
     /// Extends the ConcurrentQueue to fire an event whenever a new item is enqueued
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">Type of the queue</typeparam>
     public class ConcurrentQueueWithEvent<T>: ConcurrentQueue<T>
     {
+        /// <summary>
+        /// Event waiter for this queue- fires an event when an item is enqueued
+        /// </summary>
         public EventWaitHandle eventWaiter { get; }
 
+        /// <summary>
+        /// Constructer
+        /// </summary>
         public ConcurrentQueueWithEvent():base()
         {
             eventWaiter = new EventWaitHandle(false,EventResetMode.AutoReset);
         } 
 
         /// <summary>
-        /// Add a new item to the queue and set the EventWaitHandle
+        /// Add a new item to the queue and set the EventWaitHandle. Overrides ConcurrentQueue.Enqueue
         /// </summary>
         /// <param name="t">Item to be enqueued</param>
         public new void Enqueue(T t)

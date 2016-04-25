@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Lidgren.Network;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Threading;
 
 namespace hist_mmorpg
 {
     /// <summary>
-    /// Represents a connected client
+    /// Represents a client and holds data and methods for retrieving the client's next message, as well as items the client may currently be viewing
     /// </summary>
     public class Client: IEquatable<Client>, IEquatable<string>
     {
@@ -81,6 +78,12 @@ namespace hist_mmorpg
         /// Linked cancellation token source- checks whether client or server CTS has been cancelled (e.g. due to shut down)
         /// </summary>
         private CancellationTokenSource _linkedTokenSource;
+
+        /// <summary>
+        /// Create a new client
+        /// </summary>
+        /// <param name="user">Username of the client</param>
+        /// <param name="pcID">ID of the PlayerCharacter this client will be controlling</param>
         public Client(String user, String pcID)
         {
             // set username associated with client
@@ -105,9 +108,10 @@ namespace hist_mmorpg
 
         
         /// <summary>
-        /// Updates the client
+        /// Send an update message to this client
         /// </summary>
-        /// <param name="info"></param>
+        /// <param name="type">The response type of the message</param>
+        /// <param name="fields">Any additional information to be included</param>
         public void Update(DisplayMessages type, string[] fields = null)
         {
 
@@ -117,17 +121,25 @@ namespace hist_mmorpg
             m.MessageFields = fields;
             if (connection != null)
             {
+#if DEBUG
                 Globals_Server.logEvent("Update " + this.username + ": " + type.ToString());
+#endif
                 Server.SendViaProto(m, connection,alg);
             }
         }
 
+        /// <summary>
+        /// Send a more detailed update to the client
+        /// </summary>
+        /// <param name="message">Any details required can be sent as a subclass of ProtoMessage</param>
         public void Update(ProtoMessage message)
         {
             message.ActionType = Actions.Update;
             if (connection != null)
             {
+#if DEBUG
                 Globals_Server.logEvent("Update " + this.username + ": " + message.ResponseType.ToString());
+#endif
                 Server.SendViaProto(message, connection, alg);
             }
         }
@@ -165,13 +177,9 @@ namespace hist_mmorpg
             return reply;
         }
 
-        public void ProcessLogOut()
-        {
-            ctSource.Cancel();
-            connection = null;
-            alg = null;
-        }
-
+        /// <summary>
+        /// Handles a client connecting to the server- creates the cancellation tokens and initialises the client message queue
+        /// </summary>
         public void ProcessConnect()
         {
             ctSource=new CancellationTokenSource();
@@ -179,6 +187,9 @@ namespace hist_mmorpg
             protobufMessageQueue = new ConcurrentQueueWithEvent<ProtoMessage>();
         }
 
+        /// <summary>
+        /// Controller handling sequences of messages from the client. Makes use of a lot of asynchronous operations
+        /// </summary>
         public void ActionControllerAsync()
         {
             
@@ -259,23 +270,40 @@ namespace hist_mmorpg
             }
             catch (OperationCanceledException e)
             {
+#if DEBUG
                 Globals_Server.logEvent("Client "+username+"'s current action was cancelled");
+#endif
             }
+#if DEBUG
             Globals_Server.logEvent("Server's client listener for "+username+" has ended.");
+#endif
             
         }
 
+        /// <summary>
+        /// Compares two clients by username
+        /// </summary>
+        /// <param name="other">Client to be compared</param>
+        /// <returns>True if usernames match; false otherwise</returns>
         public bool Equals(Client other)
         {
             return this.username.Equals(other.username);
         }
 
+        /// <summary>
+        /// Compares a string to this client- returns true if the clients username equals the string
+        /// </summary>
+        /// <param name="uname">Username as a string</param>
+        /// <returns>True if the usernames match; false otherwise</returns>
         public bool Equals(string uname)
         {
             return this.username.Equals(uname);
         }
     }
 
+    /// <summary>
+    /// Serialisable form of client (used in database serialisation/deserialisation)
+    /// </summary>
     public class Client_Serialized
     {
         public string user { get; set; }
