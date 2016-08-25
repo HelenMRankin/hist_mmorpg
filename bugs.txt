@@ -75,7 +75,6 @@ Detected through: dynamic testing
 Severity: High
 Chance of happening: High
 
-
 Bug: In original implementation, calculating battle values without an army leader throws NullReferenceException. Since armies are allowed to not have leaders, this is a cause for concern
 Detected through: dynamic testing
 Severity: High
@@ -90,8 +89,6 @@ Bug: In original implementation, recruiting with a null army id causes a crash, 
 Detected through: Dynamic testing
 Severity: High
 Chance of happening: high
-
-
 
 Differing behaviour: In Session types implementation a double log in is handled as an invalid message and an error is sent to the client; in the original it is processed as an invalid log in and the client is logged out
 Detected through: Dynamic testing
